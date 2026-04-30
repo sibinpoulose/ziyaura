@@ -28,8 +28,8 @@ export const login = async (req, res) => {
     }
 
     const data = await loginUser(req.body);
-    res.cookie("token",data.token,{
-      httpOnly:true,
+    res.cookie("token", data.token, {
+      httpOnly: true,
     })
 
     res.redirect("/home");
@@ -58,7 +58,7 @@ export const verifyOTP = async (req, res) => {
 
     await verifyOtp(email, otp);
 
-    res.redirect("/home");
+    res.redirect("/login");
 
   } catch (err) {
     res.render("otp", {
@@ -67,7 +67,7 @@ export const verifyOTP = async (req, res) => {
     });
   }
 };
-export const logout=(req,res)=>{
+export const logout = (req, res) => {
   res.clearCookie("token");
   res.redirect("/login")
 }

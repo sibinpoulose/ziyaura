@@ -1,9 +1,78 @@
-<h2>Login</h2>
+<%- include("partials/header") %>
 
-<form action="/login" method="POST">
-  <input name="email" placeholder="Email" required />
-  <input name="password" type="password" placeholder="Password" required />
-  <button>Login</button>
-</form>
+  <div style="display:flex; justify-content:center; align-items:center; min-height:85vh; background:#f3f3f3;">
 
-<p><%= message || "" %></p>
+    <div style="
+    width:420px;
+    background:#fff;
+    padding:40px;
+    border-radius:14px;
+    box-shadow:0 0 12px rgba(0,0,0,0.08);
+  ">
+
+      <h2 style="margin-bottom:20px; color:#555;">Login</h2>
+
+      <form action="/login" method="POST">
+
+        <!-- Email -->
+        <label style="font-size:14px;">Email</label>
+        <input type="email" name="email" placeholder="Enter your email" required
+          style="width:100%; padding:12px; margin:8px 0 15px; border:1px solid #ddd; border-radius:8px;" />
+
+        <!-- Password -->
+        <label style="font-size:14px;">Password</label>
+        <input type="password" name="password" placeholder="Enter your password" required
+          style="width:100%; padding:12px; margin:8px 0 10px; border:1px solid #ddd; border-radius:8px;" />
+
+        <!-- Forgot password -->
+        <div style="text-align:center; margin-bottom:15px;">
+          <a href="/forgot-password" style="font-size:13px; color:#666;">
+            Forgot password?
+          </a>
+        </div>
+
+        <!-- Button -->
+        <button style="
+        width:100%;
+        padding:14px;
+        background:#5a67d8;
+        color:#fff;
+        border:none;
+        border-radius:8px;
+        font-weight:bold;
+        cursor:pointer;
+      ">
+          Login
+        </button>
+
+      </form>
+
+      <!-- Divider -->
+      <div style="margin:20px 0; text-align:center; color:#aaa;">
+        <hr style="border:none; border-top:1px solid #eee;">
+        <span style="position:relative; top:-12px; background:#fff; padding:0 10px;">OR</span>
+      </div>
+
+      <!-- Google Button -->
+      <button style="
+      width:100%;
+      padding:12px;
+      background:#eee;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+    ">
+        Continue with Google
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- Bottom link -->
+  <div style="text-align:center; margin-bottom:30px;">
+    Don't have an account?
+    <a href="/signup" style="color:#5a67d8;">Sign up now</a>
+  </div>
+
+  <%- include("partials/footer") %>
