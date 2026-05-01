@@ -1,21 +1,25 @@
-import { registerUser, loginUser, sendOtp, verifyOtp } from "../services/authService.js";
+import { registerUser, loginUser, sendOtp, verifyOtp,resetPassword as resetPasswordService } from "../services/authService.js";
 
 export const signup = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, confirmPassword, phone } = req.body;
 
-    if (!name || !email || !password) {
-      return res.render("signup", { message: "All fields are required" });
+    if (!name || !email || !password || !confirmPassword) {
+      return res.render("signup", { message: "All fields are required", user: null });
     }
 
-    await registerUser(req.body);
+    if (password !== confirmPassword) {
+      return res.render("signup", { message: "Passwords do not match", user: null });
+    }
+
+    await registerUser({ name, email, password, phone });
 
     await sendOtp(email);
 
     res.render("otp", { email, message: null });
 
   } catch (err) {
-    res.render("signup", { message: err.message });
+    res.render("signup", { message: err.message, user: null });
   }
 };
 
@@ -71,3 +75,70 @@ export const logout = (req, res) => {
   res.clearCookie("token");
   res.redirect("/login")
 }
+
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    await sendOtp(email); 
+
+    res.render("verify-otp", {
+      email,
+      message: "OTP sent to your email"
+    });
+
+  } catch (err) {
+    res.render("forgot-password", {
+      message: err.message
+    });
+  }
+};
+export const verifyOtpReset = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    await verifyOtp(email, otp); 
+
+    
+    res.render("reset-password", {
+      email,
+      message: ""
+    });
+
+  } catch (err) {
+    res.render("verify-otp", {
+      email: req.body.email,
+      message: err.message
+    });
+  }
+};
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
+
+    if (!password || !confirmPassword) {
+      return res.render("reset-password", {
+        email,
+        message: "All fields required"
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.render("reset-password", {
+        email,
+        message: "Passwords do not match"
+      });
+    }
+
+    await resetPasswordService(email, password);
+
+    res.redirect("/login");
+
+  } catch (err) {
+    res.render("reset-password", {
+      email: req.body.email,
+      message: err.message
+    });
+  }
+};

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Reset Password</title>
+  <title>Verify OTP</title>
   <style>
     body {
       font-family: Arial;
@@ -23,7 +23,7 @@
     input {
       width: 100%;
       padding: 12px;
-      margin-top: 15px;
+      margin-top: 20px;
       border-radius: 10px;
       border: 1px solid #ccc;
     }
@@ -48,15 +48,13 @@
 
 <body>
   <div class="box">
-    <h2>Reset Password</h2>
+    <h2>Enter OTP</h2>
+    <p>We sent an OTP to your email</p>
 
-    <form action="/reset-password" method="POST">
+    <form action="/verify-otp-reset" method="POST">
       <input type="hidden" name="email" value="<%= email %>" />
-
-      <input type="password" name="password" placeholder="New Password" required />
-      <input type="password" name="confirmPassword" placeholder="Confirm Password" required />
-
-      <button type="submit">Reset Password</button>
+      <input type="text" name="otp" placeholder="Enter OTP" required />
+      <button type="submit">Verify</button>
     </form>
 
     <p><%= message %></p>

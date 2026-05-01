@@ -91,3 +91,24 @@ export const verifyOtp = async (email, otp) => {
 
   return { message: "OTP verified" };
 };
+
+export const resetPassword = async (email, newPassword) => {
+  const user = await User.findOne({ email });
+
+  if (!user) throw new Error("User not found");
+
+  if (!user.isVerified) {
+    throw new Error("OTP not verified");
+  }
+
+  const hashed = await hashPassword(newPassword);
+
+  user.password = hashed;
+
+
+  // user.isVerified = false;
+
+  await user.save();
+
+  return { message: "Password updated" };
+};
