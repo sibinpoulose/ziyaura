@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Add Address</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gray-100">
+
+<div class="max-w-2xl mx-auto mt-10 bg-white p-8 rounded-xl">
+
+  <h1 class="text-3xl font-bold mb-8">
+    Add Address
+  </h1>
+
+  <form action="/profile/add-address" method="POST">
+
+    <div class="grid gap-5">
+
+      <input
+        type="text"
+        name="fullName"
+        placeholder="Full Name"
+        class="border p-3 rounded-lg"
+      >
+
+      <input
+        type="text"
+        name="phone"
+        placeholder="Phone"
+        class="border p-3 rounded-lg"
+      >
+
+      <textarea
+        name="address"
+        placeholder="Address"
+        class="border p-3 rounded-lg"
+      ></textarea>
+
+      <input
+        type="text"
+        name="landmark"
+        placeholder="Landmark"
+        class="border p-3 rounded-lg"
+      >
+
+      <input
+        type="text"
+        name="city"
+        placeholder="City"
+        class="border p-3 rounded-lg"
+      >
+
+      <input
+        type="text"
+        name="state"
+        placeholder="State"
+        class="border p-3 rounded-lg"
+      >
+
+      <input
+        type="text"
+        name="pincode"
+        placeholder="Pincode"
+        class="border p-3 rounded-lg"
+      >
+
+      <select
+        name="addressType"
+        class="border p-3 rounded-lg"
+      >
+
+        <option value="Home">Home</option>
+
+        <option value="Work">Work</option>
+
+        <option value="Other">Other</option>
+
+      </select>
+
+      <button class="bg-black text-white py-3 rounded-lg">
+
+        Save Address
+
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
+
+</body>
+
+</html>

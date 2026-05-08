@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIYAURA | Modern Luxury Jewelry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .nav-container {
+            background-color: #f3f4f6; /* Light grey background for nav links as seen in image */
+        }
+        .category-label {
+            letter-spacing: 0.1em;
+            font-size: 0.65rem;
+        }
+    </style>
+</head>
+<body>
+    <%- include("../partials/user/header") %>
+    <div class="max-w-7xl mx-auto px-4 pt-6">
+
+  <% if (success) { %>
+
+    <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg text-sm mb-4 text-center">
+
+      <%= success %>
+
+    </div>
+
+  <% } %>
+
+
+  <% if (error) { %>
+
+    <div class="bg-red-100 text-red-700 px-4 py-3 rounded-lg text-sm mb-4 text-center">
+
+      <%= error %>
+
+    </div>
+
+  <% } %>
+
+</div>
+
+    <!-- Hero Banner -->
+    <section class="w-full">
+        <div class="relative aspect-[16/9] md:aspect-[21/9] bg-gray-200 overflow-hidden">
+            <img src="homeimages/homemain.webp" 
+                 alt="Men's Jewelry Hero" 
+                 class="w-full h-full object-cover">
+        </div>
+    </section>
+
+    <!-- Categories Grid -->
+    <section class="max-w-7xl mx-auto px-4 py-16">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
+            <% const categories = [
+                { name: 'RINGS', img: 'homeimages/ring.jpeg' },
+                { name: 'CHAINS', img: 'homeimages/chain.jpg' },
+                { name: 'BRACELETS', img: 'homeimages/bracelet.jpg' },
+                { name: 'EARRINGS', img: 'homeimages/earings.jpg' }
+            ]; %>
+            
+            <% categories.forEach(cat => { %>
+                <div class="group cursor-pointer">
+                    <div class="aspect-square overflow-hidden bg-gray-100 mb-4">
+                        <img src="<%= cat.img %>" alt="<%= cat.name %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <p class="category-label font-bold text-[14px] text-gray-800 tracking-widest"><%= cat.name %></p>
+                </div>
+            <% }); %>
+        </div>
+    </section>
+
+    <!-- Promotional Banner -->
+    <section class="max-w-7xl mx-auto px-4 pb-16">
+        <div class="relative overflow-hidden bg-black text-white min-h-[400px] flex items-center">
+            <h2 class="text-[10px] font-bold tracking-widest absolute top-8 left-8 z-20">YOUR LEGACY. CRAFTED</h2>
+            <div class="flex flex-col md:flex-row w-full h-full">
+                <div class="w-full md:w-2/3 h-[300px] md:h-[500px]">
+                    <img src="homeimages/secondimage.avif" 
+                         alt="Promotional Banner" 
+                         class="w-full h-full object-cover opacity-90">
+                </div>
+                <div class="w-full md:w-1/3 flex items-center justify-center p-8 md:p-12 bg-black">
+                    <div class="text-center md:text-left">
+                        <h3 class="text-2xl md:text-4xl font-bold tracking-[0.1em] leading-tight">SHOP MEN'S<br>JEWELLERY</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Limited Edition Section -->
+    <section class="max-w-7xl mx-auto px-4 py-12">
+        <h2 class="text-[14px] font-bold tracking-widest mb-10 text-center md:text-left">LIMITED EDITION</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            <% const limited = [
+                { name: 'Durga ring real silver antique', img: 'homeimages/ring.jpeg' },
+                { name: 'Veer Hanuman Full-Body Oxidised Silver Pendant – Handcrafted Real Silver', img: 'homeimages/pendant.webp' },
+                { name: 'Skull ring real silver', img: 'homeimages/skullring.webp' },
+                { name: 'Handcrafted Oxidised Real Silver Snake Bracelet ', img: 'homeimages/s.webp' }
+            ]; %>
+
+            <% limited.forEach(item => { %>
+                <div class="group cursor-pointer">
+                    <div class="aspect-square bg-gray-50 overflow-hidden mb-4">
+                        <img src="<%= item.img %>" alt="<%= item.name %>" class="w-full h-full object-cover">
+                    </div>
+                    <p class="text-[14px font-bold text-gray-800 font-medium tracking-tighter text-center leading-normal">
+                        <%= item.name %>
+                    </p>
+                </div>
+            <% }); %>
+        </div>
+    </section>
+
+    <!-- Brand Features Section -->
+    <section class="bg-[#f9f9f9] py-24 text-center">
+        <div class="max-w-4xl mx-auto px-4 flex flex-col items-center">
+            <div class="flex flex-col items-center mb-16">
+                <h4 class="text-2xl font-bold tracking-[0.4em] mb-4">ZIYAURA</h4>
+                <div class="w-px h-20 bg-gray-300"></div>
+                <p class="text-[11px] text-gray-500 italic mt-6 max-w-xs leading-relaxed">
+                    Crafting modern luxury pieces for ambitious men is what drives us forward.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-y-16 gap-x-24">
+                <div class="flex flex-col items-center">
+                    <i class="fa-solid fa-award text-3xl mb-4"></i>
+                    <p class="text-[11px] font-bold tracking-[0.2em] uppercase">1 Year Warranty</p>
+                </div>
+                <div class="flex flex-col items-center">
+                    <i class="fa-regular fa-face-smile text-3xl mb-4"></i>
+                    <p class="text-[11px] font-bold tracking-[0.2em] uppercase">Happy Customers</p>
+                </div>
+                <div class="flex flex-col items-center">
+                    <i class="fa-regular fa-thumbs-up text-3xl mb-4"></i>
+                    <p class="text-[11px] font-bold tracking-[0.2em] uppercase">Unique designs and high-quality materials</p>
+                </div>
+                <div class="flex flex-col items-center">
+                    <i class="fa-solid fa-droplet text-3xl mb-4"></i>
+                    <p class="text-[11px] font-bold tracking-[0.2em] uppercase">Waterproof/Anti-Tarnish</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   <%-include("../partials/user/footer") %>
+
+</body>
+</html>

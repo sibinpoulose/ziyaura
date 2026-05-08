@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>ZIYAURA</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+</head>
+
+<body class="bg-white text-gray-900">
+
+  <!-- Header / Navbar -->
+  <header class="bg-white sticky top-0 z-50 border-b border-gray-100">
+
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
+
+      <!-- Logo -->
+      <div class="flex-shrink-0">
+
+        <a
+          href="/home"
+          class="text-2xl md:text-3xl font-bold tracking-tighter"
+        >
+
+          ZIYAURA
+
+        </a>
+
+      </div>
+
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex items-center px-4 lg:px-8 py-2 rounded-sm border border-gray-100">
+
+        <div class="flex space-x-4 lg:space-x-8">
+
+          <a
+            href="/home"
+            class="text-[10px] lg:text-[12px] font-bold text-gray-800 hover:text-gray-500 tracking-widest whitespace-nowrap"
+          >
+
+            HOME
+
+          </a>
+
+          <a
+            href="#"
+            class="text-[10px] lg:text-[12px] font-bold text-gray-800 hover:text-gray-500 tracking-widest whitespace-nowrap"
+          >
+
+            CATEGORIES
+
+          </a>
+
+          <a
+            href="#"
+            class="text-[10px] lg:text-[12px] font-bold text-gray-800 hover:text-gray-500 tracking-widest whitespace-nowrap"
+          >
+
+            LIMITED EDITION
+
+          </a>
+
+          <a
+            href="#"
+            class="text-[10px] lg:text-[12px] font-bold text-gray-800 hover:text-gray-500 tracking-widest whitespace-nowrap"
+          >
+
+            NEED HELP
+
+          </a>
+
+        </div>
+
+      </nav>
+
+      <!-- Right Side -->
+      <div class="flex items-center space-x-4 lg:space-x-8 text-gray-800">
+
+        <!-- Wishlist -->
+        <button class="hover:opacity-70">
+
+          <i class="fa-regular fa-heart text-lg md:text-xl"></i>
+
+        </button>
+
+        <!-- Cart -->
+        <button class="hover:opacity-70">
+
+          <i class="fa-solid fa-bag-shopping text-lg md:text-xl"></i>
+
+        </button>
+
+        <!-- Search -->
+        <button class="hidden sm:flex items-center gap-2 hover:opacity-70">
+
+          <span class="text-[11px] font-bold tracking-widest">
+
+            SEARCH
+
+          </span>
+
+        </button>
+
+        <!-- User Section -->
+        <div class="flex items-center gap-3 border-l border-gray-200 pl-4 lg:pl-6">
+
+          <% if (user) { %>
+
+            <!-- Profile Link -->
+            <a
+              href="/profile"
+              class="flex items-center gap-2 hover:opacity-70"
+            >
+
+              <!-- Avatar -->
+              <% if (user?.profileImage) { %>
+
+                <img
+                  src="<%= user.profileImage %>"
+                  alt="Profile"
+                  class="w-7 h-7 md:w-8 md:h-8 rounded-full object-cover"
+                >
+
+              <% } else { %>
+
+                <div
+                  class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs md:text-sm font-semibold"
+                >
+
+                  <%= user.name?.charAt(0).toUpperCase() %>
+
+                </div>
+
+              <% } %>
+
+              <!-- User Name -->
+              <span class="hidden sm:inline text-[11px] font-medium text-gray-600">
+
+                <%= user.name?.split(' ')[0] %>
+
+              </span>
+
+            </a>
+
+            <!-- Logout -->
+            <a
+              href="/profile/logout"
+              class="text-[11px] font-medium text-red-500 hover:text-red-700"
+            >
+
+              LOGOUT
+
+            </a>
+
+          <% } else { %>
+
+            <!-- Login -->
+            <a
+              href="/login"
+              class="text-[11px] font-medium text-gray-600 hover:text-gray-900"
+            >
+
+              LOGIN
+
+            </a>
+
+          <% } %>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Mobile Navigation -->
+    <div class="md:hidden flex justify-center bg-gray-50 py-2 border-t border-gray-100">
+
+      <div class="flex space-x-4 text-[9px] font-bold tracking-tighter text-gray-600">
+
+        <a href="/home">HOME</a>
+
+        <a href="#">CATEGORIES</a>
+
+        <a href="#">LIMITED</a>
+
+        <a href="#">HELP</a>
+
+      </div>
+
+    </div>
+
+  </header>

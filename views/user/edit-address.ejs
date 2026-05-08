@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Address</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gray-100">
+
+    <div class="max-w-2xl mx-auto mt-10 bg-white p-8 rounded-xl">
+
+        <h1 class="text-3xl font-bold mb-8">
+            Edit Address
+        </h1>
+        <% if (success) { %>
+
+            <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg text-sm mb-6">
+
+                <%= success %>
+
+            </div>
+
+            <% } %>
+
+
+                <% if (error) { %>
+
+                    <div class="bg-red-100 text-red-700 px-4 py-3 rounded-lg text-sm mb-6">
+
+                        <%= error %>
+
+                    </div>
+
+                    <% } %>
+
+                        <form action="/profile/address/edit/<%= address._id %>" method="POST">
+
+                            <div class="grid gap-5">
+
+                                <input type="text" name="fullName" value="<%= address.fullName %>"
+                                    class="border p-3 rounded-lg">
+
+                                <input type="text" name="phone" value="<%= address.phone %>"
+                                    class="border p-3 rounded-lg">
+
+                                <textarea name="address" class="border p-3 rounded-lg"><%= address.address %></textarea>
+
+                                <input type="text" name="landmark" value="<%= address.landmark %>"
+                                    class="border p-3 rounded-lg">
+
+                                <input type="text" name="city" value="<%= address.city %>"
+                                    class="border p-3 rounded-lg">
+
+                                <input type="text" name="state" value="<%= address.state %>"
+                                    class="border p-3 rounded-lg">
+
+                                <input type="text" name="pincode" value="<%= address.pincode %>"
+                                    class="border p-3 rounded-lg">
+
+                                <select name="addressType" class="border p-3 rounded-lg">
+
+                                    <option value="Home" <%=address.addressType==="Home" ? "selected" : "" %>
+                                        >
+                                        Home
+                                    </option>
+
+                                    <option value="Work" <%=address.addressType==="Work" ? "selected" : "" %>
+                                        >
+                                        Work
+                                    </option>
+
+                                    <option value="Other" <%=address.addressType==="Other" ? "selected" : "" %>
+                                        >
+                                        Other
+                                    </option>
+
+                                </select>
+
+                                <button class="bg-black text-white py-3 rounded-lg">
+
+                                    Update Address
+
+                                </button>
+
+                            </div>
+
+                        </form>
+
+    </div>
+
+</body>
+
+</html>

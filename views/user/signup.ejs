@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Signup</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+</head>
+
+<body class="bg-gray-100">
+
+  <div class="flex h-screen">
+
+    <div class="w-1/2 bg-gray-100 flex flex-col justify-center px-20 relative">
+
+      <h1 class="absolute top-8 left-20 text-xl font-semibold tracking-widest text-white">
+
+        ZIYAURA
+
+      </h1>
+
+      <div class="mt-16">
+
+        <p class="text-2xl text-gray-800 mb-6">
+
+          Explore the things you love.
+
+        </p>
+
+        <img src="/images/signupimage.webp" class="rounded-lg shadow-md w-full max-w-md">
+
+      </div>
+
+    </div>
+
+    <div class="w-1/2 flex justify-center items-start py-10">
+
+      <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+
+        <h2 class="text-xl font-semibold mb-4 text-center">
+
+          Create Account
+
+        </h2>
+
+        <form id="signupForm" action="/signup" method="POST" class="space-y-4">
+
+          <input id="name" name="name" placeholder="Username"
+            class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+
+          <input id="email" type="email" name="email" placeholder="Email"
+            class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+
+          <div class="relative">
+
+            <input type="password" id="password" name="password" placeholder="Password" required
+              class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 pr-12">
+
+            <button type="button" onclick="togglePassword('password', 'passwordIcon')"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+
+              <i id="passwordIcon" class="fa-solid fa-eye"></i>
+
+            </button>
+
+          </div>
+
+          <div id="passwordRules" class="text-xs space-y-1 mt-2">
+
+            <p id="lengthRule" class="text-gray-500">
+
+              ✗ Minimum 8 characters
+
+            </p>
+
+            <p id="uppercaseRule" class="text-gray-500">
+
+              ✗ One uppercase letter
+
+            </p>
+
+            <p id="lowercaseRule" class="text-gray-500">
+
+              ✗ One lowercase letter
+
+            </p>
+
+            <p id="numberRule" class="text-gray-500">
+
+              ✗ One number
+
+            </p>
+
+            <p id="specialRule" class="text-gray-500">
+
+              ✗ One special character
+
+            </p>
+
+          </div>
+
+          <div class="relative">
+
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required
+              class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 pr-12">
+
+            <button type="button" onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+
+              <i id="confirmPasswordIcon" class="fa-solid fa-eye"></i>
+
+            </button>
+
+          </div>
+
+          <input id="phone" name="phone" placeholder="Phone (optional)"
+            class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600">
+
+          <p id="signupError" class="text-red-500 text-sm text-center"></p>
+
+          <% if (success) { %>
+
+            <div class="bg-green-100 text-green-700 p-3 rounded mb-3 text-sm text-center">
+
+              <%= success %>
+
+            </div>
+
+            <% } %>
+
+
+              <% if (error) { %>
+
+                <div class="bg-red-100 text-red-700 p-3 rounded mb-3 text-sm text-center">
+
+                  <%= error %>
+
+                </div>
+
+                <% } %>
+
+                  <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded">
+
+                    Sign Up
+
+                  </button>
+
+        </form>
+
+        <div class="flex items-center my-5">
+
+          <div class="flex-grow h-px bg-gray-300"></div>
+
+          <span class="px-3 text-sm text-gray-500">
+
+            or continue with
+
+          </span>
+
+          <div class="flex-grow h-px bg-gray-300"></div>
+
+        </div>
+
+        <div class="space-y-3">
+
+          <a href="/auth/google"
+            class="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded hover:bg-gray-100">
+            <img src="/images/googlelogo.jpg" class="w-7 h-7">
+
+            <span class="text-sm font-medium text-gray-700">
+
+              Continue with Google
+
+            </span>
+
+          </a>
+
+          <!-- <button
+            class="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded hover:bg-gray-100">
+
+            <img src="/images/facebooklogo.png" class="w-5 h-5">
+
+            <span class="text-sm font-medium text-gray-700">
+
+              Continue with Facebook
+
+            </span>
+
+          </button> -->
+
+        </div>
+
+        <p class="text-center mt-4 text-sm">
+
+          Already have an account?
+
+          <a href="/login" class="text-blue-600">
+
+            Login
+
+          </a>
+
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    function togglePassword(
+      inputId,
+      iconId
+    ) {
+
+      const input =
+        document.getElementById(inputId);
+
+      const icon =
+        document.getElementById(iconId);
+
+
+      if (input.type === "password") {
+
+        input.type = "text";
+
+        icon.classList.remove("fa-eye");
+
+        icon.classList.add("fa-eye-slash");
+
+      }
+
+      else {
+
+        input.type = "password";
+
+        icon.classList.remove("fa-eye-slash");
+
+        icon.classList.add("fa-eye");
+
+      }
+
+    }
+
+
+    const passwordInput =
+      document.getElementById("password");
+
+
+    const lengthRule =
+      document.getElementById("lengthRule");
+
+    const uppercaseRule =
+      document.getElementById("uppercaseRule");
+
+    const lowercaseRule =
+      document.getElementById("lowercaseRule");
+
+    const numberRule =
+      document.getElementById("numberRule");
+
+    const specialRule =
+      document.getElementById("specialRule");
+
+
+    passwordInput.addEventListener("keyup", () => {
+
+      const password =
+        passwordInput.value;
+
+
+      if (password.length >= 8) {
+
+        lengthRule.innerHTML =
+          "✓ Minimum 8 characters";
+
+        lengthRule.className =
+          "text-green-600";
+
+      }
+
+      else {
+
+        lengthRule.innerHTML =
+          "✗ Minimum 8 characters";
+
+        lengthRule.className =
+          "text-gray-500";
+
+      }
+
+
+      if (/[A-Z]/.test(password)) {
+
+        uppercaseRule.innerHTML =
+          "✓ One uppercase letter";
+
+        uppercaseRule.className =
+          "text-green-600";
+
+      }
+
+      else {
+
+        uppercaseRule.innerHTML =
+          "✗ One uppercase letter";
+
+        uppercaseRule.className =
+          "text-gray-500";
+
+      }
+
+
+      if (/[a-z]/.test(password)) {
+
+        lowercaseRule.innerHTML =
+          "✓ One lowercase letter";
+
+        lowercaseRule.className =
+          "text-green-600";
+
+      }
+
+      else {
+
+        lowercaseRule.innerHTML =
+          "✗ One lowercase letter";
+
+        lowercaseRule.className =
+          "text-gray-500";
+
+      }
+
+
+      if (/[0-9]/.test(password)) {
+
+        numberRule.innerHTML =
+          "✓ One number";
+
+        numberRule.className =
+          "text-green-600";
+
+      }
+
+      else {
+
+        numberRule.innerHTML =
+          "✗ One number";
+
+        numberRule.className =
+          "text-gray-500";
+
+      }
+
+
+      if (/[^A-Za-z0-9]/.test(password)) {
+
+        specialRule.innerHTML =
+          "✓ One special character";
+
+        specialRule.className =
+          "text-green-600";
+
+      }
+
+      else {
+
+        specialRule.innerHTML =
+          "✗ One special character";
+
+        specialRule.className =
+          "text-gray-500";
+
+      }
+
+    });
+
+
+    const signupForm =
+      document.getElementById("signupForm");
+
+    const nameInput =
+      document.getElementById("name");
+
+    const emailInput =
+      document.getElementById("email");
+
+    const confirmPasswordInput =
+      document.getElementById("confirmPassword");
+
+    const phoneInput =
+      document.getElementById("phone");
+
+    const signupError =
+      document.getElementById("signupError");
+
+
+    signupForm.addEventListener("submit", (e) => {
+
+      signupError.innerText = "";
+
+
+      if (!nameInput.value.trim()) {
+
+        e.preventDefault();
+
+        signupError.innerText =
+          "Username is required";
+
+        return;
+
+      }
+
+
+      const emailPattern =
+        /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+
+      if (!emailInput.value.match(emailPattern)) {
+
+        e.preventDefault();
+
+        signupError.innerText =
+          "Enter valid email";
+
+        return;
+
+      }
+
+
+      if (passwordInput.value.length < 8) {
+
+        e.preventDefault();
+
+        signupError.innerText =
+          "Password must be at least 8 characters";
+
+        return;
+
+      }
+
+
+      if (!/[A-Z]/.test(passwordInput.value)) {
+
+        e.preventDefault();
+
+        signupError.innerText =
+          "Password needs one uppercase letter";
+
+        return;
+
+      }
+
+
+      if (!/[a-z]/.test(passwordInput.value)) {
+
+        e.preventDefault();
+
+        signupError.innerText =
+          "Password needs one lowercase letter";
+
+        return;
+
+      }
+
+
+      if (!/[0-9]/.test(passwordInput.value)) {
+
+        e.preventDefault();
+
+        signupError.innerText =
+          "Password needs one number";
+
+        return;
+
+      }
+
+
+      if (!/[^A-Za-z0-9]/.test(passwordInput.value)) {
+
+        e.preventDefault();
+
+        signupError.innerText =
+          "Password needs one special character";
+
+        return;
+
+      }
+
+
+      if (
+
+        passwordInput.value !==
+        confirmPasswordInput.value
+
+      ) {
+
+        e.preventDefault();
+
+        signupError.innerText =
+          "Passwords do not match";
+
+        return;
+
+      }
+
+
+      if (
+
+        phoneInput.value &&
+        !/^[0-9]{10}$/.test(phoneInput.value)
+
+      ) {
+
+        e.preventDefault();
+
+        signupError.innerText =
+          "Phone number must be 10 digits";
+
+        return;
+
+      }
+
+    });
+
+  </script>
+
+</body>
+
+</html>

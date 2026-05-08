@@ -1,0 +1,1134 @@
+<%- include("../partials/user/header") %>
+
+  <div class="bg-gray-100 min-h-screen py-10">
+
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6">
+
+      <!-- Heading -->
+
+      <div class="mb-8">
+
+        <h2 class="text-2xl font-bold text-gray-800">
+
+          Hello, <%= user?.name || "User" %>
+
+        </h2>
+
+        <p class="text-sm text-gray-500 mt-1">
+
+          Manage your account settings and orders
+
+        </p>
+
+      </div>
+
+
+      <div class="flex flex-col lg:flex-row gap-8">
+
+        <!-- Sidebar -->
+
+        <%- include("../partials/user/sidebar") %>
+
+
+          <!-- Main Content -->
+
+          <div class="flex-1 space-y-8">
+
+            <!-- Account Info -->
+
+            <div class="bg-white rounded-lg shadow-sm border">
+
+              <div class="px-6 py-4 border-b">
+
+                <h3 class="text-xs font-bold tracking-widest uppercase text-gray-700">
+
+                  Account Settings
+
+                </h3>
+
+              </div>
+
+
+              <div class="p-8">
+
+                <div class="flex flex-col md:flex-row gap-10">
+
+                  <!-- Avatar -->
+
+                  <div class="flex flex-col items-center gap-5">
+
+                    <% if (user?.profileImage) { %>
+
+                      <img src="<%= user.profileImage %>" alt="Profile"
+                        class="w-36 h-36 rounded-full object-cover border">
+
+                      <% } else { %>
+
+                        <div
+                          class="w-36 h-36 rounded-full bg-blue-600 flex items-center justify-center text-white text-5xl font-bold">
+
+                          <%= user?.name?.charAt(0).toUpperCase() %>
+
+                        </div>
+
+                        <% } %>
+
+
+                          <form action="/profile/update-profile-image" method="POST" enctype="multipart/form-data">
+
+                            <label
+                              class="bg-red-400 hover:bg-red-500 transition text-white text-xs font-semibold px-6 py-3 rounded-md uppercase tracking-wider cursor-pointer inline-block">
+
+                              Upload Photo
+
+                              <input type="file" name="profileImage" accept="image/*" onchange="this.form.submit()"
+                                hidden>
+
+                            </label>
+
+                          </form>
+
+                  </div>
+
+
+                  <!-- User Details -->
+
+                  <form action="/profile/account/update" method="POST" class="flex-1">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                      <!-- Name -->
+
+                      <div>
+
+                        <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+
+                          Name
+
+                        </label>
+
+                        <input type="text" name="name" value="<%= user?.name || '' %>"
+                          class="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:border-gray-500">
+
+                      </div>
+
+
+                      <!-- Email -->
+
+                      <div>
+
+                        <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+
+                          Email
+
+                        </label>
+
+                        <input type="email" name="email" value="<%= user?.email || '' %>"
+                          class="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:border-gray-500">
+
+                      </div>
+
+                    </div>
+
+
+                    <!-- Phone -->
+
+                    <div class="mt-6 max-w-md">
+
+                      <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+
+                        Phone Number
+
+                      </label>
+
+                      <input type="text" name="phone" value="<%= user?.phone || '' %>" placeholder="Enter phone number"
+                        maxlength="10" pattern="[0-9]{10}" required
+                        class="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:border-gray-500">
+                    </div>
+
+
+                    <!-- Save -->
+
+                    <div class="mt-8 flex justify-end">
+
+                      <button type="submit"
+                        class="bg-red-400 hover:bg-red-500 transition text-white text-xs font-semibold px-8 py-3 rounded-md uppercase tracking-wider">
+
+                        Save Changes
+
+                      </button>
+
+                    </div>
+
+                  </form>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- Address Section -->
+
+            <div id="address-section" class="bg-white rounded-lg shadow-sm border">
+
+              <!-- Header -->
+
+              <div class="px-6 py-4 border-b flex items-center justify-between">
+
+                <h3 class="text-xs font-bold tracking-widest uppercase text-gray-700">
+
+                  Addresses
+
+                </h3>
+
+
+                <button onclick="openAddressModal()"
+                  class="text-sm font-medium text-gray-500 hover:text-black flex items-center gap-2">
+
+                  <i class="fa-solid fa-plus"></i>
+
+                  Add Address
+
+                </button>
+
+              </div>
+
+
+              <!-- Address Content -->
+
+              <div class="p-6">
+
+                <% if (addresses && addresses.length> 0) { %>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+                    <% addresses.forEach((address)=> { %>
+
+                      <div class="border rounded-xl p-5 bg-gray-50 relative">
+
+                        <% if (address.isDefault) { %>
+
+                          <p class="text-sm text-red-500 font-semibold mb-4">
+
+                            Default Address
+
+                          </p>
+
+                          <% } %>
+
+
+                            <div class="space-y-2 text-[15px] text-gray-800">
+
+                              <p class="font-semibold">
+
+                                <%= address.fullName %>
+
+                              </p>
+
+                              <p>
+
+                                <%= address.address %>
+
+                              </p>
+
+                              <% if (address.landmark) { %>
+
+                                <p>
+
+                                  <%= address.landmark %>
+
+                                </p>
+
+                                <% } %>
+
+                                  <p>
+
+                                    <%= address.city %>,
+                                      <%= address.state %>
+
+                                  </p>
+
+                                  <p>
+
+                                    <%= address.pincode %>
+
+                                  </p>
+
+                                  <p>
+                                    India
+                                  </p>
+
+                                  <p class="pt-2">
+
+                                    +91 <%= address.phone %>
+
+                                  </p>
+
+                            </div>
+
+                      </div>
+
+                      <% }) %>
+
+                  </div>
+
+                  <% } else { %>
+
+                    <div class="border rounded-xl bg-gray-50 px-6 py-6 text-gray-500">
+
+                      No addresses added
+
+                    </div>
+
+                    <% } %>
+
+              </div>
+
+            </div>
+
+
+            <!-- Password Section -->
+
+            <div id="password-section" class="bg-white rounded-lg shadow-sm border">
+
+              <div class="px-6 py-4 border-b">
+
+                <h3 class="text-xs font-bold tracking-widest uppercase text-gray-700">
+
+                  Change Password
+
+                </h3>
+
+              </div>
+
+              <% if (passwordMessage) { %>
+
+                <div class="mb-6 px-8 pt-6">
+
+                  <div class="bg-red-100 text-red-600 px-4 py-3 rounded-lg text-sm">
+
+                    <%= passwordMessage %>
+
+                  </div>
+
+                </div>
+
+                <% } %>
+
+                  <form id="changePasswordForm" action="/profile/change-password" method="POST" class="p-8 space-y-6">
+
+                    <div>
+
+                      <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+
+                        Current Password
+
+                      </label>
+
+                      <div class="relative">
+
+                        <input type="password" id="currentPassword" name="currentPassword" required
+                          class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+
+                        <button type="button" onclick="togglePassword('currentPassword', 'currentPasswordIcon')"
+                          class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+
+                          <i id="currentPasswordIcon" class="fa-solid fa-eye"></i>
+
+                        </button>
+
+                      </div>
+
+                    </div>
+
+
+                    <div>
+
+                      <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+
+                        New Password
+
+                      </label>
+
+                      <div class="relative">
+
+                        <input type="password" id="newPassword" name="newPassword" required
+                          class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+
+                        <button type="button" onclick="togglePassword('newPassword', 'newPasswordIcon')"
+                          class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+
+                          <i id="newPasswordIcon" class="fa-solid fa-eye"></i>
+
+                        </button>
+
+                      </div>
+
+                      <div id="passwordRules" class="text-xs space-y-1 mt-3">
+
+                        <p id="lengthRule" class="text-gray-500">
+
+                          ✗ Minimum 8 characters
+
+                        </p>
+
+                        <p id="uppercaseRule" class="text-gray-500">
+
+                          ✗ One uppercase letter
+
+                        </p>
+
+                        <p id="lowercaseRule" class="text-gray-500">
+
+                          ✗ One lowercase letter
+
+                        </p>
+
+                        <p id="numberRule" class="text-gray-500">
+
+                          ✗ One number
+
+                        </p>
+
+                        <p id="specialRule" class="text-gray-500">
+
+                          ✗ One special character
+
+                        </p>
+
+                      </div>
+
+                    </div>
+
+
+                    <div>
+
+                      <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+
+                        Confirm Password
+
+                      </label>
+
+                      <div class="relative">
+
+                        <input type="password" id="confirmPassword" name="confirmPassword" required
+                          class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+
+                        <button type="button" onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')"
+                          class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+
+                          <i id="confirmPasswordIcon" class="fa-solid fa-eye"></i>
+
+                        </button>
+
+                      </div>
+
+                    </div>
+
+
+                    <p id="passwordError" class="text-red-500 text-sm"></p>
+
+
+                    <div class="pt-4">
+
+                      <button id="changePasswordButton" type="submit"
+                        class="bg-red-400 hover:bg-red-500 transition text-white text-xs font-semibold px-8 py-3 rounded-md uppercase tracking-wider">
+
+                        Change Password
+
+                      </button>
+
+                    </div>
+
+                  </form>
+
+            </div>
+
+
+            <!-- Address Modal -->
+            <div id="addressModal"
+              class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+
+              <!-- Modal Box -->
+              <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl relative overflow-hidden">
+
+                <!-- Scroll Area -->
+                <div class="max-h-[90vh] overflow-y-auto">
+
+                  <!-- Header -->
+                  <div class="flex items-center justify-between px-8 py-6 border-b">
+
+                    <h2 class="text-4xl font-semibold text-gray-900">
+                      Add address
+                    </h2>
+
+                    <button onclick="closeAddressModal()" class="text-4xl text-gray-500 hover:text-black">
+
+                      &times;
+
+                    </button>
+
+                  </div>
+
+                  <!-- Form -->
+                  <form action="/profile/add-address" method="POST" class="p-8 space-y-6">
+
+                    <!-- Full Name -->
+                    <div>
+
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Full Name
+                      </label>
+
+                      <input type="text" name="fullName" placeholder="Enter full name" required autofocus
+                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number
+                      </label>
+
+                      <div class="flex">
+
+                        <div class="px-5 py-4 border border-r-0 rounded-l-xl bg-gray-50 text-lg text-gray-600">
+
+                          +91
+
+                        </div>
+
+                        <input type="text" name="phone" maxlength="10" placeholder="9876543210" required
+                          class="w-full border rounded-r-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+
+                      </div>
+
+                    </div>
+
+                    <!-- Address -->
+                    <div>
+
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Address
+                      </label>
+
+                      <input type="text" name="address" placeholder="House number and street name" required
+                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+
+                    </div>
+
+                    <!-- Landmark -->
+                    <div>
+
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Apartment / Landmark
+                      </label>
+
+                      <input type="text" name="landmark" placeholder="Apartment, suite, landmark (optional)"
+                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+
+                    </div>
+
+                    <!-- Pincode -->
+                    <div>
+
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        PIN Code
+                      </label>
+
+                      <input id="pincode" type="text" name="pincode" maxlength="6" placeholder="Enter PIN code" required
+                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+
+                      <p id="pincodeMessage" class="text-sm text-gray-500 mt-2">
+                      </p>
+
+                    </div>
+
+                    <!-- City + State -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                      <!-- City -->
+                      <div>
+
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          City
+                        </label>
+
+                        <input id="city" type="text" name="city" placeholder="City" required
+                          class="w-full border rounded-xl px-5 py-4 text-lg bg-gray-50 focus:outline-none focus:border-black">
+
+                      </div>
+
+                      <!-- State -->
+                      <div>
+
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          State
+                        </label>
+
+                        <select id="state" name="state" required
+                          class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+
+                          <option value="">
+                            Select State
+                          </option>
+
+                        </select>
+
+                      </div>
+
+                    </div>
+
+                    <!-- Address Type -->
+                    <div>
+
+                      <label class="block text-sm font-medium text-gray-700 mb-3">
+                        Address Type
+                      </label>
+
+                      <div class="flex gap-3 flex-wrap">
+
+                        <label class="cursor-pointer">
+
+                          <input type="radio" name="addressType" value="Home" class="hidden peer" checked>
+
+                          <div class="px-5 py-2 rounded-full border peer-checked:bg-black peer-checked:text-white">
+
+                            Home
+
+                          </div>
+
+                        </label>
+
+                        <label class="cursor-pointer">
+
+                          <input type="radio" name="addressType" value="Work" class="hidden peer">
+
+                          <div class="px-5 py-2 rounded-full border peer-checked:bg-black peer-checked:text-white">
+
+                            Work
+
+                          </div>
+
+                        </label>
+
+                        <label class="cursor-pointer">
+
+                          <input type="radio" name="addressType" value="Other" class="hidden peer">
+
+                          <div class="px-5 py-2 rounded-full border peer-checked:bg-black peer-checked:text-white">
+
+                            Other
+
+                          </div>
+
+                        </label>
+
+                      </div>
+
+                    </div>
+
+                    <!-- Default Address -->
+                    <label class="flex items-center gap-3">
+
+                      <input type="checkbox" name="isDefault" class="w-5 h-5 rounded">
+
+                      <span class="text-lg text-gray-700">
+                        Make this my default address
+                      </span>
+
+                    </label>
+
+                    <!-- Buttons -->
+                    <div class="flex items-center justify-end gap-6 pt-6">
+
+                      <button type="button" onclick="closeAddressModal()"
+                        class="text-lg text-gray-500 hover:text-black">
+
+                        Cancel
+
+                      </button>
+
+                      <button type="submit"
+                        class="bg-black hover:bg-gray-800 text-white px-8 py-4 rounded-xl text-lg font-semibold transition">
+
+                        Save Address
+
+                      </button>
+
+                    </div>
+
+                  </form>
+
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+
+
+  <%- include("../partials/user/footer") %>
+
+
+    <script>
+
+      function openAddressModal() {
+
+        document
+          .getElementById("addressModal")
+          .classList.remove("hidden");
+
+        document.body.style.overflow = "hidden";
+
+      }
+
+
+      function closeAddressModal() {
+
+        document
+          .getElementById("addressModal")
+          .classList.add("hidden");
+
+        document.body.style.overflow = "auto";
+
+      }
+
+
+      // Indian States
+
+      const indianStates = [
+        "Andhra Pradesh",
+        "Arunachal Pradesh",
+        "Assam",
+        "Bihar",
+        "Chhattisgarh",
+        "Goa",
+        "Gujarat",
+        "Haryana",
+        "Himachal Pradesh",
+        "Jharkhand",
+        "Karnataka",
+        "Kerala",
+        "Madhya Pradesh",
+        "Maharashtra",
+        "Manipur",
+        "Meghalaya",
+        "Mizoram",
+        "Nagaland",
+        "Odisha",
+        "Punjab",
+        "Rajasthan",
+        "Sikkim",
+        "Tamil Nadu",
+        "Telangana",
+        "Tripura",
+        "Uttar Pradesh",
+        "Uttarakhand",
+        "West Bengal",
+        "Andaman and Nicobar Islands",
+        "Chandigarh",
+        "Delhi",
+        "Jammu and Kashmir",
+        "Ladakh",
+        "Lakshadweep",
+        "Puducherry"
+      ];
+
+
+      const stateSelect = document.getElementById("state");
+
+      indianStates.forEach(state => {
+
+        const option = document.createElement("option");
+
+        option.value = state;
+        option.textContent = state;
+
+        stateSelect.appendChild(option);
+
+      });
+
+
+      // Pincode Detection
+
+      const pincodeInput = document.getElementById("pincode");
+
+      pincodeInput.addEventListener("keyup", async () => {
+
+        const pincode = pincodeInput.value;
+
+        if (pincode.length === 6) {
+
+          try {
+
+            document.getElementById("pincodeMessage").innerText =
+              "Detecting location...";
+
+            const response = await fetch(
+              `https://api.postalpincode.in/pincode/${pincode}`
+            );
+
+            const data = await response.json();
+
+            if (
+              data[0].Status === "Success" &&
+              data[0].PostOffice.length > 0
+            ) {
+
+              const postOffice = data[0].PostOffice[0];
+
+              document.getElementById("city").value =
+                postOffice.District;
+
+              document.getElementById("state").value =
+                postOffice.State;
+
+              document.getElementById("pincodeMessage").innerText =
+                `Location detected: ${postOffice.District}, ${postOffice.State}`;
+
+            } else {
+
+              document.getElementById("city").value = "";
+              document.getElementById("state").value = "";
+
+              document.getElementById("pincodeMessage").innerText =
+                "Invalid PIN code";
+
+            }
+
+          } catch (err) {
+
+            console.log(err);
+
+            document.getElementById("pincodeMessage").innerText =
+              "Unable to fetch location";
+
+          }
+
+        }
+
+      });
+
+
+      // AUTO OPEN ADDRESS MODAL
+
+      const params = new URLSearchParams(window.location.search);
+
+      const shouldOpen =
+        params.get("openAddress");
+
+      if (shouldOpen === "true") {
+
+        openAddressModal();
+
+      }
+      const scrollToPassword =
+        "<%= scrollToPassword %>";
+
+      if (scrollToPassword === "true") {
+
+        window.addEventListener("load", () => {
+
+          document
+            .getElementById("password-section")
+            .scrollIntoView({
+
+              behavior: "smooth"
+
+            });
+
+        });
+
+      }
+      function togglePassword(
+        inputId,
+        iconId
+      ) {
+
+        const input =
+          document.getElementById(inputId);
+
+        const icon =
+          document.getElementById(iconId);
+
+
+        if (input.type === "password") {
+
+          input.type = "text";
+
+          icon.classList.remove("fa-eye");
+
+          icon.classList.add("fa-eye-slash");
+
+        }
+
+        else {
+
+          input.type = "password";
+
+          icon.classList.remove("fa-eye-slash");
+
+          icon.classList.add("fa-eye");
+
+        }
+
+      }
+      const changePasswordForm =
+        document.getElementById("changePasswordForm");
+
+      const currentPasswordInput =
+        document.getElementById("currentPassword");
+
+      const newPasswordInput =
+        document.getElementById("newPassword");
+
+      const confirmPasswordInput =
+        document.getElementById("confirmPassword");
+
+      const passwordError =
+        document.getElementById("passwordError");
+
+      const changePasswordButton =
+        document.getElementById("changePasswordButton");
+
+
+      const lengthRule =
+        document.getElementById("lengthRule");
+
+      const uppercaseRule =
+        document.getElementById("uppercaseRule");
+
+      const lowercaseRule =
+        document.getElementById("lowercaseRule");
+
+      const numberRule =
+        document.getElementById("numberRule");
+
+      const specialRule =
+        document.getElementById("specialRule");
+
+
+      newPasswordInput.addEventListener("keyup", () => {
+
+        const password =
+          newPasswordInput.value;
+
+
+        if (password.length >= 8) {
+
+          lengthRule.innerHTML =
+            "✓ Minimum 8 characters";
+
+          lengthRule.className =
+            "text-green-600";
+
+        }
+
+        else {
+
+          lengthRule.innerHTML =
+            "✗ Minimum 8 characters";
+
+          lengthRule.className =
+            "text-gray-500";
+
+        }
+
+
+        if (/[A-Z]/.test(password)) {
+
+          uppercaseRule.innerHTML =
+            "✓ One uppercase letter";
+
+          uppercaseRule.className =
+            "text-green-600";
+
+        }
+
+        else {
+
+          uppercaseRule.innerHTML =
+            "✗ One uppercase letter";
+
+          uppercaseRule.className =
+            "text-gray-500";
+
+        }
+
+
+        if (/[a-z]/.test(password)) {
+
+          lowercaseRule.innerHTML =
+            "✓ One lowercase letter";
+
+          lowercaseRule.className =
+            "text-green-600";
+
+        }
+
+        else {
+
+          lowercaseRule.innerHTML =
+            "✗ One lowercase letter";
+
+          lowercaseRule.className =
+            "text-gray-500";
+
+        }
+
+
+        if (/[0-9]/.test(password)) {
+
+          numberRule.innerHTML =
+            "✓ One number";
+
+          numberRule.className =
+            "text-green-600";
+
+        }
+
+        else {
+
+          numberRule.innerHTML =
+            "✗ One number";
+
+          numberRule.className =
+            "text-gray-500";
+
+        }
+
+
+        if (/[^A-Za-z0-9]/.test(password)) {
+
+          specialRule.innerHTML =
+            "✓ One special character";
+
+          specialRule.className =
+            "text-green-600";
+
+        }
+
+        else {
+
+          specialRule.innerHTML =
+            "✗ One special character";
+
+          specialRule.className =
+            "text-gray-500";
+
+        }
+
+      });
+
+
+      changePasswordForm.addEventListener("submit", (e) => {
+
+        passwordError.innerText = "";
+
+
+        if (!currentPasswordInput.value.trim()) {
+
+          e.preventDefault();
+
+          passwordError.innerText =
+            "Current password is required";
+
+          return;
+
+        }
+
+
+        if (newPasswordInput.value.length < 8) {
+
+          e.preventDefault();
+
+          passwordError.innerText =
+            "Password must be at least 8 characters";
+
+          return;
+
+        }
+
+
+        if (!/[A-Z]/.test(newPasswordInput.value)) {
+
+          e.preventDefault();
+
+          passwordError.innerText =
+            "Password needs one uppercase letter";
+
+          return;
+
+        }
+
+
+        if (!/[a-z]/.test(newPasswordInput.value)) {
+
+          e.preventDefault();
+
+          passwordError.innerText =
+            "Password needs one lowercase letter";
+
+          return;
+
+        }
+
+
+        if (!/[0-9]/.test(newPasswordInput.value)) {
+
+          e.preventDefault();
+
+          passwordError.innerText =
+            "Password needs one number";
+
+          return;
+
+        }
+
+
+        if (!/[^A-Za-z0-9]/.test(newPasswordInput.value)) {
+
+          e.preventDefault();
+
+          passwordError.innerText =
+            "Password needs one special character";
+
+          return;
+
+        }
+
+
+        if (
+
+          newPasswordInput.value !==
+          confirmPasswordInput.value
+
+        ) {
+
+          e.preventDefault();
+
+          passwordError.innerText =
+            "Passwords do not match";
+
+          return;
+
+        }
+
+
+        changePasswordButton.innerText =
+          "Updating...";
+
+        changePasswordButton.disabled = true;
+
+      });
+
+
+    </script>

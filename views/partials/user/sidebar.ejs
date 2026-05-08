@@ -1,0 +1,90 @@
+<aside class="w-full lg:w-[280px]">
+
+  <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+
+    <!-- Account -->
+
+    <a
+      href="/profile"
+      class="
+        flex items-center gap-4 px-6 py-4
+        <%= requestPath === '/profile'
+          ? 'bg-red-400 text-white'
+          : 'text-gray-600 hover:bg-gray-50'
+        %>
+      "
+    >
+
+      <i class="fa-regular fa-user text-lg"></i>
+
+      <span class="text-sm font-medium">
+
+        Account Details
+
+      </span>
+
+    </a>
+
+
+    <!-- Orders -->
+
+    <a
+      href="#"
+      class="flex items-center gap-4 px-6 py-4 border-b hover:bg-gray-50 text-gray-600"
+    >
+
+      <i class="fa-solid fa-clock-rotate-left"></i>
+
+      <span class="text-sm">
+
+        Order History
+
+      </span>
+
+    </a>
+
+
+    <!-- Address -->
+
+    <a
+      href="/profile/address"
+      class="
+        flex items-center gap-4 px-6 py-4 border-b
+        <%= requestPath.includes('/profile/address')
+          ? 'bg-red-400 text-white'
+          : 'text-gray-600 hover:bg-gray-50'
+        %>
+      "
+    >
+
+      <i class="fa-regular fa-address-card"></i>
+
+      <span class="text-sm">
+
+        Address
+
+      </span>
+
+    </a>
+
+
+    <!-- Wallet -->
+
+    <a
+      href="#"
+      class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 text-gray-600"
+    >
+
+      <i class="fa-solid fa-wallet"></i>
+
+      <span class="text-sm">
+
+        Wallet
+
+      </span>
+
+    </a>
+
+  </div>
+
+</aside>

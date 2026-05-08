@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>OTP Verification</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gray-100">
+
+  <div class="flex h-screen">
+
+    <div class="w-1/2 bg-gray-100 flex flex-col justify-center px-20 relative">
+
+      <h1 class="absolute top-8 left-20 text-xl font-semibold tracking-widest text-white">
+
+        ZIYAURA
+
+      </h1>
+
+      <div class="mt-16">
+
+        <p class="text-2xl text-gray-800 mb-6">
+
+          Secure verification for your account.
+
+        </p>
+
+        <img src="/images/signupimage.webp" class="rounded-lg shadow-md w-full max-w-md">
+
+      </div>
+
+    </div>
+
+    <div class="w-1/2 flex justify-center items-start py-10">
+
+      <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+
+        <h2 class="text-2xl font-semibold mb-2 text-center">
+
+          Verify OTP
+
+        </h2>
+
+        <p class="text-sm text-gray-500 text-center mb-6">
+
+          We have sent a 6-digit OTP to your email
+
+        </p>
+
+        <form id="otpForm" action="/verify-otp" method="POST" class="space-y-5">
+
+          <input type="hidden" name="email" value="<%= email %>">
+
+          <input id="otpInput" type="text" name="otp" maxlength="6" placeholder="------" required
+            class="w-full border rounded-xl p-4 text-center tracking-[10px] text-xl focus:outline-none focus:ring-2 focus:ring-blue-600">
+
+          <p id="otpError" class="text-red-500 text-sm text-center"></p>
+
+          <div class="px-8 pt-6">
+
+            <% if (success) { %>
+
+              <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg text-sm mb-4">
+
+                <%= success %>
+
+              </div>
+
+              <% } %>
+
+
+                <% if (error) { %>
+
+                  <div class="bg-red-100 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+
+                    <%= error %>
+
+                  </div>
+
+                  <% } %>
+
+          </div>
+
+          <button id="verifyButton" type="submit"
+            class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-semibold">
+
+            Verify OTP
+
+          </button>
+
+        </form>
+
+        <div class="mt-6 text-center">
+
+          <p id="timer" class="text-sm text-gray-500">
+
+            OTP expires in 05:00
+
+          </p>
+
+          <form id="resendForm" action="/send-otp" method="POST" class="hidden mt-4">
+
+            <input type="hidden" name="email" value="<%= email %>">
+
+            <button id="resendButton" type="submit" class="text-blue-600 font-semibold hover:text-blue-800">
+
+              Resend OTP
+
+            </button>
+
+          </form>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    const otpForm =
+      document.getElementById("otpForm");
+
+    const otpInput =
+      document.getElementById("otpInput");
+
+    const otpError =
+      document.getElementById("otpError");
+
+    const verifyButton =
+      document.getElementById("verifyButton");
+
+    const timer =
+      document.getElementById("timer");
+
+    const resendForm =
+      document.getElementById("resendForm");
+
+    const resendButton =
+      document.getElementById("resendButton");
+
+
+    otpForm.addEventListener("submit", (e) => {
+
+      otpError.innerText = "";
+
+
+      if (!/^[0-9]{6}$/.test(otpInput.value)) {
+
+        e.preventDefault();
+
+        otpError.innerText =
+          "Enter valid 6-digit OTP";
+
+        return;
+
+      }
+
+
+      verifyButton.innerText =
+        "Verifying...";
+
+      verifyButton.disabled = true;
+
+    });
+
+
+    let timeLeft = 300;
+
+
+    const countdown = setInterval(() => {
+
+      const minutes =
+        Math.floor(timeLeft / 60);
+
+      const seconds =
+        timeLeft % 60;
+
+
+      timer.innerText =
+        `OTP expires in ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+
+      timeLeft--;
+
+
+      if (timeLeft < 0) {
+
+        clearInterval(countdown);
+
+        timer.innerText =
+          "OTP expired";
+
+        timer.classList.remove("text-gray-500");
+
+        timer.classList.add("text-red-500");
+
+        resendForm.classList.remove("hidden");
+
+      }
+
+    }, 1000);
+
+
+    resendForm.addEventListener("submit", () => {
+
+      resendButton.innerText =
+        "Sending...";
+
+      resendButton.disabled = true;
+
+    });
+
+  </script>
+
+</body>
+
+</html>

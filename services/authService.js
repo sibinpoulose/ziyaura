@@ -62,9 +62,20 @@ export const sendOtp = async (email) => {
   user.isVerified = false;
 
   await user.save();
-  await sendMail(email,otp)
 
-  console.log("OTP:", otp);
+   console.log("========== OTP ==========");
+  console.log(otp);
+  console.log("=========================");
+
+  try {
+
+    await sendMail(email, otp);
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
 
   return { message: "OTP sent" };
 };
