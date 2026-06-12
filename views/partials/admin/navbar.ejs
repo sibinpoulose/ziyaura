@@ -1,0 +1,132 @@
+<aside class="w-64 bg-[#F8F9FB] border-r border-gray-100 flex flex-col py-8 px-6 fixed h-full">
+
+    <!-- Branding -->
+
+    <div class="flex items-center gap-2 mb-12">
+
+        <h1 class="text-xl font-black tracking-tighter flex items-center">
+
+            ZIYAURA
+
+        </h1>
+
+    </div>
+
+
+    <!-- Navigation -->
+
+    <nav class="flex flex-col flex-grow space-y-8">
+
+        <!-- Menu -->
+
+        <div class="space-y-2">
+
+            <p class="text-[10px] font-bold text-blue-400 tracking-widest uppercase mb-4">
+
+                Menu
+
+            </p>
+
+
+            <a
+                href="/admin/dashboard"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+            >
+
+                <i class="fa-solid fa-table-cells-large"></i>
+
+                Dashboard
+
+            </a>
+
+
+            <a
+                href="/admin/products"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/products') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+            >
+
+                <i class="fa-solid fa-box"></i>
+
+                Products
+
+            </a>
+
+
+            <a
+                href="/admin/categories"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/categories') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+            >
+
+                <i class="fa-solid fa-layer-group"></i>
+
+                Category
+
+            </a>
+
+
+            <a
+                href="#"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+            >
+
+                <i class="fa-solid fa-receipt"></i>
+
+                Orders
+
+            </a>
+
+        </div>
+
+
+        <!-- USER MANAGEMENT -->
+
+        <div class="space-y-2">
+
+            <p class="text-[10px] font-bold text-blue-400 tracking-widest uppercase mb-4">
+
+                User Management
+
+            </p>
+
+
+            <a
+                href="/admin/customers"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+            >
+
+                <i class="fa-solid fa-user-group"></i>
+
+                Customers
+
+            </a>
+
+        </div>
+
+
+        <!-- OTHERS -->
+
+        <div class="mt-auto space-y-2 pt-10">
+
+            <p class="text-[10px] font-bold text-blue-400 tracking-widest uppercase mb-4">
+
+                Others
+
+            </p>
+
+
+            <a
+                href="/admin/logout"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-400 hover:text-red-600 transition-colors"
+            >
+
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+
+                Logout
+
+            </a>
+
+        </div>
+
+    </nav>
+
+</aside>

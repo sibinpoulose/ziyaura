@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Category Management
+  </title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    rel="stylesheet"
+  >
+
+</head>
+
+<body
+  class="bg-[#F3F6F9]"
+>
+
+<%- include("../../partials/admin/navbar") %>
+
+<main
+  class="ml-64 p-10"
+>
+
+  <!-- HEADER -->
+
+  <div
+    class="flex justify-between items-center mb-8"
+  >
+
+    <div>
+
+      <h1
+        class="text-3xl font-bold"
+      >
+
+        Category Management
+
+      </h1>
+
+      <p
+        class="text-gray-400 mt-1"
+      >
+
+        Manage all categories
+
+      </p>
+
+    </div>
+
+    <a
+
+      href="/admin/categories/add"
+
+      class="
+        bg-blue-600
+        text-white
+        px-6
+        py-3
+        rounded-lg
+        hover:bg-blue-700
+      "
+
+    >
+
+      + Add Category
+
+    </a>
+
+  </div>
+
+  <!-- SEARCH -->
+
+  <div
+    class="
+      bg-white
+      rounded-xl
+      p-5
+      mb-6
+      shadow-sm
+    "
+  >
+
+    <form
+
+      action="/admin/categories"
+
+      method="GET"
+
+      class="flex gap-3"
+
+    >
+
+      <input
+
+        type="text"
+
+        name="search"
+
+        value="<%= search %>"
+
+        placeholder="Search Category"
+
+        class="
+          border
+          px-4
+          py-3
+          rounded-lg
+          w-96
+          focus:outline-none
+          focus:ring-2
+          focus:ring-blue-500
+        "
+
+      >
+
+      <button
+
+        type="submit"
+
+        class="
+          bg-black
+          text-white
+          px-5
+          rounded-lg
+        "
+
+      >
+
+        Search
+
+      </button>
+
+      <a
+
+        href="/admin/categories"
+
+        class="
+          bg-gray-200
+          px-5
+          py-3
+          rounded-lg
+        "
+
+      >
+
+        Clear
+
+      </a>
+
+    </form>
+
+  </div>
+  <form
+  action="/admin/categories"
+  method="GET"
+  class="flex gap-3"
+>
+
+  <input
+    type="hidden"
+    name="search"
+    value="<%= search %>"
+  >
+
+  <select
+    name="sort"
+    onchange="this.form.submit()"
+    class="
+      border
+      px-4
+      py-3
+      rounded-lg
+    "
+  >
+
+    <option value="">
+      Sort By
+    </option>
+
+    <option
+      value="newest"
+      <%= sort === 'newest' ? 'selected' : '' %>
+    >
+      Newest First
+    </option>
+
+    <option
+      value="oldest"
+      <%= sort === 'oldest' ? 'selected' : '' %>
+    >
+      Oldest First
+    </option>
+
+    <option
+      value="az"
+      <%= sort === 'az' ? 'selected' : '' %>
+    >
+      A - Z
+    </option>
+
+    <option
+      value="za"
+      <%= sort === 'za' ? 'selected' : '' %>
+    >
+      Z - A
+    </option>
+
+  </select>
+
+</form>
+
+  <!-- TABLE -->
+
+  <div
+    class="
+      bg-white
+      rounded-xl
+      overflow-hidden
+      shadow-sm
+    "
+  >
+
+    <table
+      class="w-full"
+    >
+
+      <thead>
+
+        <tr
+          class="
+            border-b
+            text-left
+            bg-gray-50
+          "
+        >
+
+          <th class="p-4">
+            Image
+          </th>
+
+          <th class="p-4">
+            Category
+          </th>
+
+          <th class="p-4">
+            Variants
+          </th>
+
+          <th class="p-4">
+            Products
+          </th>
+
+         
+
+          <th class="p-4">
+            Added Date
+          </th>
+
+           <th class="p-4">
+            Featured
+          </th>
+
+          <th class="p-4">
+            Status
+          </th>
+
+          <th class="p-4">
+            Action
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+      <% if(categories.length > 0){ %>
+
+      <% categories.forEach(category => { %>
+
+        <tr
+          class="
+            border-b
+            hover:bg-gray-50
+          "
+        >
+
+          <td class="p-4">
+
+            <img
+
+              src="<%= category.image %>"
+
+              alt="<%= category.name %>"
+
+              class="
+                w-14
+                h-14
+                rounded-lg
+                object-cover
+              "
+
+            >
+
+          </td>
+
+          <td class="p-4 font-medium">
+
+            <%= category.name %>
+
+          </td>
+
+          <td class="p-4">
+            <% if (category.variantTypes && category.variantTypes.length > 0) { %>
+              <div class="flex flex-wrap gap-1">
+                <% category.variantTypes.forEach(v => { %>
+                  <span class="bg-gray-100 text-gray-800 text-xs px-2 py-0.5 rounded border font-medium">
+                    <%= v.name %>
+                  </span>
+                <% }) %>
+              </div>
+            <% } else { %>
+              <span class="text-gray-400 text-xs">-</span>
+            <% } %>
+          </td>
+
+          <td class="p-4">
+
+            0
+
+          </td>
+
+          
+
+          <td class="p-4">
+
+            <%= category.createdAt.toDateString() %>
+
+          </td>
+
+          <td class="p-4">
+            <button
+              onclick="toggleFeaturedStatus('<%= category._id %>')"
+              class="focus:outline-none transition-colors duration-150 flex items-center gap-1 text-xs font-semibold"
+            >
+              <% if(category.isFeatured){ %>
+                <span class="text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <i class="fa-solid fa-star"></i> Featured
+                </span>
+              <% } else { %>
+                <span class="text-gray-400 hover:text-gray-600 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <i class="fa-regular fa-star"></i> Standard
+                </span>
+              <% } %>
+            </button>
+          </td>
+
+          <td class="p-4">
+
+            <% if(category.isListed){ %>
+
+              <span
+                class="
+                  bg-green-100
+                  text-green-700
+                  px-3
+                  py-1
+                  rounded-full
+                  text-sm
+                "
+              >
+
+                Listed
+
+              </span>
+
+            <% } else { %>
+
+              <span
+                class="
+                  bg-red-100
+                  text-red-700
+                  px-3
+                  py-1
+                  rounded-full
+                  text-sm
+                "
+              >
+
+                Unlisted
+
+              </span>
+
+            <% } %>
+
+          </td>
+
+          <td class="p-4">
+
+            <div
+              class="flex gap-4"
+            >
+
+              <a
+
+                href="/admin/categories/edit/<%= category._id %>"
+
+                class="
+                  text-blue-600
+                  font-medium
+                "
+
+              >
+
+                Edit
+
+              </a>
+              <button
+
+onclick="toggleCategoryStatus('<%= category._id %>')"
+
+class="
+  <%= category.isListed
+  ? 'text-red-600'
+  : 'text-green-600'
+  %>
+
+  font-medium
+"
+
+>
+
+<%= category.isListed
+? 'Unlist'
+: 'List'
+%>
+
+</button>
+              
+            </div>
+
+          </td>
+
+        </tr>
+
+      <% }) %>
+
+      <% } else { %>
+
+        <tr>
+
+          <td
+            colspan="7"
+            class="
+              text-center
+              py-10
+              text-gray-500
+            "
+          >
+
+            No categories found
+
+          </td>
+
+        </tr>
+
+      <% } %>
+
+      </tbody>
+
+    </table>
+
+    <!-- PAGINATION -->
+
+    <% if(totalPages > 1){ %>
+
+    <div
+      class="
+        flex
+        justify-center
+        items-center
+        gap-2
+        py-6
+      "
+    >
+
+      <% for(let i = 1; i <= totalPages; i++){ %>
+
+      <a
+
+        href="/admin/categories?page=<%= i %>&search=<%= search %>"
+
+        class="
+          px-4
+          py-2
+          rounded-lg
+          border
+
+          <%= currentPage === i
+          ? 'bg-blue-600 text-white border-blue-600'
+          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+          %>
+        "
+
+      >
+
+        <%= i %>
+
+      </a>
+
+      <% } %>
+
+    </div>
+
+    <% } %>
+
+  </div>
+
+</main>
+
+<%- include("../../partials/toast") %>
+
+</body>
+<script>
+
+async function toggleCategoryStatus(id){
+
+  try{
+
+    const response =
+      await fetch(
+
+        `/admin/categories/toggle/${id}`,
+
+        {
+          method: "PATCH"
+        }
+
+      );
+
+    const data =
+      await response.json();
+
+    if(data.success){
+
+      location.reload();
+
+    }
+
+  }catch(error){
+
+    console.log(error);
+
+  }
+
+}
+
+async function toggleFeaturedStatus(id) {
+  try {
+    const response = await fetch(`/admin/categories/toggle-featured/${id}`, {
+      method: "PATCH"
+    });
+
+    const data = await response.json();
+    if (response.ok && data.success) {
+      location.reload();
+    } else {
+      if (typeof showToast === 'function') {
+        showToast(data.message || 'Failed to toggle featured status', 'error');
+      } else {
+        alert(data.message || 'Failed to toggle featured status');
+      }
+    }
+  } catch (error) {
+    console.error("Toggle featured error:", error);
+    alert('Something went wrong');
+  }
+}
+
+</script>
+</html>

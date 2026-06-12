@@ -26,26 +26,7 @@
     <%- include("../partials/user/header") %>
     <div class="max-w-7xl mx-auto px-4 pt-6">
 
-  <% if (success) { %>
 
-    <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg text-sm mb-4 text-center">
-
-      <%= success %>
-
-    </div>
-
-  <% } %>
-
-
-  <% if (error) { %>
-
-    <div class="bg-red-100 text-red-700 px-4 py-3 rounded-lg text-sm mb-4 text-center">
-
-      <%= error %>
-
-    </div>
-
-  <% } %>
 
 </div>
 
@@ -61,21 +42,20 @@
     <!-- Categories Grid -->
     <section class="max-w-7xl mx-auto px-4 py-16">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
-            <% const categories = [
-                { name: 'RINGS', img: 'homeimages/ring.jpeg' },
-                { name: 'CHAINS', img: 'homeimages/chain.jpg' },
-                { name: 'BRACELETS', img: 'homeimages/bracelet.jpg' },
-                { name: 'EARRINGS', img: 'homeimages/earings.jpg' }
-            ]; %>
-            
-            <% categories.forEach(cat => { %>
-                <div class="group cursor-pointer">
-                    <div class="aspect-square overflow-hidden bg-gray-100 mb-4">
-                        <img src="<%= cat.img %>" alt="<%= cat.name %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    </div>
-                    <p class="category-label font-bold text-[14px] text-gray-800 tracking-widest"><%= cat.name %></p>
+            <% if (typeof featuredCategories !== 'undefined' && featuredCategories.length > 0) { %>
+                <% featuredCategories.forEach(cat => { %>
+                    <a href="/products?category=<%= cat.slug %>" class="group cursor-pointer block">
+                        <div class="aspect-square overflow-hidden bg-gray-100 mb-4">
+                            <img src="<%= cat.image || 'homeimages/placeholder.jpg' %>" alt="<%= cat.name %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <p class="category-label font-bold text-[14px] text-gray-800 tracking-widest uppercase"><%= cat.name %></p>
+                    </a>
+                <% }); %>
+            <% } else { %>
+                <div class="col-span-4 py-8 text-center text-xs text-gray-400 font-bold tracking-widest uppercase">
+                  No Categories Available
                 </div>
-            <% }); %>
+            <% } %>
         </div>
     </section>
 
@@ -156,5 +136,6 @@
 
    <%-include("../partials/user/footer") %>
 
+  <%- include("../partials/toast") %>
 </body>
 </html>

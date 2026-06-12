@@ -28,31 +28,7 @@
                                     <p class="text-gray-500 mt-2">
                                         Manage your shipping addresses
                                     </p>
-                                    <div class="mt-6">
 
-                                        <% if (success) { %>
-
-                                            <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg text-sm mb-4">
-
-                                                <%= success %>
-
-                                            </div>
-
-                                            <% } %>
-
-
-                                                <% if (error) { %>
-
-                                                    <div
-                                                        class="bg-red-100 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
-
-                                                        <%= error %>
-
-                                                    </div>
-
-                                                    <% } %>
-
-                                    </div>
 
                                 </div>
 
@@ -226,3 +202,4 @@
     </div>
 
     <%- include("../partials/user/footer") %>
+    <%- include("../partials/toast") %>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Management - ZIYAURA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-[#F3F6F9]">
+
+<%- include("../../partials/admin/navbar") %>
+
+<main class="ml-64 p-10">
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold">Product Management</h1>
+      <p class="text-gray-400 mt-1">Manage and track your jewelry products</p>
+    </div>
+    <a href="/admin/products/add" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium transition-colors">
+      + Add Product
+    </a>
+  </div>
+
+  <!-- FILTERS & SEARCH -->
+  <div class="bg-white rounded-xl p-5 mb-6 shadow-sm">
+    <form action="/admin/products" method="GET" class="flex flex-wrap items-center gap-4">
+      <!-- Search input -->
+      <div class="relative flex-1 min-w-[280px]">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </span>
+        <input
+          type="text"
+          name="search"
+          value="<%= search %>"
+          placeholder="Search by name or brand..."
+          class="border w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+      </div>
+
+      <!-- Category Filter -->
+      <select
+        name="category"
+        class="border px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+      >
+        <option value="">All Categories</option>
+        <% categories.forEach(cat => { %>
+          <option value="<%= cat._id %>" <%= categoryFilter === cat._id.toString() ? 'selected' : '' %>>
+            <%= cat.name %>
+          </option>
+        <% }) %>
+      </select>
+
+      <!-- Sort Filter -->
+      <select
+        name="sort"
+        class="border px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+      >
+        <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>Newest First</option>
+        <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+        <option value="az" <%= sort === 'az' ? 'selected' : '' %>>Name A - Z</option>
+        <option value="za" <%= sort === 'za' ? 'selected' : '' %>>Name Z - A</option>
+        <option value="priceAsc" <%= sort === 'priceAsc' ? 'selected' : '' %>>Price: Low to High</option>
+        <option value="priceDesc" <%= sort === 'priceDesc' ? 'selected' : '' %>>Price: High to Low</option>
+      </select>
+
+      <button type="submit" class="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium">
+        Filter
+      </button>
+      <a href="/admin/products" class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium text-gray-700">
+        Reset
+      </a>
+    </form>
+  </div>
+
+  <!-- TABLE -->
+  <div class="bg-white rounded-xl overflow-hidden shadow-sm">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="border-b text-gray-500 bg-gray-50 font-semibold text-sm">
+          <th class="p-4">Image</th>
+          <th class="p-4">Product Name</th>
+          <th class="p-4">Category</th>
+          <th class="p-4">SKU / Variants</th>
+          <th class="p-4">Price</th>
+          <th class="p-4">Stock</th>
+          <th class="p-4">Status</th>
+          <th class="p-4 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (products.length > 0) { %>
+          <% products.forEach(product => { %>
+            <tr class="border-b hover:bg-gray-50 transition-colors">
+              <!-- Image -->
+              <td class="p-4">
+                <img
+                  src="<%= product.images && product.images.length > 0 ? product.images[0] : '/placeholder-product.png' %>"
+                  alt="<%= product.name %>"
+                  class="w-16 h-16 rounded-lg object-cover border"
+                >
+              </td>
+
+              <!-- Name & Brand -->
+              <td class="p-4">
+                <div class="font-bold text-gray-800"><%= product.name %></div>
+                <div class="text-xs text-gray-400 font-medium"><%= product.brand || 'No Brand' %></div>
+              </td>
+
+              <!-- Category -->
+              <td class="p-4">
+                <span class="text-sm font-semibold bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-100">
+                  <%= product.category ? product.category.name : 'Unknown' %>
+                </span>
+              </td>
+
+              <!-- SKU / Variants Count -->
+              <td class="p-4 text-sm text-gray-600">
+                <% if (product.variants && product.variants.length > 0) { %>
+                  <span class="text-xs font-semibold bg-purple-50 text-purple-700 px-2 py-1 rounded border border-purple-100">
+                    <%= product.variants.length %> Variants
+                  </span>
+                <% } else { %>
+                  <code class="text-xs font-mono"><%= product.sku %></code>
+                <% } %>
+              </td>
+
+              <!-- Price -->
+              <td class="p-4 text-sm font-bold text-gray-900">
+                <% if (product.variants && product.variants.length > 0) {
+                  const prices = product.variants.map(v => v.price);
+                  const minPrice = Math.min(...prices);
+                  const maxPrice = Math.max(...prices);
+                %>
+                  <% if (minPrice === maxPrice) { %>
+                    ₹<%= minPrice.toLocaleString() %>
+                  <% } else { %>
+                    ₹<%= minPrice.toLocaleString() %> - ₹<%= maxPrice.toLocaleString() %>
+                  <% } %>
+                <% } else { %>
+                  <% if (product.salePrice) { %>
+                    <span class="text-red-500">₹<%= product.salePrice.toLocaleString() %></span>
+                    <span class="text-gray-400 line-through text-xs ml-1">₹<%= product.price.toLocaleString() %></span>
+                  <% } else { %>
+                    ₹<%= product.price.toLocaleString() %>
+                  <% } %>
+                <% } %>
+              </td>
+
+              <!-- Stock -->
+              <td class="p-4">
+                <%
+                  let totalStock = 0;
+                  if (product.variants && product.variants.length > 0) {
+                    totalStock = product.variants.reduce((acc, v) => acc + v.stock, 0);
+                  } else {
+                    totalStock = product.stock;
+                  }
+                %>
+                <% if (totalStock === 0) { %>
+                  <span class="bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                    Out of Stock
+                  </span>
+                <% } else if (totalStock < 5) { %>
+                  <span class="bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                    Low Stock (<%= totalStock %>)
+                  </span>
+                <% } else { %>
+                  <span class="text-gray-700 font-medium text-sm"><%= totalStock %> units</span>
+                <% } %>
+              </td>
+
+              <!-- Status -->
+              <td class="p-4">
+                <% if (product.isListed) { %>
+                  <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                    Listed
+                  </span>
+                <% } else { %>
+                  <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">
+                    Unlisted
+                  </span>
+                <% } %>
+              </td>
+
+              <!-- Actions -->
+              <td class="p-4">
+                <div class="flex items-center justify-center gap-3">
+                  <!-- Edit -->
+                  <a href="/admin/products/edit/<%= product._id %>" class="text-blue-600 hover:text-blue-800 font-semibold text-sm" title="Edit Product">
+                    Edit
+                  </a>
+                  <!-- Toggle List -->
+                  <button
+                    onclick="toggleProductStatus('<%= product._id %>')"
+                    class="font-semibold text-sm <%= product.isListed ? 'text-amber-600 hover:text-amber-800' : 'text-green-600 hover:text-green-800' %>"
+                  >
+                    <%= product.isListed ? 'Unlist' : 'List' %>
+                  </button>
+                  <!-- Soft Delete -->
+                  <button
+                    onclick="confirmDeleteProduct('<%= product._id %>', '<%= product.name %>')"
+                    class="text-red-600 hover:text-red-800 font-semibold text-sm"
+                    title="Delete Product"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="text-center py-12 text-gray-500">
+              <i class="fa-regular fa-folder-open text-3xl mb-2 block"></i>
+              No products found
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+
+    <!-- PAGINATION -->
+    <% if (totalPages > 1) { %>
+      <div class="flex justify-center items-center gap-2 py-6 border-t bg-gray-50">
+        <% for(let i = 1; i <= totalPages; i++){ %>
+          <a
+            href="/admin/products?page=<%= i %>&search=<%= search %>&category=<%= categoryFilter %>&sort=<%= sort %>"
+            class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors <%= currentPage === i ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100' %>"
+          >
+            <%= i %>
+          </a>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include("../../partials/toast") %>
+
+<script>
+// Toggle list status via AJAX
+async function toggleProductStatus(id) {
+  try {
+    const response = await fetch(`/admin/products/toggle/${id}`, {
+      method: "PATCH"
+    });
+    const data = await response.json();
+    if (data.success) {
+      location.reload();
+    } else {
+      alert(data.message || "Something went wrong");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Network error. Please try again.");
+  }
+}
+
+// Soft delete via AJAX
+async function confirmDeleteProduct(id, name) {
+  if (confirm(`Are you sure you want to delete "${name}"?`)) {
+    try {
+      const response = await fetch(`/admin/products/delete/${id}`, {
+        method: "DELETE"
+      });
+      const data = await response.json();
+      if (data.success) {
+        location.reload();
+      } else {
+        alert(data.message || "Unable to delete product");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Network error. Please try again.");
+    }
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZIYAURA | Wishlist</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-900 min-h-screen flex flex-col justify-between">
+
+  <!-- Header -->
+  <%- include("../partials/user/header") %>
+
+  <!-- Wishlist Section -->
+  <main class="max-w-[1440px] mx-auto px-4 md:px-8 py-8 flex-grow w-full">
+    
+    <!-- Breadcrumbs -->
+    <nav class="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-8">
+      <a href="/home" class="hover:text-black">Home</a>
+      <span class="mx-2">/</span>
+      <span class="text-black">Wishlist</span>
+    </nav>
+
+    <h1 class="text-xl md:text-2xl font-bold tracking-tight text-gray-900 mb-8">
+      YOUR WISHLIST
+      <span class="text-sm font-normal text-gray-400 ml-2" id="wishlist-count">(<%= wishlistItems.length %> items)</span>
+    </h1>
+
+    <% if (wishlistItems.length > 0) { %>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8" id="wishlist-grid">
+        <% wishlistItems.forEach(item => { %>
+          
+          <!-- Wishlist Item Card -->
+          <div 
+            class="group flex flex-col justify-between h-full bg-white border border-gray-50 hover:shadow-md transition-shadow duration-300 rounded-sm overflow-hidden p-3 relative"
+            id="wishlist-card-<%= item.productId %>"
+          >
+            
+            <!-- Remove Button -->
+            <form action="/wishlist/remove/<%= item._id %>" method="POST" class="absolute top-4 right-4 z-10">
+              <button 
+                type="submit" 
+                class="w-7 h-7 bg-white/90 backdrop-blur-sm border border-gray-100 hover:border-black text-gray-400 hover:text-black rounded-full flex items-center justify-center transition-all shadow-sm"
+                title="Remove from wishlist"
+              >
+                <i class="fa-solid fa-xmark text-[11px]"></i>
+              </button>
+            </form>
+
+            <!-- Discount Badge -->
+            <% if (item.hasDiscount) { %>
+              <div class="absolute top-4 left-4 bg-black text-white text-[9px] font-bold tracking-widest px-2 py-0.5 z-10 rounded-sm">
+                SAVE <%= item.discountPercent %>%
+              </div>
+            <% } %>
+
+            <!-- Product Image -->
+            <div class="aspect-square bg-gray-50 overflow-hidden mb-3 rounded-sm">
+              <a href="/product/<%= item.slug %>">
+                <img
+                  src="<%= item.image %>"
+                  alt="<%= item.name %>"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                >
+              </a>
+            </div>
+
+            <!-- Content details -->
+            <div class="flex flex-col flex-grow justify-between">
+              <div>
+                <span class="text-[8px] font-bold text-gray-400 tracking-wider uppercase block mb-0.5">
+                  <%= item.brand || 'ZIYAURA' %>
+                </span>
+                <a href="/product/<%= item.slug %>" class="text-xs font-bold text-gray-800 tracking-tight leading-snug hover:text-black line-clamp-2 transition-colors mb-2">
+                  <%= item.name %>
+                </a>
+
+                <!-- Price -->
+                <div class="flex items-baseline gap-2 mb-3">
+                  <span class="text-xs font-bold text-black">
+                    ₹<%= (item.salePrice !== null ? item.salePrice : item.price).toLocaleString() %>
+                  </span>
+                  <% if (item.hasDiscount) { %>
+                    <span class="text-[9px] text-gray-400 line-through font-semibold">
+                      ₹<%= item.price.toLocaleString() %>
+                    </span>
+                  <% } %>
+                </div>
+              </div>
+
+              <!-- Stock & Actions -->
+              <div class="space-y-2 pt-2 border-t border-gray-50 mt-auto">
+                <div class="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider">
+                  <span>Status:</span>
+                  <% if (item.inStock) { %>
+                    <span class="text-emerald-600">IN STOCK</span>
+                  <% } else { %>
+                    <span class="text-rose-500">SOLD OUT</span>
+                  <% } %>
+                </div>
+
+                <% if (item.inStock) { %>
+                  <% if (item.variantsCount > 0) { %>
+                    <!-- Has Variants -> Redirect to select options -->
+                    <a
+                      href="/product/<%= item.slug %>"
+                      class="block w-full bg-black text-white hover:bg-gray-800 py-2 text-[9px] font-bold tracking-widest uppercase text-center rounded-sm transition-colors"
+                    >
+                      SELECT OPTIONS
+                    </a>
+                  <% } else { %>
+                    <!-- Simple product -> Add directly -->
+                    <button
+                      type="button"
+                      onclick="moveToBag('<%= item.productId %>')"
+                      class="w-full bg-black text-white hover:bg-gray-800 py-2 text-[9px] font-bold tracking-widest uppercase rounded-sm transition-colors"
+                    >
+                      ADD TO BAG
+                    </button>
+                  <% } %>
+                <% } else { %>
+                  <button
+                    disabled
+                    class="w-full bg-gray-150 text-gray-400 py-2 text-[9px] font-bold tracking-widest uppercase rounded-sm cursor-not-allowed"
+                  >
+                    OUT OF STOCK
+                  </button>
+                <% } %>
+              </div>
+            </div>
+
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <!-- Empty Wishlist State -->
+      <div class="text-center py-20 bg-gray-50 rounded-sm border border-dashed border-gray-200">
+        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <i class="fa-regular fa-heart text-2xl text-gray-400"></i>
+        </div>
+        <h3 class="text-sm font-bold tracking-widest text-gray-800 uppercase mb-2">Your Wishlist is Empty</h3>
+        <p class="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed mb-6">
+          You haven't saved any items to your wishlist yet. Browse our collections and click the heart icon to save products.
+        </p>
+        <a
+          href="/products"
+          class="inline-block bg-black hover:bg-gray-800 text-white text-[10px] font-bold tracking-widest uppercase px-8 py-3 rounded-sm transition-colors"
+        >
+          EXPLORE CATALOG
+        </a>
+      </div>
+    <% } %>
+
+  </main>
+
+  <!-- Footer -->
+  <%- include("../partials/user/footer") %>
+
+  <!-- Toast system -->
+  <%- include("../partials/toast") %>
+
+  <script>
+    async function moveToBag(productId) {
+      try {
+        const response = await fetch('/cart/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, quantity: 1 })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast(data.message, 'success');
+          
+          // Remove the product card from the wishlist view dynamically
+          const card = document.getElementById(`wishlist-card-${productId}`);
+          if (card) {
+            card.style.transform = 'scale(0.9)';
+            card.style.opacity = '0';
+            card.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+              card.remove();
+              
+              // Update wishlist count badge
+              const countLabel = document.getElementById('wishlist-count');
+              const grid = document.getElementById('wishlist-grid');
+              if (grid) {
+                const remainingCards = grid.querySelectorAll('.group');
+                countLabel.innerText = `(${remainingCards.length} items)`;
+                
+                if (remainingCards.length === 0) {
+                  window.location.reload(); // Reload to show empty state
+                }
+              }
+            }, 300);
+          }
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (error) {
+        console.error('AJAX Error:', error);
+        showToast('Something went wrong. Please try again.', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

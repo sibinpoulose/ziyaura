@@ -21,6 +21,8 @@
     Add Address
   </h1>
 
+
+
   <form action="/profile/add-address" method="POST">
 
     <div class="grid gap-5">
@@ -29,26 +31,31 @@
         type="text"
         name="fullName"
         placeholder="Full Name"
+        required
         class="border p-3 rounded-lg"
       >
 
       <input
         type="text"
         name="phone"
-        placeholder="Phone"
+        placeholder="Phone (10 digits)"
+        maxlength="10"
+        pattern="[0-9]{10}"
+        required
         class="border p-3 rounded-lg"
       >
 
       <textarea
         name="address"
         placeholder="Address"
+        required
         class="border p-3 rounded-lg"
       ></textarea>
 
       <input
         type="text"
         name="landmark"
-        placeholder="Landmark"
+        placeholder="Landmark (optional)"
         class="border p-3 rounded-lg"
       >
 
@@ -56,6 +63,7 @@
         type="text"
         name="city"
         placeholder="City"
+        required
         class="border p-3 rounded-lg"
       >
 
@@ -63,13 +71,17 @@
         type="text"
         name="state"
         placeholder="State"
+        required
         class="border p-3 rounded-lg"
       >
 
       <input
         type="text"
         name="pincode"
-        placeholder="Pincode"
+        placeholder="Pincode (6 digits)"
+        maxlength="6"
+        pattern="[0-9]{6}"
+        required
         class="border p-3 rounded-lg"
       >
 
@@ -98,6 +110,7 @@
 
 </div>
 
+  <%- include("../partials/toast") %>
 </body>
 
 </html>

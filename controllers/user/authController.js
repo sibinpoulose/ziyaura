@@ -4,405 +4,232 @@ import {
   sendOtp,
   verifyOtp,
   resetPassword as resetPasswordService
-}
-  from "../../services/authService.js";
+} from "../../services/user/authService.js";
 
 import User from "../../models/User.js";
 
-
-// SIGNUP
 export const signup = async (req, res) => {
-
   try {
+    const { name, email, password, confirmPassword, phone } = req.body;
 
-    const {
-      name,
-      email,
-      password,
-      confirmPassword,
-      phone
-    } = req.body;
-
-
-    // EMPTY CHECK
-
-    if (
-      !name ||
-      !email ||
-      !password ||
-      !confirmPassword
-    ) {
-
-      req.session.error =
-        "All fields are required";
-
+    if (!name || !email || !password || !confirmPassword) {
+      req.session.error = "All fields are required";
       return res.redirect("/signup");
-
     }
 
+    // Name Validation (3-50 chars, only letters and spaces)
+    const nameTrimmed = name.trim();
+    if (nameTrimmed.length < 3 || nameTrimmed.length > 50 || !/^[A-Za-z\s]+$/.test(nameTrimmed)) {
+      req.session.error = "Username must be 3-50 characters and contain only letters and spaces";
+      return res.redirect("/signup");
+    }
 
-    // PASSWORD MATCH
+    // Email Validation
+    const emailRegex = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+    if (!email.match(emailRegex)) {
+      req.session.error = "Please enter a valid email address";
+      return res.redirect("/signup");
+    }
+
+    // Password strength check (8+ chars, upper, lower, number, special char)
+    if (password.length < 8) {
+      req.session.error = "Password must be at least 8 characters long";
+      return res.redirect("/signup");
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+      req.session.error = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character";
+      return res.redirect("/signup");
+    }
 
     if (password !== confirmPassword) {
-
-      req.session.error =
-        "Passwords do not match";
-
+      req.session.error = "Passwords do not match";
       return res.redirect("/signup");
-
     }
 
-
-    // REGISTER USER
+    // Phone Validation (10 digits if provided)
+    if (phone && !/^[0-9]{10}$/.test(phone)) {
+      req.session.error = "Phone number must be exactly 10 digits";
+      return res.redirect("/signup");
+    }
 
     await registerUser({
-
-      name,
+      name: nameTrimmed,
       email,
       password,
       phone
-
     });
-
-
-    // SEND OTP
 
     await sendOtp(email);
 
-
-    req.session.success =
-      "OTP sent successfully";
-
-
-    res.render("user/otp", {
-
-      email
-
-    });
-
-  }
-
-  catch (err) {
-
-    req.session.error =
-      err.message;
-
+    req.session.success = "OTP sent successfully";
+    req.session.email = email;
+    res.redirect("/otp");
+  } catch (err) {
+    req.session.error = err.message;
     res.redirect("/signup");
-
   }
-
 };
 
-
-// LOGIN
 export const login = async (req, res) => {
-
   try {
-
     const { email, password } = req.body;
 
-
-    // EMPTY CHECK
-
     if (!email || !password) {
-
-      req.session.error =
-        "All fields are required";
+      req.session.error = "All fields are required";
 
       return res.redirect("/login");
-
     }
 
-
-    // LOGIN USER
-
-    const data =
-      await loginUser(req.body);
-
-
-    // TOKEN COOKIE
+    const data = await loginUser(req.body);
 
     res.cookie(
-
-      "token",
+      "userToken",
 
       data.token,
 
       {
-
         httpOnly: true,
 
-        maxAge:
-          24 * 60 * 60 * 1000
-
+        maxAge: 24 * 60 * 60 * 1000
       }
-
     );
 
-
-    // SUCCESS MESSAGE
-
-    req.session.success =
-      "Login successful";
-
-
-    // ADMIN LOGIN
-
-    if (data.user.role === "admin") {
-
-      return res.redirect(
-        "/admin/dashboard"
-      );
-
-    }
-
-
-    // USER LOGIN
+    req.session.success = "Login successful";
 
     res.redirect("/home");
-
-  }
-
-  catch (err) {
-
-    req.session.error =
-      err.message;
+  } catch (err) {
+    req.session.error = err.message;
 
     res.redirect("/login");
-
   }
-
 };
 
-
-// SEND OTP
 export const sendOTP = async (req, res) => {
-
   try {
-
     const { email } = req.body;
-
 
     await sendOtp(email);
 
+    req.session.success = "OTP sent successfully";
 
-    req.session.success =
-      "OTP sent successfully";
-
+    const user = await User.findOne({ email });
+    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 300;
 
     res.render("user/otp", {
-
-      email
-
+      email,
+      timeLeft
     });
-
-  }
-
-  catch (err) {
-
-    req.session.error =
-      err.message;
+  } catch (err) {
+    req.session.error = err.message;
 
     res.redirect("/login");
-
   }
-
 };
 
-
-// VERIFY OTP
 export const verifyOTP = async (req, res) => {
-
   try {
-
     const { email, otp } = req.body;
-
 
     await verifyOtp(email, otp);
 
-
-    req.session.success =
-      "Account verified successfully";
-
+    req.session.success = "Account verified successfully";
 
     res.redirect("/login");
-
-  }
-
-  catch (err) {
-
-    req.session.error =
-      err.message;
+  } catch (err) {
+    const user = await User.findOne({ email: req.body.email });
+    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 0;
 
     res.render("user/otp", {
-
-      email: req.body.email
-
+      email: req.body.email,
+      error: err.message,
+      timeLeft
     });
-
   }
-
 };
 
-
-// LOGOUT
 export const logout = (req, res) => {
-
+  res.clearCookie("userToken");
   res.clearCookie("token");
 
-
-  req.session.success =
-    "Logged out successfully";
-
+  req.session.success = "Logged out successfully";
 
   res.redirect("/login");
-
 };
 
-
-// FORGOT PASSWORD
 export const forgotPassword = async (req, res) => {
-
   try {
-
     const { email } = req.body;
-
 
     await sendOtp(email);
 
+    req.session.success = "OTP sent to your email";
 
-    req.session.success =
-      "OTP sent to your email";
-
+    const user = await User.findOne({ email });
+    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 300;
 
     res.render("user/verify-otp", {
-
-      email
-
+      email,
+      timeLeft
     });
-
-  }
-
-  catch (err) {
-
-    req.session.error =
-      err.message;
+  } catch (err) {
+    req.session.error = err.message;
 
     res.redirect("/forgot-password");
-
   }
-
 };
-
-
-// VERIFY RESET OTP
 export const verifyOtpReset = async (req, res) => {
+  const { email, otp } = req.body;
 
   try {
-
-    const { email, otp } = req.body;
-
 
     await verifyOtp(email, otp);
 
-
-    req.session.success =
-      "OTP verified successfully";
-
-
-    res.render("user/reset-password", {
-
+    return res.render("user/reset-password", {
       email
-
     });
 
-  }
+  } catch (err) {
+    const user = await User.findOne({ email });
+    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 0;
 
-  catch (err) {
-
-    req.session.error =
-      err.message;
-
-    res.render("user/verify-otp", {
-
-      email: req.body.email
-
-    });
-
-  }
-
-};
-
-
-// RESET PASSWORD
-export const resetPassword = async (req, res) => {
-
-  try {
-
-    const {
-      email,
-      password,
-      confirmPassword
-    } = req.body;
-
-
-    // EMPTY CHECK
-
-    if (!password || !confirmPassword) {
-
-      req.session.error =
-        "All fields are required";
-
-      return res.render(
-        "user/reset-password",
-        { email }
-      );
-
-    }
-
-
-    // PASSWORD MATCH
-
-    if (password !== confirmPassword) {
-
-      req.session.error =
-        "Passwords do not match";
-
-      return res.render(
-        "user/reset-password",
-        { email }
-      );
-
-    }
-
-
-    // RESET PASSWORD
-
-    await resetPasswordService(
-      email,
-      password
+    return res.status(400).render(
+      "user/verify-otp",
+      {
+        email,
+        error: err.message,
+        timeLeft
+      }
     );
 
+  }
+};
 
-    req.session.success =
-      "Password reset successful";
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
 
+    if (!password || !confirmPassword) {
+      req.session.error = "All fields are required";
+
+      return res.render("user/reset-password", { email });
+    }
+
+    if (password !== confirmPassword) {
+      req.session.error = "Passwords do not match";
+
+      return res.render("user/reset-password", { email });
+    }
+
+    await resetPasswordService(email, password);
+
+    req.session.success = "Password reset successful";
 
     res.redirect("/login");
-
-  }
-
-  catch (err) {
-
-    req.session.error =
-      err.message;
+  } catch (err) {
+    req.session.error = err.message;
 
     res.render("user/reset-password", {
-
       email: req.body.email
-
     });
-
   }
-
 };

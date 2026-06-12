@@ -19,6 +19,10 @@
           Manage your account settings and orders
 
         </p>
+        <div class="mt-6">
+
+
+        </div>
 
       </div>
 
@@ -303,146 +307,133 @@
 
               </div>
 
-              <% if (passwordMessage) { %>
 
-                <div class="mb-6 px-8 pt-6">
+              <form id="changePasswordForm" action="/profile/change-password" method="POST" class="p-8 space-y-6">
 
-                  <div class="bg-red-100 text-red-600 px-4 py-3 rounded-lg text-sm">
+                <div>
 
-                    <%= passwordMessage %>
+                  <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+
+                    Current Password
+
+                  </label>
+
+                  <div class="relative">
+
+                    <input type="password" id="currentPassword" name="currentPassword" required
+                      class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+
+                    <button type="button" onclick="togglePassword('currentPassword', 'currentPasswordIcon')"
+                      class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+
+                      <i id="currentPasswordIcon" class="fa-solid fa-eye"></i>
+
+                    </button>
 
                   </div>
 
                 </div>
 
-                <% } %>
 
-                  <form id="changePasswordForm" action="/profile/change-password" method="POST" class="p-8 space-y-6">
+                <div>
 
-                    <div>
+                  <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
 
-                      <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+                    New Password
 
-                        Current Password
+                  </label>
 
-                      </label>
+                  <div class="relative">
 
-                      <div class="relative">
+                    <input type="password" id="newPassword" name="newPassword" required
+                      class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
 
-                        <input type="password" id="currentPassword" name="currentPassword" required
-                          class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+                    <button type="button" onclick="togglePassword('newPassword', 'newPasswordIcon')"
+                      class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
 
-                        <button type="button" onclick="togglePassword('currentPassword', 'currentPasswordIcon')"
-                          class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                      <i id="newPasswordIcon" class="fa-solid fa-eye"></i>
 
-                          <i id="currentPasswordIcon" class="fa-solid fa-eye"></i>
+                    </button>
 
-                        </button>
+                  </div>
 
-                      </div>
+                  <div id="passwordRules" class="text-xs space-y-1 mt-3">
 
-                    </div>
+                    <p id="lengthRule" class="text-gray-500">
 
+                      ✗ Minimum 8 characters
 
-                    <div>
+                    </p>
 
-                      <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+                    <p id="uppercaseRule" class="text-gray-500">
 
-                        New Password
+                      ✗ One uppercase letter
 
-                      </label>
+                    </p>
 
-                      <div class="relative">
+                    <p id="lowercaseRule" class="text-gray-500">
 
-                        <input type="password" id="newPassword" name="newPassword" required
-                          class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+                      ✗ One lowercase letter
 
-                        <button type="button" onclick="togglePassword('newPassword', 'newPasswordIcon')"
-                          class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                    </p>
 
-                          <i id="newPasswordIcon" class="fa-solid fa-eye"></i>
+                    <p id="numberRule" class="text-gray-500">
 
-                        </button>
+                      ✗ One number
 
-                      </div>
+                    </p>
 
-                      <div id="passwordRules" class="text-xs space-y-1 mt-3">
+                    <p id="specialRule" class="text-gray-500">
 
-                        <p id="lengthRule" class="text-gray-500">
+                      ✗ One special character
 
-                          ✗ Minimum 8 characters
+                    </p>
 
-                        </p>
+                  </div>
 
-                        <p id="uppercaseRule" class="text-gray-500">
-
-                          ✗ One uppercase letter
-
-                        </p>
-
-                        <p id="lowercaseRule" class="text-gray-500">
-
-                          ✗ One lowercase letter
-
-                        </p>
-
-                        <p id="numberRule" class="text-gray-500">
-
-                          ✗ One number
-
-                        </p>
-
-                        <p id="specialRule" class="text-gray-500">
-
-                          ✗ One special character
-
-                        </p>
-
-                      </div>
-
-                    </div>
+                </div>
 
 
-                    <div>
+                <div>
 
-                      <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
+                  <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">
 
-                        Confirm Password
+                    Confirm Password
 
-                      </label>
+                  </label>
 
-                      <div class="relative">
+                  <div class="relative">
 
-                        <input type="password" id="confirmPassword" name="confirmPassword" required
-                          class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+                    <input type="password" id="confirmPassword" name="confirmPassword" required
+                      class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
 
-                        <button type="button" onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')"
-                          class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                    <button type="button" onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')"
+                      class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
 
-                          <i id="confirmPasswordIcon" class="fa-solid fa-eye"></i>
+                      <i id="confirmPasswordIcon" class="fa-solid fa-eye"></i>
 
-                        </button>
+                    </button>
 
-                      </div>
+                  </div>
 
-                    </div>
-
-
-                    <p id="passwordError" class="text-red-500 text-sm"></p>
+                </div>
 
 
-                    <div class="pt-4">
+                <p id="passwordError" class="text-red-500 text-sm"></p>
 
-                      <button id="changePasswordButton" type="submit"
-                        class="bg-red-400 hover:bg-red-500 transition text-white text-xs font-semibold px-8 py-3 rounded-md uppercase tracking-wider">
 
-                        Change Password
+                <div class="pt-4">
 
-                      </button>
+                  <button id="changePasswordButton" type="submit"
+                    class="bg-red-400 hover:bg-red-500 transition text-white text-xs font-semibold px-8 py-3 rounded-md uppercase tracking-wider">
 
-                    </div>
+                    Change Password
 
-                  </form>
+                  </button>
+
+                </div>
+
+              </form>
 
             </div>
 
@@ -1132,3 +1123,4 @@
 
 
     </script>
+  <%- include("../partials/toast") %>

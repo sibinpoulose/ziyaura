@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Admin Login | ZIYAURA</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    rel="stylesheet"
+  >
+
+  <style>
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    body {
+
+      font-family: 'Inter', sans-serif;
+
+      background-color: #ffffff;
+
+    }
+
+
+    .login-card {
+
+      box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.03);
+
+    }
+
+
+    .input-icon-wrapper i {
+
+      color: #9ca3af;
+
+    }
+
+  </style>
+
+</head>
+
+<body class="min-h-screen flex flex-col">
+
+
+  <!-- HEADER -->
+
+  <header class="w-full flex justify-between items-center px-6 md:px-12 py-5 border-b-2 border-gray-100 bg-white">
+
+    <!-- LOGO -->
+
+    <div class="flex-shrink-0">
+
+      <h1 class="text-2xl font-black tracking-[0.1em] text-black flex items-center">
+
+        <span class="mr-1 italic">
+
+
+        </span>
+
+        ZIYAURA
+
+      </h1>
+
+    </div>
+
+
+    <!-- TITLE -->
+
+    <div>
+
+      <h2 class="text-sm font-extrabold text-gray-700 tracking-widest">
+
+        ADMIN LOGIN
+
+      </h2>
+
+    </div>
+
+
+    <!-- EMPTY SPACE -->
+
+    <div class="w-20 hidden md:block"></div>
+
+  </header>
+
+
+  <!-- MAIN -->
+
+  <main class="flex-grow flex items-center justify-center p-6">
+
+    <div class="login-card border border-gray-100 rounded-[40px] p-10 md:p-16 max-w-[540px] w-full">
+
+      <h3 class="text-3xl font-bold text-gray-500 mb-10">
+
+        Login
+
+      </h3>
+
+
+
+
+
+      <!-- LOGIN FORM -->
+
+      <form
+        action="/admin/login"
+        method="POST"
+        class="space-y-6"
+      >
+
+        <!-- EMAIL -->
+
+        <div class="space-y-2">
+
+          <label
+            for="email"
+            class="text-[13px] font-semibold text-gray-400 block ml-1"
+          >
+
+            Email
+
+          </label>
+
+          <div class="relative input-icon-wrapper">
+
+            <span class="absolute left-4 top-1/2 -translate-y-1/2">
+
+              <i class="fa-regular fa-user text-lg"></i>
+
+            </span>
+
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+              required
+              class="w-full border border-gray-200 rounded-xl py-3.5 pl-12 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#f29924] focus:border-[#f29924] transition-all placeholder:text-gray-300"
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- PASSWORD -->
+
+        <div class="space-y-2">
+
+          <label
+            for="password"
+            class="text-[13px] font-semibold text-gray-400 block ml-1"
+          >
+
+            Password
+
+          </label>
+
+          <div class="relative input-icon-wrapper">
+
+            <span class="absolute left-4 top-1/2 -translate-y-1/2">
+
+              <i class="fa-solid fa-lock text-lg"></i>
+
+            </span>
+
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+              class="w-full border border-gray-200 rounded-xl py-3.5 pl-12 pr-12 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#f29924] focus:border-[#f29924] transition-all placeholder:text-gray-300"
+            >
+
+            <button
+              type="button"
+              onclick="togglePassword()"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
+            >
+
+              <i
+                id="eye-icon"
+                class="fa-regular fa-eye text-lg"
+              ></i>
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- BUTTON -->
+
+        <button
+          type="submit"
+          class="w-full bg-[#f29924] hover:bg-[#e08a1d] text-white font-bold py-4 rounded-xl mt-4 transition-all duration-300 shadow-lg shadow-orange-100 text-sm tracking-wide"
+        >
+
+          Login
+
+        </button>
+
+      </form>
+
+
+
+    </div>
+
+  </main>
+
+
+  <script>
+
+    function togglePassword() {
+
+      const passwordInput =
+        document.getElementById("password");
+
+      const eyeIcon =
+        document.getElementById("eye-icon");
+
+
+      if (
+
+        passwordInput.type ===
+        "password"
+
+      ) {
+
+        passwordInput.type =
+          "text";
+
+        eyeIcon.classList.remove(
+          "fa-eye"
+        );
+
+        eyeIcon.classList.add(
+          "fa-eye-slash"
+        );
+
+      }
+
+      else {
+
+        passwordInput.type =
+          "password";
+
+        eyeIcon.classList.remove(
+          "fa-eye-slash"
+        );
+
+        eyeIcon.classList.add(
+          "fa-eye"
+        );
+
+      }
+
+    }
+
+  </script>
+
+  <%- include("../partials/toast") %>
+</body>
+
+</html>

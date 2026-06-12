@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Add Category
+  </title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gray-100">
+
+<div
+  class="
+    max-w-3xl
+    mx-auto
+    mt-10
+    bg-white
+    p-8
+    rounded-xl
+  "
+>
+
+  <h1
+    class="
+      text-3xl
+      font-bold
+      mb-8
+    "
+  >
+
+    Add Category
+
+  </h1>
+
+  <form
+
+    id="categoryForm"
+
+    action="/admin/categories/add"
+
+    method="POST"
+
+    enctype="multipart/form-data"
+
+  >
+
+    <div class="grid gap-5">
+
+      <!-- CATEGORY NAME -->
+
+      <div>
+
+        <label
+          class="
+            block
+            mb-2
+            font-medium
+          "
+        >
+
+          Category Name
+
+        </label>
+
+        <input
+
+          id="name"
+
+          type="text"
+
+          name="name"
+
+          placeholder="Category Name"
+
+          required
+
+          class="
+            border
+            p-3
+            rounded-lg
+            w-full
+          "
+
+        >
+
+        <p
+          id="nameError"
+          class="
+            text-red-500
+            text-sm
+            mt-1
+          "
+        ></p>
+
+      </div>
+
+      <!-- DESCRIPTION -->
+
+      <div>
+
+        <label
+          class="
+            block
+            mb-2
+            font-medium
+          "
+        >
+
+          Description
+
+        </label>
+
+        <textarea
+
+          id="description"
+
+          name="description"
+
+          rows="4"
+
+          placeholder="Description"
+
+          class="
+            border
+            p-3
+            rounded-lg
+            w-full
+          "
+
+        ></textarea>
+
+        <p
+          id="descriptionError"
+          class="
+            text-red-500
+            text-sm
+            mt-1
+          "
+        ></p>
+
+      </div>
+
+      <!-- SEO TITLE -->
+
+      <div>
+
+        <label
+          class="
+            block
+            mb-2
+            font-medium
+          "
+        >
+
+          SEO Title
+
+        </label>
+
+        <input
+
+          id="seoTitle"
+
+          type="text"
+
+          name="seoTitle"
+
+          placeholder="SEO Title"
+
+          class="
+            border
+            p-3
+            rounded-lg
+            w-full
+          "
+
+        >
+
+        <p
+          id="seoTitleError"
+          class="
+            text-red-500
+            text-sm
+            mt-1
+          "
+        ></p>
+
+      </div>
+
+      <!-- SEO DESCRIPTION -->
+
+      <div>
+
+        <label
+          class="
+            block
+            mb-2
+            font-medium
+          "
+        >
+
+          SEO Description
+
+        </label>
+
+        <textarea
+
+          id="seoDescription"
+
+          name="seoDescription"
+
+          rows="4"
+
+          placeholder="SEO Description"
+
+          class="
+            border
+            p-3
+            rounded-lg
+            w-full
+          "
+
+        ></textarea>
+
+        <p
+          id="seoDescriptionError"
+          class="
+            text-red-500
+            text-sm
+            mt-1
+          "
+        ></p>
+
+      </div>
+      <div>
+
+  <label
+    class="
+      block
+      mb-3
+      font-medium
+    "
+  >
+
+    Variant Types
+
+  </label>
+
+  <div
+    id="variantContainer"
+    class="space-y-4"
+  >
+
+  </div>
+
+  <button
+
+    type="button"
+
+    onclick="addVariantField()"
+
+    class="
+      bg-gray-200
+      px-4
+      py-2
+      rounded-lg
+    "
+
+  >
+
+    + Add Variant Type
+
+  </button>
+
+</div>
+
+      <!-- IMAGE -->
+
+      <div>
+
+        <label
+          class="
+            block
+            mb-2
+            font-medium
+          "
+        >
+
+          Category Image
+
+        </label>
+
+        <input
+
+          id="image"
+
+          type="file"
+
+          name="image"
+         
+
+          accept="image/*"
+
+          class="
+            border
+            p-3
+            rounded-lg
+            w-full
+          "
+
+        >
+
+        <p
+          id="imageError"
+          class="
+            text-red-500
+            text-sm
+            mt-1
+          "
+        ></p>
+
+      </div>
+
+      <button
+
+        type="submit"
+
+        class="
+          bg-black
+          text-white
+          py-3
+          rounded-lg
+        "
+
+      >
+
+        Add Category
+
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
+
+<%- include("../../partials/toast") %>
+
+<script>
+
+function addVariantField(){
+
+  const container =
+    document.getElementById(
+      "variantContainer"
+    );
+
+  const html = `
+
+    <div
+      class="
+        border
+        p-4
+        rounded-lg
+        grid
+        grid-cols-1
+        md:grid-cols-2
+        gap-3
+        relative
+        variant-row
+      "
+    >
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">Variant Name</label>
+        <input
+          type="text"
+          name="variantNames[]"
+          placeholder="Size, Material, Color..."
+          required
+          class="
+            w-full
+            border
+            p-3
+            rounded-lg
+          "
+        >
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">Allowed Values (Comma-separated)</label>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            name="variantValues[]"
+            placeholder="e.g. 16,18,20 or Gold,Silver"
+            required
+            class="
+              flex-1
+              border
+              p-3
+              rounded-lg
+            "
+          >
+          <button
+            type="button"
+            class="
+              bg-red-500
+              text-white
+              px-4
+              rounded-lg
+              hover:bg-red-600
+              transition-colors
+            "
+            onclick="removeVariant(this)"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+
+  `;
+
+  container.insertAdjacentHTML(
+    "beforeend",
+    html
+  );
+
+}
+
+function removeVariant(button){
+
+  const rows =
+    document.querySelectorAll(
+      ".variant-row"
+    );
+
+  if(rows.length === 1){
+
+    alert(
+      "At least one variant type is required"
+    );
+
+    return;
+
+  }
+
+  button.closest(".variant-row").remove();
+
+}
+
+const form =
+  document.getElementById(
+    "categoryForm"
+  );
+
+const nameInput =
+  document.getElementById(
+    "name"
+  );
+
+const seoTitleInput =
+  document.getElementById(
+    "seoTitle"
+  );
+
+const seoDescriptionInput =
+  document.getElementById(
+    "seoDescription"
+  );
+
+const imageInput =
+  document.getElementById(
+    "image"
+  );
+
+
+// CATEGORY NAME
+
+nameInput.addEventListener(
+  "input",
+  () => {
+
+    const value =
+      nameInput.value.trim();
+
+    const error =
+      document.getElementById(
+        "nameError"
+      );
+
+    const regex =
+  /^[A-Za-z0-9\s'-]+$/;
+
+    if (!value) {
+
+      error.textContent =
+        "Category name is required";
+
+      return;
+
+    }
+
+    if (value.length < 3) {
+
+      error.textContent =
+        "Minimum 3 characters required";
+
+      return;
+
+    }
+    if(value.length > 50){
+
+  error.textContent =
+    "Maximum 50 characters allowed";
+
+  return;
+
+}
+
+    if (!regex.test(value)) {
+
+      error.textContent =
+        "Only letters, numbers, spaces, apostrophes and hyphens allowed";
+
+      return;
+
+    }
+
+    error.textContent = "";
+
+  }
+);
+
+
+// SEO TITLE
+
+seoTitleInput.addEventListener(
+  "input",
+  () => {
+
+    const error =
+      document.getElementById(
+        "seoTitleError"
+      );
+
+    if (
+      seoTitleInput.value.length > 60
+    ) {
+
+      error.textContent =
+        "Maximum 60 characters";
+
+      return;
+
+    }
+
+    error.textContent = "";
+
+  }
+);
+
+
+// SEO DESCRIPTION
+
+seoDescriptionInput.addEventListener(
+  "input",
+  () => {
+
+    const error =
+      document.getElementById(
+        "seoDescriptionError"
+      );
+
+    if (
+      seoDescriptionInput.value.length > 160
+    ) {
+
+      error.textContent =
+        "Maximum 160 characters";
+
+      return;
+
+    }
+
+    error.textContent = "";
+
+  }
+);
+
+
+// IMAGE
+
+imageInput.addEventListener(
+  "change",
+  () => {
+
+    const error =
+      document.getElementById(
+        "imageError"
+      );
+
+    const file =
+      imageInput.files[0];
+
+    if (!file) {
+
+      error.textContent = "";
+
+      return;
+
+    }
+
+    const allowed = [
+
+      "image/jpeg",
+
+      "image/png",
+
+      "image/webp"
+
+    ];
+
+    if (
+      !allowed.includes(
+        file.type
+      )
+    ) {
+
+      error.textContent =
+        "Only JPG, PNG and WEBP allowed";
+
+      imageInput.value = "";
+
+      return;
+
+    }
+
+    if (
+      file.size >
+      5 * 1024 * 1024
+    ) {
+
+      error.textContent =
+        "Image must be under 5MB";
+
+      imageInput.value = "";
+
+      return;
+
+    }
+
+    error.textContent = "";
+
+  }
+);
+
+
+// FINAL SUBMIT
+
+form.addEventListener(
+  "submit",
+  (e) => {
+    const file =
+  imageInput.files[0];
+
+if (!file) {
+
+  document.getElementById(
+    "imageError"
+  ).textContent =
+    "Category image is required";
+
+  e.preventDefault();
+
+  return;
+
+}
+    const variantNames =
+  document.querySelectorAll(
+    '[name="variantNames[]"]'
+  );
+    const variantValues =
+  document.querySelectorAll(
+    '[name="variantValues[]"]'
+  );
+
+    let hasVariant = false;
+    let missingInfo = false;
+
+    for (let i = 0; i < variantNames.length; i++) {
+      const name = variantNames[i].value.trim();
+      const valInput = variantValues[i];
+      const values = valInput ? valInput.value.trim() : '';
+
+      if (name && values) {
+        hasVariant = true;
+      } else if (name || values) {
+        missingInfo = true;
+      }
+    }
+
+    if (!hasVariant) {
+      alert("At least one variant type with at least one value is required");
+      e.preventDefault();
+      return;
+    }
+
+    if (missingInfo) {
+      alert("Please ensure all added variant rows have both a name and values.");
+      e.preventDefault();
+      return;
+    }
+
+    const variantTypeSet = new Set();
+    for (let i = 0; i < variantNames.length; i++) {
+      const name = variantNames[i].value.trim().toLowerCase();
+      if (name) {
+        if (variantTypeSet.has(name)) {
+          alert(`Duplicate variant type name "${variantNames[i].value.trim()}" is not allowed.`);
+          e.preventDefault();
+          return;
+        }
+        variantTypeSet.add(name);
+      }
+    }
+
+    const errors = [
+
+      "nameError",
+
+      "seoTitleError",
+
+      "seoDescriptionError",
+
+      "imageError"
+
+    ];
+
+    const hasError =
+      errors.some(
+        id =>
+          document
+            .getElementById(id)
+            .textContent
+            .trim() !== ""
+      );
+
+    if (hasError) {
+
+      e.preventDefault();
+
+    }
+
+  }
+);
+addVariantField();
+
+</script>
+
+</body>
+
+</html>

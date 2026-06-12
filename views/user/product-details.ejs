@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZIYAURA | <%= product.name %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-900 min-h-screen flex flex-col justify-between">
+
+  <!-- Header -->
+  <%- include("../partials/user/header") %>
+
+  <!-- Main Details Section -->
+  <main class="max-w-[1440px] mx-auto px-4 md:px-8 py-8 flex-grow w-full">
+    
+    <!-- Breadcrumbs -->
+    <nav class="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-8">
+      <a href="/home" class="hover:text-black">Home</a>
+      <span class="mx-2">/</span>
+      <a href="/products?category=<%= category.slug %>" class="hover:text-black"><%= category.name %></a>
+      <span class="mx-2">/</span>
+      <span class="text-black"><%= product.name %></span>
+    </nav>
+
+    <!-- Product Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mb-16">
+      
+      <!-- Left Column: Gallery & Zoom -->
+      <div class="space-y-4">
+        <!-- Main Image Container -->
+        <div id="zoom-container" class="relative overflow-hidden aspect-square bg-gray-50 rounded-sm cursor-zoom-in border border-gray-100">
+          <img
+            id="main-image"
+            src="<%= product.images && product.images[0] ? product.images[0] : '/images/placeholder.jpg' %>"
+            alt="<%= product.name %>"
+            class="w-full h-full object-cover transition-transform duration-200"
+          >
+        </div>
+
+        <!-- Thumbnails Grid -->
+        <% if (product.images && product.images.length > 1) { %>
+          <div class="grid grid-cols-4 gap-3">
+            <% product.images.forEach((imgSrc, index) => { %>
+              <button
+                type="button"
+                onclick="changeMainImage(this, '<%= imgSrc %>')"
+                class="thumbnail-btn aspect-square bg-gray-50 border rounded-sm overflow-hidden transition-all duration-200 <%= index === 0 ? 'border-black' : 'border-gray-200 hover:border-black' %>"
+              >
+                <img src="<%= imgSrc %>" alt="Thumbnail" class="w-full h-full object-cover">
+              </button>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Right Column: Product Information -->
+      <div class="flex flex-col justify-between">
+        
+        <div>
+          <!-- Brand -->
+          <span class="text-[10px] font-bold tracking-widest text-gray-400 uppercase block mb-2">
+            <%= product.brand || 'ZIYAURA LUXURY' %>
+          </span>
+
+          <!-- Product Name -->
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-gray-900 leading-tight mb-4">
+            <%= product.name %>
+          </h1>
+
+          <!-- Ratings Summary -->
+          <div class="flex items-center gap-2 mb-6">
+            <div class="flex text-xs text-black">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star-half-stroke"></i>
+            </div>
+            <span class="text-xs font-bold text-gray-800">4.7</span>
+            <span class="text-xs text-gray-400 font-medium">(24 verified reviews)</span>
+          </div>
+
+          <!-- Divider -->
+          <hr class="border-gray-100 my-6">
+
+          <!-- Price Display Section -->
+          <div class="mb-6">
+            <% if (!product.variants || product.variants.length === 0) { %>
+              <!-- Root Base Product Price -->
+              <div class="flex items-baseline gap-3">
+                <span class="text-2xl md:text-3xl font-bold text-black" id="display-price">
+                  ₹<%= (product.salePrice !== null ? product.salePrice : product.price).toLocaleString() %>
+                </span>
+                <% if (product.salePrice !== null) { %>
+                  <span class="text-sm text-gray-400 line-through font-semibold" id="display-old-price">
+                    ₹<%= product.price.toLocaleString() %>
+                  </span>
+                  <span class="text-[9px] font-bold tracking-widest text-white bg-black px-2.5 py-1 rounded-sm" id="display-discount">
+                    SAVE <%= Math.round(((product.price - product.salePrice) / product.price) * 100) %>%
+                  </span>
+                <% } %>
+              </div>
+            <% } else { %>
+              <!-- Variant Product Price (Updated via JS) -->
+              <div class="flex items-baseline gap-3">
+                <span class="text-2xl md:text-3xl font-bold text-black" id="display-price">--</span>
+                <span class="text-sm text-gray-400 line-through font-semibold hidden" id="display-old-price"></span>
+                <span class="text-[9px] font-bold tracking-widest text-white bg-black px-2.5 py-1 rounded-sm hidden" id="display-discount"></span>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Availability Stock Status -->
+          <div class="mb-6">
+            <% if (!product.variants || product.variants.length === 0) { %>
+              <% if (product.stock === 0) { %>
+                <span class="text-[10px] font-bold tracking-widest text-rose-500 bg-rose-50 px-3 py-1 rounded-sm uppercase" id="display-stock">
+                  SOLD OUT
+                </span>
+              <% } else if (product.stock < 5) { %>
+                <span class="text-[10px] font-bold tracking-widest text-amber-600 bg-amber-50 px-3 py-1 rounded-sm uppercase" id="display-stock">
+                  ONLY <%= product.stock %> LEFT IN STOCK
+                </span>
+              <% } else { %>
+                <span class="text-[10px] font-bold tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-sm uppercase" id="display-stock">
+                  IN STOCK
+                </span>
+              <% } %>
+            <% } else { %>
+              <!-- Updated via JS for active variant -->
+              <span class="text-[10px] font-bold tracking-widest uppercase" id="display-stock"></span>
+            <% } %>
+          </div>
+
+          <!-- Variant Selector Form -->
+          <% if (product.variants && product.variants.length > 0) { %>
+            <% 
+              // Extract unique combination dimension options
+              const dimensions = {};
+              product.variants.forEach(v => {
+                v.combination.forEach(c => {
+                  if (!dimensions[c.name]) {
+                    dimensions[c.name] = new Set();
+                  }
+                  dimensions[c.name].add(c.value);
+                });
+              });
+            %>
+            <div class="space-y-6 mb-8">
+              <% Object.keys(dimensions).forEach(dimName => { %>
+                <div class="option-group" data-dimension="<%= dimName %>">
+                  <span class="text-[10px] font-bold tracking-widest text-gray-400 uppercase block mb-3">
+                    SELECT <%= dimName %>
+                  </span>
+                  <div class="flex flex-wrap gap-2">
+                    <% Array.from(dimensions[dimName]).forEach((val, idx) => { %>
+                      <button
+                        type="button"
+                        onclick="selectOption(this, '<%= dimName %>', '<%= val %>')"
+                        class="option-btn border border-gray-200 px-4 py-2 text-xs font-semibold tracking-wider rounded-sm transition-all <%= idx === 0 ? 'bg-black text-white border-black selected' : 'hover:border-black text-gray-800 bg-white' %>"
+                      >
+                        <%= val %>
+                      </button>
+                    <% }); %>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+
+          <!-- Highlights (Features) -->
+          <div class="bg-gray-50 p-6 rounded-sm space-y-4 mb-8">
+            <span class="text-[10px] font-bold tracking-widest text-gray-800 uppercase block">PRODUCT HIGHLIGHTS</span>
+            <ul class="text-xs text-gray-600 space-y-2.5 font-medium leading-relaxed">
+              <% if (product.description && product.description.trim()) { %>
+                <% 
+                  const highlights = product.description.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+                  const icons = [
+                    'fa-solid fa-circle-check',
+                    'fa-solid fa-shield-halved',
+                    'fa-solid fa-award',
+                    'fa-solid fa-truck-fast'
+                  ];
+                %>
+                <% if (highlights.length > 0) { %>
+                  <% highlights.forEach((highlight, idx) => { %>
+                    <li class="flex items-start gap-2">
+                      <span class="mt-0.5 shrink-0">
+                        <i class="<%= icons[idx % icons.length] %> text-black text-[10px]"></i>
+                      </span>
+                      <span><%= highlight %></span>
+                    </li>
+                  <% }) %>
+                <% } else { %>
+                  <li class="flex items-start gap-2">
+                    <span class="mt-0.5 shrink-0">
+                      <i class="fa-solid fa-circle-check text-black text-[10px]"></i>
+                    </span>
+                    <span><%= product.description %></span>
+                  </li>
+                <% } %>
+              <% } else { %>
+                <li class="flex items-start gap-2">
+                  <span class="mt-0.5 shrink-0">
+                    <i class="fa-solid fa-circle-check text-black text-[10px]"></i>
+                  </span>
+                  <span>Handcrafted Luxury: Modern design engineered for comfort.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="mt-0.5 shrink-0">
+                    <i class="fa-solid fa-shield-halved text-black text-[10px]"></i>
+                  </span>
+                  <span>Waterproof & Anti-Tarnish finish.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="mt-0.5 shrink-0">
+                    <i class="fa-solid fa-award text-black text-[10px]"></i>
+                  </span>
+                  <span>1-Year Brand Warranty against oxidation.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="mt-0.5 shrink-0">
+                    <i class="fa-solid fa-truck-fast text-black text-[10px]"></i>
+                  </span>
+                  <span>Free Insured Shipping across all regions.</span>
+                </li>
+              <% } %>
+            </ul>
+          </div>
+
+          <!-- SKU Information -->
+          <div class="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-8">
+            SKU: <span id="display-sku" class="text-gray-800 font-semibold"><%= product.sku || 'N/A' %></span>
+          </div>
+
+        </div>
+
+        <!-- Purchase Actions -->
+        <div class="space-y-3">
+          <% if (!product.variants || product.variants.length === 0) { %>
+            <% if (product.stock === 0) { %>
+              <button
+                type="button"
+                id="action-button"
+                disabled
+                class="w-full bg-gray-200 text-gray-400 py-3 text-xs font-bold tracking-widest uppercase cursor-not-allowed rounded-sm"
+              >
+                SOLD OUT
+              </button>
+            <% } else { %>
+              <button
+                type="button"
+                id="action-button"
+                class="w-full bg-black text-white hover:bg-gray-800 py-3 text-xs font-bold tracking-widest uppercase transition-colors rounded-sm"
+              >
+                ADD TO BAG
+              </button>
+            <% } %>
+          <% } else { %>
+            <!-- Updates via JS based on variant selection -->
+            <button
+              type="button"
+              id="action-button"
+              class="w-full py-3 text-xs font-bold tracking-widest uppercase rounded-sm"
+            >
+              SELECT OPTIONS
+            </button>
+          <% } %>
+          <button
+            type="button"
+            id="wishlist-button"
+            class="w-full border border-gray-200 hover:border-black py-3 text-xs font-bold tracking-widest uppercase transition-colors rounded-sm flex items-center justify-center gap-2 bg-white"
+          >
+            <i class="fa-regular fa-heart"></i> ADD TO WISHLIST
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Details/Description Accordion/Block -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16 border-t border-gray-100 pt-12">
+      <div class="lg:col-span-2 space-y-6">
+        <h3 class="text-sm font-bold tracking-widest text-gray-900 uppercase">DESCRIPTION</h3>
+        <p class="text-xs text-gray-500 leading-relaxed font-medium">
+          <% if (product.description && product.description.trim()) { %>
+            <% 
+              const descLines = product.description.split(/\r?\n/);
+            %>
+            <% descLines.forEach((line, index) => { %>
+              <%= line %>
+              <% if (index < descLines.length - 1) { %><br><% } %>
+            <% }) %>
+          <% } else { %>
+            No description provided for this product. Crafting modern luxury pieces for ambitious men is what drives Ziyaura forward. This product is designed with precision, utilizing quality materials engineered to last.
+          <% } %>
+        </p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold tracking-widest text-gray-900 uppercase mb-6">SHIPPING & RETURNS</h3>
+        <ul class="text-[11px] text-gray-500 space-y-3 font-medium">
+          <li><strong>Free Shipping:</strong> Dispatch in 24-48 hours. Delivered in 4-6 business days.</li>
+          <li><strong>Easy Returns:</strong> 7-day exchange or refund guarantee if item remains unused.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="border-t border-gray-100 pt-12 mb-16">
+      <h3 class="text-sm font-bold tracking-widest text-gray-900 uppercase mb-8">CUSTOMER REVIEWS</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Reviews Stat Summary -->
+        <div class="bg-gray-50 p-6 rounded-sm flex flex-col justify-center items-center text-center">
+          <span class="text-4xl font-extrabold text-black mb-2">4.7</span>
+          <div class="flex text-xs text-black mb-2">
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star-half-stroke"></i>
+          </div>
+          <span class="text-[10px] font-bold text-gray-400 tracking-wider uppercase">Average Rating</span>
+        </div>
+
+        <!-- Review list (2 items) -->
+        <div class="md:col-span-2 space-y-6">
+          <div class="border-b border-gray-100 pb-6">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-bold text-gray-800">Aryan K.</span>
+              <span class="text-[10px] text-gray-400 font-semibold">June 10, 2026</span>
+            </div>
+            <div class="flex text-[10px] text-black mb-2">
+              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            </div>
+            <p class="text-xs text-gray-500 font-medium leading-relaxed">
+              "Stunning piece! The oxidized silver look is absolutely gorgeous. Built solid and feels heavy. Worth every rupee."
+            </p>
+          </div>
+
+          <div class="border-b border-gray-100 pb-6">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-bold text-gray-800">Rohan S.</span>
+              <span class="text-[10px] text-gray-400 font-semibold">May 28, 2026</span>
+            </div>
+            <div class="flex text-[10px] text-black mb-2">
+              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            </div>
+            <p class="text-xs text-gray-500 font-medium leading-relaxed">
+              "Fits perfectly. Clean design. Arrived in a beautiful box. Customer support was also helpful when choosing the size."
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Related Products Grid -->
+    <% if (relatedProducts && relatedProducts.length > 0) { %>
+      <div class="border-t border-gray-100 pt-12">
+        <h3 class="text-sm font-bold tracking-widest text-gray-900 uppercase text-center mb-10">YOU MAY ALSO LIKE</h3>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          <% relatedProducts.forEach(rel => { %>
+            
+            <% 
+              let relPrice = rel.price;
+              let relSalePrice = rel.salePrice;
+              let relHasDiscount = false;
+              let relDiscountPct = 0;
+
+              if (rel.variants && rel.variants.length > 0) {
+                const activeVariants = rel.variants.filter(v => v.isListed);
+                if (activeVariants.length > 0) {
+                  const cheapestVal = activeVariants.reduce((minV, v) => {
+                    const vp = v.salePrice !== null ? v.salePrice : v.price;
+                    const mp = minV.salePrice !== null ? minV.salePrice : minV.price;
+                    return vp < mp ? v : minV;
+                  }, activeVariants[0]);
+                  
+                  relPrice = cheapestVal.price;
+                  relSalePrice = cheapestVal.salePrice;
+                  if (cheapestVal.salePrice !== null) {
+                    relHasDiscount = true;
+                    relDiscountPct = Math.round(((cheapestVal.price - cheapestVal.salePrice) / cheapestVal.price) * 100);
+                  }
+                }
+              } else {
+                if (rel.salePrice !== null) {
+                  relHasDiscount = true;
+                  relDiscountPct = Math.round(((rel.price - rel.salePrice) / rel.price) * 100);
+                }
+              }
+            %>
+
+            <a href="/product/<%= rel.slug %>" class="group flex flex-col justify-between h-full bg-white border border-gray-50 hover:shadow-md transition-shadow duration-300 rounded-sm overflow-hidden p-3 relative">
+              <% if (relHasDiscount) { %>
+                <div class="absolute top-4 left-4 bg-black text-white text-[9px] font-bold tracking-widest px-2 py-0.5 z-10 rounded-sm">
+                  SAVE <%= relDiscountPct %>%
+                </div>
+              <% } %>
+              
+              <div class="aspect-square bg-gray-50 overflow-hidden mb-3 rounded-sm">
+                <img
+                  src="<%= rel.images && rel.images[0] ? rel.images[0] : '/images/placeholder.jpg' %>"
+                  alt="<%= rel.name %>"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                >
+              </div>
+
+              <div>
+                <span class="text-[8px] font-bold text-gray-400 tracking-wider uppercase block mb-0.5">
+                  <%= rel.brand || 'Ziyaura' %>
+                </span>
+                <h4 class="text-xs font-bold text-gray-800 tracking-tight leading-snug group-hover:text-black line-clamp-2 transition-colors mb-2">
+                  <%= rel.name %>
+                </h4>
+                
+                <div class="flex items-baseline gap-2 mt-auto">
+                  <span class="text-xs font-bold text-black">
+                    ₹<%= (relSalePrice !== null ? relSalePrice : relPrice).toLocaleString() %>
+                  </span>
+                  <% if (relHasDiscount) { %>
+                    <span class="text-[9px] text-gray-400 line-through font-semibold">
+                      ₹<%= relPrice.toLocaleString() %>
+                    </span>
+                  <% } %>
+                </div>
+              </div>
+            </a>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+
+  </main>
+
+  <!-- Footer -->
+  <%- include("../partials/user/footer") %>
+
+  <!-- Toast system -->
+  <%- include("../partials/toast") %>
+
+  <!-- Interactive JavaScript: Gallery, Zoom & Variant combinator -->
+  <script>
+    // 1. Gallery switcher and Zoom effect
+    const container = document.getElementById('zoom-container');
+    const mainImg = document.getElementById('main-image');
+
+    container.addEventListener('mousemove', (e) => {
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      mainImg.style.transformOrigin = `${x}px ${y}px`;
+      mainImg.style.transform = 'scale(2.2)';
+    });
+
+    container.addEventListener('mouseleave', () => {
+      mainImg.style.transformOrigin = 'center';
+      mainImg.style.transform = 'scale(1)';
+    });
+
+    function changeMainImage(thumbButton, imageSrc) {
+      mainImg.src = imageSrc;
+      
+      // Update highlighted thumbnail border
+      document.querySelectorAll('.thumbnail-btn').forEach(btn => {
+        btn.classList.remove('border-black');
+        btn.classList.add('border-gray-200');
+      });
+      thumbButton.classList.remove('border-gray-200');
+      thumbButton.classList.add('border-black');
+    }
+
+    // 2. Variant selection combinator
+    let selectedOptions = {};
+
+    function selectOption(btnElement, dimension, value) {
+      // Find all buttons in the current option group
+      const optionGroup = btnElement.closest('.option-group');
+      optionGroup.querySelectorAll('.option-btn').forEach(btn => {
+        btn.classList.remove('bg-black', 'text-white', 'border-black');
+        btn.classList.add('border-gray-200', 'text-gray-800', 'bg-white');
+      });
+
+      // Mark the clicked one as active
+      btnElement.classList.remove('border-gray-200', 'text-gray-800', 'bg-white');
+      btnElement.classList.add('bg-black', 'text-white', 'border-black');
+
+      selectedOptions[dimension] = value;
+      updateVariantDetails();
+    }
+
+    function updateVariantDetails() {
+      // Safely grab the product variants array passed from Express EJS
+      const variants = <%- JSON.stringify(product.variants) %>;
+      if (!variants || variants.length === 0) return;
+
+      // Find variant match in variants data matching selectedOptions values
+      const matchedVariant = variants.find(v => {
+        return v.combination.every(c => selectedOptions[c.name] === c.value);
+      });
+
+      const priceLabel = document.getElementById('display-price');
+      const oldPriceLabel = document.getElementById('display-old-price');
+      const discountLabel = document.getElementById('display-discount');
+      const stockLabel = document.getElementById('display-stock');
+      const skuLabel = document.getElementById('display-sku');
+      const actionButton = document.getElementById('action-button');
+
+      if (matchedVariant && matchedVariant.isListed) {
+        skuLabel.innerText = matchedVariant.sku;
+        
+        // Compute active price
+        const activePrice = matchedVariant.salePrice !== null ? matchedVariant.salePrice : matchedVariant.price;
+        priceLabel.innerText = '₹' + activePrice.toLocaleString();
+        
+        if (matchedVariant.salePrice !== null) {
+          oldPriceLabel.innerText = '₹' + matchedVariant.price.toLocaleString();
+          oldPriceLabel.classList.remove('hidden');
+          
+          const pct = Math.round(((matchedVariant.price - matchedVariant.salePrice) / matchedVariant.price) * 100);
+          discountLabel.innerText = 'SAVE ' + pct + '%';
+          discountLabel.classList.remove('hidden');
+        } else {
+          oldPriceLabel.classList.add('hidden');
+          discountLabel.classList.add('hidden');
+        }
+
+        // Stock and purchasing button state
+        if (matchedVariant.stock === 0) {
+          stockLabel.className = "text-[10px] font-bold tracking-widest text-rose-500 bg-rose-50 px-3 py-1 rounded-sm uppercase";
+          stockLabel.innerText = "SOLD OUT";
+          
+          actionButton.disabled = true;
+          actionButton.innerText = "SOLD OUT";
+          actionButton.className = "w-full bg-gray-250 text-gray-400 py-3 text-xs font-bold tracking-widest uppercase cursor-not-allowed rounded-sm";
+        } else {
+          actionButton.disabled = false;
+          actionButton.innerText = "ADD TO BAG";
+          actionButton.className = "w-full bg-black text-white hover:bg-gray-800 py-3 text-xs font-bold tracking-widest uppercase transition-colors rounded-sm";
+          
+          if (matchedVariant.stock < 5) {
+            stockLabel.className = "text-[10px] font-bold tracking-widest text-amber-600 bg-amber-50 px-3 py-1 rounded-sm uppercase";
+            stockLabel.innerText = "ONLY " + matchedVariant.stock + " LEFT IN STOCK";
+          } else {
+            stockLabel.className = "text-[10px] font-bold tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-sm uppercase";
+            stockLabel.innerText = "IN STOCK";
+          }
+        }
+      } else {
+        // Combination does not match any listed options
+        priceLabel.innerText = 'N/A';
+        oldPriceLabel.classList.add('hidden');
+        discountLabel.classList.add('hidden');
+        skuLabel.innerText = 'N/A';
+        
+        stockLabel.className = "text-[10px] font-bold tracking-widest text-rose-500 bg-rose-50 px-3 py-1 rounded-sm uppercase";
+        stockLabel.innerText = "COMBINATION UNAVAILABLE";
+        
+        actionButton.disabled = true;
+        actionButton.innerText = "UNAVAILABLE";
+        actionButton.className = "w-full bg-gray-200 text-gray-400 py-3 text-xs font-bold tracking-widest uppercase cursor-not-allowed rounded-sm";
+      }
+    }
+
+    // Initialize defaults on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.option-group').forEach(group => {
+        // Find the selected/active option button
+        const selectedBtn = group.querySelector('.option-btn.bg-black');
+        if (selectedBtn) {
+          const dim = group.dataset.dimension;
+          const val = selectedBtn.innerText.trim();
+          selectedOptions[dim] = val;
+        }
+      });
+      
+      // Update calculations immediately
+      updateVariantDetails();
+
+      // Hook up purchase and wishlist actions
+      const actionButton = document.getElementById('action-button');
+      if (actionButton) {
+        actionButton.addEventListener('click', async () => {
+          // If the button says "SELECT OPTIONS", do nothing or alert
+          if (actionButton.innerText === "SELECT OPTIONS") {
+            showToast("Please select options first.", "error");
+            return;
+          }
+
+          const variants = <%- JSON.stringify(product.variants) %>;
+          let variantId = null;
+
+          if (variants && variants.length > 0) {
+            // Find variant match in variants data matching selectedOptions values
+            const matchedVariant = variants.find(v => {
+              return v.combination.every(c => selectedOptions[c.name] === c.value);
+            });
+            
+            if (!matchedVariant || !matchedVariant.isListed) {
+              showToast("Please select valid product options.", "error");
+              return;
+            }
+            
+            if (matchedVariant.stock <= 0) {
+              showToast("This option is currently out of stock.", "error");
+              return;
+            }
+            
+            variantId = matchedVariant._id;
+          } else {
+            if (<%= product.stock %> <= 0) {
+              showToast("This product is currently out of stock.", "error");
+              return;
+            }
+          }
+
+          try {
+            const response = await fetch('/cart/add', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                productId: '<%= product._id %>',
+                variantId,
+                quantity: 1
+              })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              showToast(data.message, 'success');
+            } else {
+              showToast(data.message, 'error');
+            }
+          } catch (error) {
+            console.error('Add to cart error:', error);
+            showToast('Something went wrong. Please try again.', 'error');
+          }
+        });
+      }
+
+      const wishlistBtn = document.getElementById('wishlist-button');
+      if (wishlistBtn) {
+        wishlistBtn.addEventListener('click', async () => {
+          try {
+            const response = await fetch('/wishlist/add', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                productId: '<%= product._id %>'
+              })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              showToast(data.message, 'success');
+            } else {
+              showToast(data.message, 'error');
+            }
+          } catch (error) {
+            console.error('Add to wishlist error:', error);
+            showToast('Something went wrong. Please try again.', 'error');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

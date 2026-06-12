@@ -23,16 +23,10 @@
     </p>
 
 
-    <% if(message){ %>
 
-      <div class="bg-red-100 text-red-600 px-4 py-3 rounded-lg mb-5">
 
-        <%= message %>
 
-      </div>
-
-    <% } %>
-
+    <!-- VERIFY OTP FORM -->
 
     <form
       id="otpForm"
@@ -70,26 +64,6 @@
       </div>
 
 
-      <form
-        id="resendForm"
-        action="/profile/resend-profile-otp"
-        method="POST"
-        class="hidden mt-4 text-center"
-      >
-
-        <button
-          id="resendButton"
-          type="submit"
-          class="text-blue-600 font-semibold hover:text-blue-800"
-        >
-
-          Resend OTP
-
-        </button>
-
-      </form>
-
-
       <button
         id="verifyButton"
         type="submit"
@@ -97,6 +71,28 @@
       >
 
         Verify OTP
+
+      </button>
+
+    </form>
+
+
+    <!-- RESEND OTP FORM -->
+
+    <form
+      id="resendForm"
+      action="/profile/resend-profile-otp"
+      method="POST"
+      class="hidden mt-4 text-center"
+    >
+
+      <button
+        id="resendButton"
+        type="submit"
+        class="text-blue-600 font-semibold hover:text-blue-800"
+      >
+
+        Resend OTP
 
       </button>
 
@@ -131,6 +127,8 @@
     document.getElementById("timer");
 
 
+  // VERIFY OTP
+
   otpForm.addEventListener("submit", (e) => {
 
     otpError.innerText = "";
@@ -156,56 +154,38 @@
   });
 
 
-  let time = 300;
+  // OTP TIMER
 
+  let timeLeft = parseInt("<%= timeLeft %>") || 0;
 
-  const countdown = setInterval(() => {
-
-    let minutes =
-      Math.floor(time / 60);
-
-    let seconds =
-      time % 60;
-
-
-    seconds = seconds < 10
-      ? "0" + seconds
-      : seconds;
-
-
-    timer.innerText =
-      `${minutes}:${seconds}`;
-
-
-    time--;
-
-
-    if (time < 0) {
-
+  const updateTimerDisplay = (secondsRemaining) => {
+    if (secondsRemaining <= 0) {
       clearInterval(countdown);
-
-      timer.innerText =
-        "OTP Expired";
-
-      timer.classList.remove(
-        "text-red-500"
-      );
-
-      timer.classList.add(
-        "text-gray-500"
-      );
-
-      resendForm.classList.remove(
-        "hidden"
-      );
-
+      timer.innerText = "OTP Expired";
+      timer.classList.remove("text-red-500");
+      timer.classList.add("text-gray-500");
+      resendForm.classList.remove("hidden");
+      return;
     }
 
+    const minutes = Math.floor(secondsRemaining / 60);
+    let seconds = secondsRemaining % 60;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+
+    timer.innerText = `${minutes}:${seconds}`;
+  };
+
+  updateTimerDisplay(timeLeft);
+
+  const countdown = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay(timeLeft);
   }, 1000);
 
 
-  resendForm.addEventListener("submit", () => {
+  // RESEND OTP
 
+  resendForm.addEventListener("submit", () => {
     resendButton.innerText =
       "Sending...";
 
@@ -214,3 +194,5 @@
   });
 
 </script>
+
+<%- include("../partials/toast") %>

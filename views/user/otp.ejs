@@ -66,26 +66,7 @@
 
           <div class="px-8 pt-6">
 
-            <% if (success) { %>
 
-              <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg text-sm mb-4">
-
-                <%= success %>
-
-              </div>
-
-              <% } %>
-
-
-                <% if (error) { %>
-
-                  <div class="bg-red-100 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
-
-                    <%= error %>
-
-                  </div>
-
-                  <% } %>
 
           </div>
 
@@ -175,54 +156,40 @@
     });
 
 
-    let timeLeft = 300;
+    let timeLeft = parseInt("<%= timeLeft %>") || 0;
 
+    const updateTimerDisplay = (secondsRemaining) => {
+      if (secondsRemaining <= 0) {
+        clearInterval(countdown);
+        timer.innerText = "OTP expired";
+        timer.classList.remove("text-gray-500");
+        timer.classList.add("text-red-500");
+        resendForm.classList.remove("hidden");
+        return;
+      }
 
-    const countdown = setInterval(() => {
-
-      const minutes =
-        Math.floor(timeLeft / 60);
-
-      const seconds =
-        timeLeft % 60;
-
+      const minutes = Math.floor(secondsRemaining / 60);
+      const seconds = secondsRemaining % 60;
 
       timer.innerText =
         `OTP expires in ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    };
 
+    updateTimerDisplay(timeLeft);
 
+    const countdown = setInterval(() => {
       timeLeft--;
-
-
-      if (timeLeft < 0) {
-
-        clearInterval(countdown);
-
-        timer.innerText =
-          "OTP expired";
-
-        timer.classList.remove("text-gray-500");
-
-        timer.classList.add("text-red-500");
-
-        resendForm.classList.remove("hidden");
-
-      }
-
+      updateTimerDisplay(timeLeft);
     }, 1000);
 
-
     resendForm.addEventListener("submit", () => {
-
-      resendButton.innerText =
-        "Sending...";
-
+      resendButton.innerText = "Sending...";
       resendButton.disabled = true;
-
     });
 
   </script>
 
+  <%- include("../partials/toast") %>
 </body>
 
 </html>

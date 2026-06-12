@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Customers</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  >
+
+</head>
+
+<body class="bg-gray-100 min-h-screen flex">
+
+
+  <!-- SIDEBAR -->
+
+  <%- include("../partials/admin/navbar")%>
+
+  <!-- MAIN -->
+
+  <main class="flex-1 ml-64 p-8 overflow-x-auto">
+
+
+    <!-- TOP -->
+
+    <div class="flex items-center justify-between mb-8">
+
+      <div>
+
+        <h1 class="text-3xl font-bold text-gray-800">
+
+          Customers
+
+        </h1>
+
+        <p class="text-gray-500 mt-1">
+
+          Manage your users
+
+        </p>
+
+      </div>
+
+
+      <!-- SEARCH -->
+
+      <form
+        action="/admin/customers"
+        method="GET"
+        class="flex items-center gap-3"
+      >
+
+        <div class="relative">
+
+          <input
+            type="text"
+            name="search"
+            value="<%= search || '' %>"
+            placeholder="Search users..."
+            class="w-72 border border-gray-300 rounded-xl px-4 py-3 pl-10 outline-none"
+          >
+
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+
+        </div>
+
+
+        <button
+          type="submit"
+          class="bg-black text-white px-5 py-3 rounded-xl"
+        >
+
+          Search
+
+        </button>
+
+
+        <% if(search){ %>
+
+          <a
+            href="/admin/customers"
+            class="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl"
+          >
+
+            Clear
+
+          </a>
+
+        <% } %>
+
+      </form>
+
+    </div>
+
+
+    <!-- TABLE -->
+
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+
+      <table class="w-full">
+
+        <thead class="bg-gray-50 border-b">
+
+          <tr>
+
+            <th class="text-left px-6 py-4">
+
+              Customer
+
+            </th>
+
+            <th class="text-left px-6 py-4">
+
+              Email
+
+            </th>
+
+            <th class="text-left px-6 py-4">
+
+              Phone
+
+            </th>
+
+            <th class="text-left px-6 py-4">
+
+              Joined
+
+            </th>
+
+            <th class="text-left px-6 py-4">
+
+              Status
+
+            </th>
+
+            <th class="text-left px-6 py-4">
+
+              Action
+
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <% users.forEach(user => { %>
+
+            <tr class="border-b hover:bg-gray-50">
+
+              <!-- USER -->
+
+              <td class="px-6 py-4">
+
+                <div class="flex items-center gap-4">
+
+                  <% if(user.profileImage){ %>
+
+                    <img
+                      src="<%= user.profileImage %>"
+                      class="w-12 h-12 rounded-full object-cover"
+                    >
+
+                  <% } else { %>
+
+                    <div class="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center">
+
+                      <%= user.name.charAt(0).toUpperCase() %>
+
+                    </div>
+
+                  <% } %>
+
+
+                  <div>
+
+                    <p class="font-semibold text-gray-800">
+
+                      <%= user.name %>
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </td>
+
+
+              <!-- EMAIL -->
+
+              <td class="px-6 py-4 text-gray-600">
+
+                <%= user.email %>
+
+              </td>
+
+
+              <!-- PHONE -->
+
+              <td class="px-6 py-4 text-gray-600">
+
+                <%= user.phone || "N/A" %>
+
+              </td>
+
+
+              <!-- JOIN DATE -->
+
+              <td class="px-6 py-4 text-gray-600">
+
+                <%= user.createdAt.toDateString() %>
+
+              </td>
+
+
+              <!-- STATUS -->
+
+              <td class="px-6 py-4">
+
+                <% if(user.isBlocked){ %>
+
+                  <span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">
+
+                    Blocked
+
+                  </span>
+
+                <% } else { %>
+
+                  <span class="bg-green-100 text-green-600 px-3 py-1 rounded-full text-xs font-semibold">
+
+                    Active
+
+                  </span>
+
+                <% } %>
+
+              </td>
+
+
+              <!-- ACTION -->
+
+              <td class="px-6 py-4">
+
+                <% if(user.isBlocked){ %>
+
+                 <a
+  href="#"
+  onclick="confirmUnblock('<%= user._id %>')"
+  class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm"
+>
+  Unblock
+</a>
+
+                <% } else { %>
+
+                  <a
+  href="#"
+  onclick="confirmBlock('<%= user._id %>')"
+  class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
+>
+  Block
+</a>
+
+                <% } %>
+
+              </td>
+
+            </tr>
+
+          <% }) %>
+
+        </tbody>
+
+      </table>
+
+
+      <!-- PAGINATION -->
+
+      <div class="flex justify-center items-center gap-3 py-6">
+
+        <% for(let i = 1; i <= totalPages; i++){ %>
+
+          <a
+            href="/admin/customers?page=<%= i %>&search=<%= search || '' %>"
+            class="
+              px-4 py-2 rounded-lg
+
+              <%= currentPage === i
+                ? 'bg-black text-white'
+                : 'bg-gray-200 text-gray-700'
+              %>
+            "
+          >
+
+            <%= i %>
+
+          </a>
+
+        <% } %>
+
+      </div>
+
+    </div>
+
+  </main>
+  <script>
+
+function confirmBlock(id) {
+
+  Swal.fire({
+
+    title: "Block User?",
+
+    text: "This user will not be able to login.",
+
+    icon: "warning",
+
+    showCancelButton: true,
+
+    confirmButtonText: "Yes, block"
+
+  }).then((result) => {
+
+    if (result.isConfirmed) {
+
+      window.location.href =
+        `/admin/block-user/${id}`;
+
+    }
+
+  });
+
+}
+
+function confirmUnblock(id) {
+
+  Swal.fire({
+
+    title: "Unblock User?",
+
+    text: "This user can login again.",
+
+    icon: "question",
+
+    showCancelButton: true,
+
+    confirmButtonText: "Yes, unblock"
+
+  }).then((result) => {
+
+    if (result.isConfirmed) {
+
+      window.location.href =
+        `/admin/unblock-user/${id}`;
+
+    }
+
+  });
+
+}
+
+</script>
+
+</body>
+
+</html>

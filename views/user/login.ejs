@@ -78,26 +78,7 @@
 
           <p id="loginError" class="text-red-500 text-sm text-center"></p>
 
-          <% if (success) { %>
 
-            <div class="bg-green-100 text-green-700 p-3 rounded text-sm text-center">
-
-              <%= success %>
-
-            </div>
-
-            <% } %>
-
-
-              <% if (error) { %>
-
-                <div class="bg-red-100 text-red-700 p-3 rounded text-sm text-center">
-
-                  <%= error %>
-
-                </div>
-
-                <% } %>
 
                   <button id="loginButton" class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded">
 
@@ -242,7 +223,7 @@
 
 
       const emailPattern =
-        /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+        /^[^ ]+@[^ ]+\.[a-z]{2,3}$/i;
 
       if (!emailInput.value.match(emailPattern)) {
 
@@ -277,6 +258,7 @@
 
   </script>
 
+  <%- include("../partials/toast") %>
 </body>
 
 </html>

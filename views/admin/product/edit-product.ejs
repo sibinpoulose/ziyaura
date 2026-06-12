@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Product - ZIYAURA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <!-- Cropper.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <style>
+    .image-preview-card:hover .image-overlay {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="bg-[#F3F6F9] min-h-screen">
+
+<%- include("../../partials/admin/navbar") %>
+
+<main class="ml-64 p-10">
+  <!-- Back Button & Title -->
+  <div class="mb-8 flex items-center justify-between">
+    <div>
+      <a href="/admin/products" class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-600 mb-2 transition-colors">
+        <i class="fa-solid fa-arrow-left mr-2"></i> Back to Products
+      </a>
+      <h1 class="text-4xl font-bold text-gray-900">Edit Product</h1>
+      <p class="text-gray-400 mt-1">Refine and update your product details</p>
+    </div>
+  </div>
+
+  <form id="productForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- LEFT & CENTER COLUMNS (Product details, variants) -->
+    <div class="lg:col-span-2 space-y-6">
+      
+      <!-- Basic Details Card -->
+      <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-5">
+        <h2 class="text-xl font-bold text-gray-800 border-b pb-3">Basic Details</h2>
+        
+        <div>
+          <label class="block font-semibold text-gray-700 mb-2">Product Name <span class="text-red-500">*</span></label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value="<%= product.name %>"
+            placeholder="e.g. Royal Gold Ring"
+            class="w-full border p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+          >
+          <p id="nameError" class="text-red-500 text-sm mt-1"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold text-gray-700 mb-2">Brand <span class="text-red-500">*</span></label>
+            <input
+              type="text"
+              id="brand"
+              name="brand"
+              value="<%= product.brand %>"
+              placeholder="e.g. Ziyaura"
+              class="w-full border p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+            >
+            <p id="brandError" class="text-red-500 text-sm mt-1"></p>
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
+            <select
+              id="categorySelect"
+              name="category"
+              class="w-full border p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-white"
+            >
+              <option value="">Select a Category</option>
+              <% categories.forEach(cat => { %>
+                <option value="<%= cat._id %>" <%= product.category && product.category._id.toString() === cat._id.toString() ? 'selected' : '' %>>
+                  <%= cat.name %>
+                </option>
+              <% }) %>
+            </select>
+            <p id="categoryError" class="text-red-500 text-sm mt-1"></p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-gray-700 mb-2">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="6"
+            placeholder="Describe the product details, materials, aesthetics..."
+            class="w-full border p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+          ><%= product.description %></textarea>
+        </div>
+      </div>
+
+      <!-- Variants / Dynamic Combination Builder Card -->
+      <div id="variantsCard" class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hidden space-y-6">
+        <h2 class="text-xl font-bold text-gray-800 border-b pb-3">Product Variants Builder</h2>
+        
+        <p class="text-sm text-gray-400">
+          This category supports variants. Choose the available options below to generate combination stock and pricing.
+        </p>
+
+        <!-- Variant Types Select Checkboxes Grid -->
+        <div id="variantTypesSelector" class="space-y-4">
+          <!-- Dynamically populated from JS -->
+        </div>
+
+        <!-- Generated Combinations Table -->
+        <div id="combinationsSection" class="hidden space-y-4 pt-4 border-t border-gray-100">
+          <h3 class="font-bold text-gray-700 text-lg">Combinations Details</h3>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr class="bg-gray-50 border-b text-gray-500 font-semibold text-xs uppercase">
+                  <th class="p-3">Combination</th>
+                  <th class="p-3">SKU *</th>
+                  <th class="p-3">Price (₹) *</th>
+                  <th class="p-3">Sale Price (₹)</th>
+                  <th class="p-3">Stock *</th>
+                </tr>
+              </thead>
+              <tbody id="combinationsTableBody">
+                <!-- Dynamically populated combinations rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fallback Single Inventory Card (When no variants exist) -->
+      <div id="fallbackInventoryCard" class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-5">
+        <h2 class="text-xl font-bold text-gray-800 border-b pb-3">Pricing & Inventory</h2>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold text-gray-700 mb-2">Original Price (₹) <span class="text-red-500">*</span></label>
+            <input
+              type="number"
+              id="basePrice"
+              value="<%= product.price %>"
+              placeholder="e.g. 15000"
+              min="0"
+              class="w-full border p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+            >
+            <p id="basePriceError" class="text-red-500 text-sm mt-1"></p>
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-700 mb-2">Sale Price (₹) <span class="text-xs text-gray-400">(Promo)</span></label>
+            <input
+              type="number"
+              id="baseSalePrice"
+              value="<%= product.salePrice %>"
+              placeholder="e.g. 13500"
+              min="0"
+              class="w-full border p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+            >
+            <p id="baseSalePriceError" class="text-red-500 text-sm mt-1"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold text-gray-700 mb-2">Stock Quantity <span class="text-red-500">*</span></label>
+            <input
+              type="number"
+              id="baseStock"
+              value="<%= product.stock %>"
+              placeholder="e.g. 10"
+              min="0"
+              class="w-full border p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+            >
+            <p id="baseStockError" class="text-red-500 text-sm mt-1"></p>
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-700 mb-2">SKU <span class="text-red-500">*</span></label>
+            <input
+              type="text"
+              id="baseSku"
+              value="<%= product.sku %>"
+              placeholder="e.g. RING-GLD-01"
+              class="w-full border p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono font-medium"
+            >
+            <p id="baseSkuError" class="text-red-500 text-sm mt-1"></p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN (Images upload section) -->
+    <div class="space-y-6">
+      
+      <!-- Images Upload Card -->
+      <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-5">
+        <div class="flex justify-between items-center border-b pb-3">
+          <h2 class="text-xl font-bold text-gray-800">Product Images</h2>
+          <span class="text-xs font-bold text-red-500">Min 3 Required</span>
+        </div>
+
+        <!-- Previews Grid -->
+        <div id="imagesPreviewGrid" class="grid grid-cols-2 gap-3 pb-4">
+          <!-- Populated in JS (combining existing and new images) -->
+        </div>
+
+        <!-- Drop area styled button -->
+        <div
+          onclick="document.getElementById('imageInput').click()"
+          class="border-2 border-dashed border-gray-200 hover:border-blue-500 rounded-xl p-8 text-center cursor-pointer transition-colors"
+        >
+          <i class="fa-solid fa-cloud-arrow-up text-gray-400 text-3xl mb-2"></i>
+          <p class="font-semibold text-sm text-gray-700">Select More Images</p>
+          <p class="text-xs text-gray-400 mt-1">PNG, JPG, WEBP formats allowed</p>
+          <input
+            type="file"
+            id="imageInput"
+            multiple
+            accept="image/*"
+            class="hidden"
+          >
+        </div>
+        <p id="imageError" class="text-red-500 text-sm mt-1"></p>
+      </div>
+
+      <!-- Action Panel Card -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3">
+        <button
+          type="submit"
+          class="bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 transition-colors w-full"
+        >
+          Update Master Product
+        </button>
+        <a
+          href="/admin/products"
+          class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-4 rounded-lg text-center transition-colors w-full"
+        >
+          Cancel
+        </a>
+      </div>
+
+    </div>
+  </form>
+</main>
+
+<!-- CROPPING MODAL -->
+<div id="cropModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden p-4">
+  <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+      <h3 class="text-lg font-bold text-gray-800">Crop Product Image</h3>
+      <button onclick="closeCropModal()" class="text-gray-400 hover:text-gray-600">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+    </div>
+
+    <!-- Cropping canvas container -->
+    <div class="max-h-[400px] overflow-hidden flex items-center justify-center bg-gray-50 border rounded-lg">
+      <img id="cropImageTarget" src="" alt="Crop Area" class="max-w-full max-h-[400px] block">
+    </div>
+
+    <!-- Controls & Actions -->
+    <div class="flex justify-between items-center pt-2">
+      <!-- Image transformations -->
+      <div class="flex gap-2 text-sm text-gray-600">
+        <button onclick="cropperInstance.rotate(-90)" class="bg-gray-100 px-3 py-2 rounded hover:bg-gray-200" title="Rotate Left">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button onclick="cropperInstance.rotate(90)" class="bg-gray-100 px-3 py-2 rounded hover:bg-gray-200" title="Rotate Right">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+        <button onclick="cropperInstance.zoom(0.1)" class="bg-gray-100 px-3 py-2 rounded hover:bg-gray-200" title="Zoom In">
+          <i class="fa-solid fa-magnifying-glass-plus"></i>
+        </button>
+        <button onclick="cropperInstance.zoom(-0.1)" class="bg-gray-100 px-3 py-2 rounded hover:bg-gray-200" title="Zoom Out">
+          <i class="fa-solid fa-magnifying-glass-minus"></i>
+        </button>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="closeCropModal()" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-semibold transition-colors">
+          Cancel
+        </button>
+        <button onclick="saveCropResult()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
+          Apply Crop
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FULLSCREEN LOADING OVERLAY -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-65 z-50 flex flex-col items-center justify-center hidden">
+  <div class="bg-white p-8 rounded-xl shadow-2xl flex flex-col items-center gap-4 text-center max-w-xs">
+    <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+    <div>
+      <h4 class="font-bold text-gray-800 text-lg">Updating Master Product</h4>
+      <p class="text-sm text-gray-400 mt-1">Uploading master details & cropped images to Cloudinary...</p>
+    </div>
+  </div>
+</div>
+
+<%- include("../../partials/toast") %>
+
+<script>
+// State Management
+const productId = "<%= product._id %>";
+const initialExistingImages = <%- JSON.stringify(product.images || []) %>;
+const productVariants = <%- JSON.stringify(product.variants || []) %>;
+
+let existingImages = [...initialExistingImages]; // URLs remaining
+let selectedImages = []; // New files uploaded: { file: File/Blob, previewUrl: string, name: string }
+
+let categoryVariantTypes = [];
+let cropperInstance = null;
+let currentCropIndex = null;
+
+const imageInput = document.getElementById("imageInput");
+const nameInput = document.getElementById("name");
+const brandInput = document.getElementById("brand");
+const categorySelect = document.getElementById("categorySelect");
+
+// 1. INITIAL LOAD OF PREVIEWS AND DYNAMIC FIELDS
+document.addEventListener("DOMContentLoaded", () => {
+  renderImagePreviews();
+  // Fetch initial category variants
+  categorySelect.dispatchEvent(new Event("change"));
+});
+
+// Render the unified image preview list (Existing Cloudinary URLs first, then newly added files)
+function renderImagePreviews() {
+  const container = document.getElementById("imagesPreviewGrid");
+  container.innerHTML = "";
+
+  // 1. Existing URL previews
+  existingImages.forEach((url, idx) => {
+    const card = document.createElement("div");
+    card.className = "image-preview-card border rounded-lg overflow-hidden bg-gray-50 flex flex-col items-center relative aspect-square border-gray-200 group";
+    card.innerHTML = `
+      <img src="${url}" class="w-full h-full object-cover">
+      <div class="image-overlay absolute inset-0 bg-black bg-opacity-50 opacity-0 flex items-center justify-center transition-opacity duration-200">
+        <button type="button" onclick="removeExistingImage(${idx})" class="w-9 h-9 bg-white text-red-600 rounded-full hover:bg-gray-100 flex items-center justify-center shadow" title="Delete Image">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+      <span class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-blue-400 uppercase">
+        Saved
+      </span>
+    `;
+    container.appendChild(card);
+  });
+
+  // 2. Newly added files
+  selectedImages.forEach((img, idx) => {
+    const card = document.createElement("div");
+    card.className = "image-preview-card border rounded-lg overflow-hidden bg-gray-50 flex flex-col items-center relative aspect-square border-gray-200 group";
+    card.innerHTML = `
+      <img src="${img.previewUrl}" class="w-full h-full object-cover">
+      <div class="image-overlay absolute inset-0 bg-black bg-opacity-50 opacity-0 flex items-center justify-center gap-3 transition-opacity duration-200">
+        <button type="button" onclick="triggerCrop(${idx})" class="w-9 h-9 bg-white text-blue-600 rounded-full hover:bg-gray-100 flex items-center justify-center shadow" title="Crop Image">
+          <i class="fa-solid fa-crop-simple"></i>
+        </button>
+        <button type="button" onclick="removeNewPreview(${idx})" class="w-9 h-9 bg-white text-red-600 rounded-full hover:bg-gray-100 flex items-center justify-center shadow" title="Delete Image">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+      <span class="absolute top-2 left-2 bg-green-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-green-400 uppercase">
+        New
+      </span>
+    `;
+    container.appendChild(card);
+  });
+
+  // Validate images limit (total images >= 3)
+  const totalCount = existingImages.length + selectedImages.length;
+  if (totalCount >= 3) {
+    document.getElementById("imageError").textContent = "";
+  }
+}
+
+function removeExistingImage(idx) {
+  existingImages.splice(idx, 1);
+  renderImagePreviews();
+}
+
+function removeNewPreview(idx) {
+  URL.revokeObjectURL(selectedImages[idx].previewUrl);
+  selectedImages.splice(idx, 1);
+  renderImagePreviews();
+}
+
+// 2. FILE UPLOADS
+imageInput.addEventListener("change", (e) => {
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    if (!file.type.startsWith("image/")) {
+      alert("Only images are allowed!");
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    selectedImages.push({
+      file,
+      previewUrl,
+      name: file.name
+    });
+  });
+  imageInput.value = "";
+  renderImagePreviews();
+});
+
+// 3. CROPPER MODAL CONTROLS
+function triggerCrop(idx) {
+  currentCropIndex = idx;
+  const modal = document.getElementById("cropModal");
+  const imgTarget = document.getElementById("cropImageTarget");
+
+  imgTarget.src = selectedImages[idx].previewUrl;
+  modal.classList.remove("hidden");
+
+  if (cropperInstance) {
+    cropperInstance.destroy();
+  }
+
+  cropperInstance = new Cropper(imgTarget, {
+    aspectRatio: 1, // forced 1:1
+    viewMode: 1,
+    dragMode: "move",
+    autoCropArea: 0.9,
+    restore: false,
+    guides: true,
+    center: true,
+    highlight: false,
+    cropBoxMovable: true,
+    cropBoxResizable: true,
+    toggleDragModeOnDblclick: false
+  });
+}
+
+function closeCropModal() {
+  document.getElementById("cropModal").classList.add("hidden");
+  if (cropperInstance) {
+    cropperInstance.destroy();
+    cropperInstance = null;
+  }
+  currentCropIndex = null;
+}
+
+function saveCropResult() {
+  if (!cropperInstance) return;
+
+  const canvas = cropperInstance.getCroppedCanvas({
+    width: 800,
+    height: 800,
+    imageSmoothingQuality: "high"
+  });
+
+  canvas.toBlob((blob) => {
+    if (blob) {
+      URL.revokeObjectURL(selectedImages[currentCropIndex].previewUrl);
+      const newUrl = URL.createObjectURL(blob);
+      selectedImages[currentCropIndex].file = new Blob([blob], { type: "image/webp" });
+      selectedImages[currentCropIndex].previewUrl = newUrl;
+
+      renderImagePreviews();
+      closeCropModal();
+    }
+  }, "image/webp", 0.9);
+}
+
+// 4. CATEGORY VARIANTS FETCHER
+categorySelect.addEventListener("change", async () => {
+  const catId = categorySelect.value;
+  const variantsCard = document.getElementById("variantsCard");
+  const fallbackCard = document.getElementById("fallbackInventoryCard");
+
+  if (!catId) {
+    variantsCard.classList.add("hidden");
+    fallbackCard.classList.remove("hidden");
+    categoryVariantTypes = [];
+    return;
+  }
+
+  try {
+    const response = await fetch(`/admin/categories/${catId}/variants`);
+    const data = await response.json();
+    
+    if (data.success && data.variantTypes && data.variantTypes.length > 0) {
+      categoryVariantTypes = data.variantTypes;
+      renderVariantSelectors();
+      variantsCard.classList.remove("hidden");
+      fallbackCard.classList.add("hidden");
+    } else {
+      categoryVariantTypes = [];
+      variantsCard.classList.add("hidden");
+      fallbackCard.classList.remove("hidden");
+    }
+  } catch (error) {
+    console.error("Fetch variants error:", error);
+    categoryVariantTypes = [];
+    variantsCard.classList.add("hidden");
+    fallbackCard.classList.remove("hidden");
+  }
+});
+
+function renderVariantSelectors() {
+  const container = document.getElementById("variantTypesSelector");
+  container.innerHTML = "";
+
+  // Gather current variant dimensions active in the product's variants to pre-check them
+  const activeOptionValues = new Set();
+  productVariants.forEach(v => {
+    if (v.combination) {
+      v.combination.forEach(c => {
+        activeOptionValues.add(`${c.name.toLowerCase()}:${c.value.toLowerCase()}`);
+      });
+    }
+  });
+
+  categoryVariantTypes.forEach((vt, index) => {
+    const selectorBox = document.createElement("div");
+    selectorBox.className = "border p-4 rounded-lg bg-gray-50 space-y-3";
+    
+    let optionsHtml = "";
+    vt.values.forEach(val => {
+      const isChecked = activeOptionValues.has(`${vt.name.toLowerCase()}:${val.toLowerCase()}`);
+      optionsHtml += `
+        <label class="inline-flex items-center gap-2 bg-white border px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+          <input
+            type="checkbox"
+            value="${val}"
+            data-variant-name="${vt.name}"
+            onchange="generateCombinationsGrid()"
+            ${isChecked ? 'checked' : ''}
+            class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+          >
+          <span class="text-sm font-semibold text-gray-700">${val}</span>
+        </label>
+      `;
+    });
+
+    selectorBox.innerHTML = `
+      <h4 class="font-bold text-gray-800 text-sm flex items-center justify-between">
+        <span>Allowed ${vt.name}s</span>
+        <span class="text-xs text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-100">${vt.values.length} Available</span>
+      </h4>
+      <div class="flex flex-wrap gap-2 pt-1">
+        ${optionsHtml}
+      </div>
+    `;
+    container.appendChild(selectorBox);
+  });
+
+  generateCombinationsGrid();
+}
+
+function generateCombinationsGrid() {
+  const activeSelectors = categoryVariantTypes.map(vt => {
+    const checkedBoxes = Array.from(document.querySelectorAll(`input[data-variant-name="${vt.name}"]:checked`));
+    return {
+      name: vt.name,
+      checkedValues: checkedBoxes.map(cb => cb.value)
+    };
+  });
+
+  const hasIncompleteDimension = activeSelectors.some(sel => sel.checkedValues.length === 0);
+  const combSection = document.getElementById("combinationsSection");
+  const tbody = document.getElementById("combinationsTableBody");
+
+  if (hasIncompleteDimension) {
+    combSection.classList.add("hidden");
+    tbody.innerHTML = "";
+    return;
+  }
+
+  const arrays = activeSelectors.map(sel => sel.checkedValues);
+  const cartesianResult = cartesian(arrays);
+
+  tbody.innerHTML = "";
+  const prodNameNormalized = nameInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  cartesianResult.forEach((comb, idx) => {
+    const combLabel = comb.join(" / ");
+    const combSuffix = comb.map(c => c.toUpperCase().replace(/\s+/g, "")).join("-");
+    
+    // Find if this specific combination already exists in the product's variants list
+    const existingMatch = productVariants.find(pv => {
+      if (!pv.combination || pv.combination.length !== comb.length) return false;
+      return pv.combination.every((dim, dIdx) => dim.value.toLowerCase() === comb[dIdx].toLowerCase());
+    });
+
+    // Populate values
+    const sku = existingMatch ? existingMatch.sku : `${prodNameNormalized || "PROD"}-${combSuffix}`;
+    const price = existingMatch ? existingMatch.price : "";
+    const salePrice = existingMatch ? (existingMatch.salePrice !== null ? existingMatch.salePrice : "") : "";
+    const stock = existingMatch ? existingMatch.stock : "10";
+
+    const tr = document.createElement("tr");
+    tr.className = "border-b hover:bg-gray-50/50 transition-colors text-sm font-medium";
+    tr.setAttribute("data-combination", JSON.stringify(comb));
+    tr.innerHTML = `
+      <td class="p-3 text-gray-800 font-bold">${combLabel}</td>
+      <td class="p-3">
+        <input
+          type="text"
+          value="${sku}"
+          placeholder="SKU"
+          class="border px-2.5 py-1.5 rounded w-full font-mono text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+          data-field="sku"
+          required
+        >
+      </td>
+      <td class="p-3">
+        <input
+          type="number"
+          min="0"
+          value="${price}"
+          placeholder="e.g. 15000"
+          class="border px-2.5 py-1.5 rounded w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+          data-field="price"
+          required
+        >
+      </td>
+      <td class="p-3">
+        <input
+          type="number"
+          min="0"
+          value="${salePrice}"
+          placeholder="e.g. 13500"
+          class="border px-2.5 py-1.5 rounded w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+          data-field="salePrice"
+        >
+      </td>
+      <td class="p-3">
+        <input
+          type="number"
+          min="0"
+          value="${stock}"
+          placeholder="Stock"
+          class="border px-2.5 py-1.5 rounded w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+          data-field="stock"
+          required
+        >
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  combSection.classList.remove("hidden");
+}
+
+function cartesian(args) {
+  var r = [], max = args.length - 1;
+  function helper(arr, i) {
+    for (var j = 0, l = args[i].length; j < l; j++) {
+      var a = arr.slice(0);
+      a.push(args[i][j]);
+      if (i == max) r.push(a);
+      else helper(a, i + 1);
+    }
+  }
+  helper([], 0);
+  return r;
+}
+
+// Update SKUs prefix if name updates (and only if SKU hasn't been edited extensively)
+nameInput.addEventListener("input", () => {
+  const tbody = document.getElementById("combinationsTableBody");
+  if (!tbody) return;
+  const rows = tbody.querySelectorAll("tr");
+  const newNamePrefix = nameInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "") || "PROD";
+  
+  rows.forEach(tr => {
+    const skuInput = tr.querySelector('[data-field="sku"]');
+    if (skuInput) {
+      const currentVal = skuInput.value;
+      const dashIdx = currentVal.indexOf("-");
+      if (dashIdx !== -1) {
+        const suffix = currentVal.substring(dashIdx + 1);
+        skuInput.value = `${newNamePrefix}-${suffix}`;
+      }
+    }
+  });
+});
+
+// 5. SUBMIT VIA AJAX FORM
+const form = document.getElementById("productForm");
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  document.getElementById("nameError").textContent = "";
+  document.getElementById("brandError").textContent = "";
+  document.getElementById("categoryError").textContent = "";
+  document.getElementById("imageError").textContent = "";
+
+  let hasError = false;
+
+  if (!nameInput.value.trim()) {
+    document.getElementById("nameError").textContent = "Product Name is required";
+    hasError = true;
+  }
+  if (!brandInput.value.trim()) {
+    document.getElementById("brandError").textContent = "Brand is required";
+    hasError = true;
+  }
+  if (!categorySelect.value) {
+    document.getElementById("categoryError").textContent = "Please select a Category";
+    hasError = true;
+  }
+
+  // Validate images count (total remaining + new >= 3)
+  const totalImagesCount = existingImages.length + selectedImages.length;
+  if (totalImagesCount < 3) {
+    document.getElementById("imageError").textContent = "Product must have at least 3 images";
+    hasError = true;
+  }
+
+  if (hasError) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("name", nameInput.value.trim());
+  formData.append("brand", brandInput.value.trim());
+  formData.append("category", categorySelect.value);
+  formData.append("description", document.getElementById("description").value.trim());
+
+  // Append remaining existing images
+  existingImages.forEach(url => {
+    formData.append("existingImages", url);
+  });
+
+  // Append new image files
+  selectedImages.forEach((img, index) => {
+    const extension = img.file.type.split("/")[1] || "webp";
+    const filename = `product_new_image_${index + 1}.${extension}`;
+    formData.append("images", img.file, filename);
+  });
+
+  const hasVariantsConfigured = categoryVariantTypes.length > 0;
+
+  if (hasVariantsConfigured) {
+    const rows = Array.from(document.querySelectorAll("#combinationsTableBody tr"));
+    if (rows.length === 0) {
+      alert("At least one variant option combination must be checked!");
+      return;
+    }
+
+    const variantsData = [];
+    let variantsValid = true;
+
+    for (const tr of rows) {
+      const combination = JSON.parse(tr.getAttribute("data-combination"));
+      const skuVal = tr.querySelector('[data-field="sku"]').value.trim();
+      const priceVal = tr.querySelector('[data-field="price"]').value;
+      const salePriceInput = tr.querySelector('[data-field="salePrice"]').value;
+      const stockVal = tr.querySelector('[data-field="stock"]').value;
+
+      if (!skuVal) {
+        alert("SKU is required for all combinations");
+        variantsValid = false;
+        break;
+      }
+      if (priceVal === "" || Number(priceVal) < 0) {
+        alert("A valid original price is required for all combinations");
+        variantsValid = false;
+        break;
+      }
+      if (stockVal === "" || Number(stockVal) < 0) {
+        alert("A valid stock quantity is required for all combinations");
+        variantsValid = false;
+        break;
+      }
+
+      const variantItem = {
+        sku: skuVal,
+        price: Number(priceVal),
+        salePrice: salePriceInput !== "" ? Number(salePriceInput) : null,
+        stock: Number(stockVal),
+        combination: combination.map((val, dimIndex) => ({
+          name: categoryVariantTypes[dimIndex].name,
+          value: val
+        }))
+      };
+
+      if (variantItem.salePrice !== null && variantItem.salePrice >= variantItem.price) {
+        alert(`Sale Price for ${combination.join(' / ')} must be lower than original price`);
+        variantsValid = false;
+        break;
+      }
+
+      variantsData.push(variantItem);
+    }
+
+    if (!variantsValid) return;
+
+    formData.append("variants", JSON.stringify(variantsData));
+  } else {
+    // Base Single inventory
+    const priceVal = document.getElementById("basePrice").value;
+    const salePriceVal = document.getElementById("baseSalePrice").value;
+    const stockVal = document.getElementById("baseStock").value;
+    const skuVal = document.getElementById("baseSku").value.trim();
+
+    if (!priceVal || Number(priceVal) < 0) {
+      document.getElementById("basePriceError").textContent = "Price is required";
+      return;
+    }
+    if (!stockVal || Number(stockVal) < 0) {
+      document.getElementById("baseStockError").textContent = "Stock is required";
+      return;
+    }
+    if (!skuVal) {
+      document.getElementById("baseSkuError").textContent = "SKU is required";
+      return;
+    }
+
+    const price = Number(priceVal);
+    const salePrice = salePriceVal !== "" ? Number(salePriceVal) : null;
+    
+    if (salePrice !== null && salePrice >= price) {
+      document.getElementById("baseSalePriceError").textContent = "Sale price must be lower than base price";
+      return;
+    }
+
+    formData.append("price", price);
+    formData.append("salePrice", salePrice);
+    formData.append("stock", Number(stockVal));
+    formData.append("sku", skuVal);
+  }
+
+  document.getElementById("loadingOverlay").classList.remove("hidden");
+
+  try {
+    const response = await fetch(`/admin/products/edit/${productId}`, {
+      method: "POST",
+      body: formData
+    });
+    
+    const data = await response.json();
+    document.getElementById("loadingOverlay").classList.add("hidden");
+
+    if (data.success) {
+      window.location.href = "/admin/products";
+    } else {
+      alert(data.message || "Error updating product");
+    }
+  } catch (error) {
+    document.getElementById("loadingOverlay").classList.add("hidden");
+    console.error("Submission error:", error);
+    alert("An error occurred during submission. Please try again.");
+  }
+});
+</script>
+
+</body>
+</html>

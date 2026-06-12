@@ -1,86 +1,107 @@
 import express from "express";
 import User from "../../models/User.js";
+import Category from "../../models/category.js";
 import passport from "../../config/passport.js";
 import {
   signup,
   login,
   sendOTP,
   verifyOTP,
-  logout,
   forgotPassword,
   verifyOtpReset,
   resetPassword
 } from "../../controllers/user/authController.js";
 import { protect } from "../../middlewares/authMiddleware.js";
+import { isGuest } from "../../middlewares/guestMiddleware.js";
 
 const router = express.Router();
-router.get("/login", (req, res) => {
+router.get("/", (req, res) => {
+  res.redirect("/home");
+});
+
+router.get("/login", isGuest, (req, res) => {
   res.render("user/login");
 });
 
-router.get("/signup", (req, res) => {
+router.get("/signup", isGuest, (req, res) => {
   res.render("user/signup");
 });
-router.get("/otp", (req, res) => res.render("user/otp"))
+router.get("/otp", isGuest, async (req, res) => {
+  try {
+    const email = req.session.email;
+    if (!email) {
+      return res.redirect("/signup");
+    }
+    const user = await User.findOne({ email });
+    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 0;
+    res.render("user/otp", {
+      email,
+      timeLeft
+    });
+  } catch (err) {
+    req.session.error = err.message;
+    res.redirect("/signup");
+  }
+});
 
-router.get("/home", (req, res) => res.render("user/home"));
+router.get("/home", async (req, res) => {
+  try {
+    let featuredCategories = await Category.find({ isListed: true, isFeatured: true }).limit(4);
+    
+    // Fallback: if less than 4 are featured, fill with standard listed categories
+    if (featuredCategories.length < 4) {
+      const remaining = 4 - featuredCategories.length;
+      const featuredIds = featuredCategories.map(c => c._id);
+      const extraCategories = await Category.find({
+        isListed: true,
+        _id: { $not: { $in: featuredIds } }
+      }).limit(remaining);
+      featuredCategories = [...featuredCategories, ...extraCategories];
+    }
+    
+    res.render("user/home", { featuredCategories });
+  } catch (error) {
+    console.error("Load Home Page Categories Error:", error);
+    res.render("user/home", { featuredCategories: [] });
+  }
+});
 
-router.get("/forgot-password", (req, res) => {
+router.get("/forgot-password", isGuest, (req, res) => {
   res.render("user/forgot-password");
 });
-// GOOGLE LOGIN
 
 router.get(
-
   "/auth/google",
 
   passport.authenticate("google", {
-
     scope: ["profile", "email"]
-
   })
-  
-
 );
 
-
-// GOOGLE CALLBACK
-
 router.get(
-
   "/auth/google/callback",
 
   passport.authenticate("google", {
-
     failureRedirect: "/login"
-
   }),
 
   (req, res) => {
-
     res.cookie(
-
-      "token",
+      "userToken",
 
       req.user.token,
 
       {
-
         httpOnly: true,
 
         maxAge: 24 * 60 * 60 * 1000
-
       }
-
     );
 
     res.redirect("/home");
-
   }
-
 );
 
-router.get("/profile/edit", (req, res) => res.render("edit-profile"))
 router.post("/signup", signup);
 router.post("/login", login);
 router.post("/send-otp", sendOTP);

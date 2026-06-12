@@ -1,8 +1,8 @@
-import User from "../models/User.js";
-import { hashPassword, comparePassword } from "../utils/hash.js";
-import { generateOTP } from "../utils/otp.js";
+import User from "../../models/User.js";
+import { hashPassword, comparePassword } from "../../utils/hash.js";
+import { generateOTP } from "../../utils/otp.js";
 import jwt from "jsonwebtoken";
-import { sendMail } from "../utils/mail.js";
+import { sendMail } from "../../utils/mail.js";
 
 export const registerUser = async (data) => {
   const { name, email, password, phone } = data;
@@ -16,7 +16,7 @@ export const registerUser = async (data) => {
     name,
     email,
     password: hashedPassword,
-    phone,
+    phone
   });
 
   const userObj = user.toObject();
@@ -63,34 +63,30 @@ export const sendOtp = async (email) => {
 
   await user.save();
 
-   console.log("========== OTP ==========");
+  console.log("========== OTP ==========");
   console.log(otp);
   console.log("=========================");
 
   try {
-
     await sendMail(email, otp);
-
   } catch (err) {
-
     console.log(err);
-
   }
 
   return { message: "OTP sent" };
 };
-
 export const verifyOtp = async (email, otp) => {
   const user = await User.findOne({ email });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    throw new Error("User not found");
+  }
 
-  if (user.otp !== otp) throw new Error("Invalid OTP");
+  if (user.otp !== otp) {
+    throw new Error("Invalid OTP");
+  }
 
   if (user.otpExpiry < Date.now()) {
-    user.otp = null;
-    user.otpExpiry = null;
-    await user.save();
     throw new Error("OTP expired");
   }
 
@@ -99,8 +95,7 @@ export const verifyOtp = async (email, otp) => {
   user.otpExpiry = null;
 
   await user.save();
-
-  return { message: "OTP verified" };
+  return user;
 };
 
 export const resetPassword = async (email, newPassword) => {
@@ -115,9 +110,6 @@ export const resetPassword = async (email, newPassword) => {
   const hashed = await hashPassword(newPassword);
 
   user.password = hashed;
-
-
-  // user.isVerified = false;
 
   await user.save();
 

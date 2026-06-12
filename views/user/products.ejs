@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZIYAURA | Products Catalog</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-900 min-h-screen flex flex-col justify-between">
+
+  <!-- Header -->
+  <%- include("../partials/user/header") %>
+
+  <!-- Catalog Section -->
+  <main class="max-w-[1440px] mx-auto px-4 md:px-8 py-8 flex-grow w-full">
+    
+    <!-- Breadcrumbs & Title -->
+    <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <nav class="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-2">
+          <a href="/home" class="hover:text-black">Home</a>
+          <span class="mx-2">/</span>
+          <span class="text-black">Products</span>
+        </nav>
+        <h1 class="text-xl md:text-2xl font-bold tracking-tight text-gray-900">
+          <% if (categorySlug) { %>
+            <% const currentCat = categories.find(c => c.slug === categorySlug); %>
+            <%= currentCat ? currentCat.name.toUpperCase() : 'ALL PRODUCTS' %>
+          <% } else { %>
+            ALL PRODUCTS
+          <% } %>
+          <span class="text-sm font-normal text-gray-400 ml-2">(<%= totalProducts %> items)</span>
+        </h1>
+      </div>
+
+      <!-- Controls (Search) -->
+      <div class="w-full md:w-auto flex flex-col sm:flex-row items-center gap-4">
+        <!-- Search bar -->
+        <div class="relative w-full sm:w-80">
+          <input
+            type="text"
+            id="searchInput"
+            value="<%= search %>"
+            placeholder="Search products..."
+            class="w-full pl-4 pr-10 py-2 border border-gray-200 rounded-sm focus:outline-none focus:border-black text-xs font-semibold tracking-wider"
+            onkeydown="if(event.key === 'Enter') applySearch();"
+          >
+          <% if (search) { %>
+            <button
+              type="button"
+              onclick="clearSearch()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
+            >
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          <% } else { %>
+            <button
+              type="button"
+              onclick="applySearch()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
+            >
+              <i class="fa-solid fa-magnifying-glass text-sm"></i>
+            </button>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="flex flex-col lg:flex-row gap-8">
+      
+      <!-- Sidebar Filters Form -->
+      <form id="filterForm" method="GET" action="/products" class="w-full lg:w-1/4 flex-shrink-0">
+        <!-- Hidden Inputs for Navigation preservation -->
+        <input type="hidden" name="category" id="formCategory" value="<%= categorySlug %>">
+        <input type="hidden" name="sort" id="formSort" value="<%= sort %>">
+        <input type="hidden" name="page" id="formPage" value="<%= currentPage %>">
+        <input type="hidden" name="search" id="formSearch" value="<%= search %>">
+
+        <div class="border border-gray-100 p-6 space-y-8 sticky top-24">
+          
+          <!-- Title & Clear Filters -->
+          <div class="flex justify-between items-center pb-4 border-b border-gray-100">
+            <span class="text-xs font-bold tracking-widest flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-sm"></i> FILTERS
+            </span>
+            <button
+              type="button"
+              onclick="clearFilters()"
+              class="text-[9px] font-bold text-gray-400 hover:text-black tracking-widest uppercase transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+
+          <!-- Price Range Filter -->
+          <div class="space-y-3 pb-6 border-b border-gray-100">
+            <span class="text-xs font-bold tracking-widest block text-gray-800">PRICE</span>
+            <div class="flex items-center gap-3">
+              <div class="relative flex-grow">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">₹</span>
+                <input
+                  type="number"
+                  name="minPrice"
+                  value="<%= minPrice %>"
+                  placeholder="Min"
+                  class="w-full pl-6 pr-2 py-1.5 border border-gray-200 rounded-sm text-xs focus:outline-none focus:border-black font-semibold"
+                >
+              </div>
+              <span class="text-xs text-gray-400 font-bold">to</span>
+              <div class="relative flex-grow">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">₹</span>
+                <input
+                  type="number"
+                  name="maxPrice"
+                  value="<%= maxPrice %>"
+                  placeholder="Max"
+                  class="w-full pl-6 pr-2 py-1.5 border border-gray-200 rounded-sm text-xs focus:outline-none focus:border-black font-semibold"
+                >
+              </div>
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-black text-white hover:bg-gray-800 py-1.5 rounded-sm text-[10px] font-bold tracking-widest uppercase transition-colors"
+            >
+              Apply Price
+            </button>
+          </div>
+
+          <!-- Category filter -->
+          <div class="space-y-3 pb-6 border-b border-gray-100">
+            <span class="text-xs font-bold tracking-widest block text-gray-800">CATEGORIES</span>
+            <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+              <button
+                type="button"
+                onclick="changeCategory('')"
+                class="w-full text-left text-xs tracking-wide py-1 border-b border-transparent transition-colors flex justify-between items-center <%= !categorySlug ? 'font-bold text-black border-black' : 'text-gray-500 hover:text-black' %>"
+              >
+                <span>ALL CATEGORIES</span>
+                <% if (!categorySlug) { %><i class="fa-solid fa-check text-[10px]"></i><% } %>
+              </button>
+              <% categories.forEach(cat => { %>
+                <button
+                  type="button"
+                  onclick="changeCategory('<%= cat.slug %>')"
+                  class="w-full text-left text-xs tracking-wide py-1 border-b border-transparent transition-colors flex justify-between items-center <%= categorySlug === cat.slug ? 'font-bold text-black border-black' : 'text-gray-500 hover:text-black' %>"
+                >
+                  <span><%= cat.name.toUpperCase() %></span>
+                  <% if (categorySlug === cat.slug) { %><i class="fa-solid fa-check text-[10px]"></i><% } %>
+                </button>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- Brand filter -->
+          <% if (brands && brands.length > 0) { %>
+            <div class="space-y-3 pb-4">
+              <span class="text-xs font-bold tracking-widest block text-gray-800">BRAND</span>
+              <div class="space-y-2.5 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                <% brands.forEach(brandName => { %>
+                  <label class="flex items-center gap-3 text-xs text-gray-600 hover:text-black cursor-pointer font-medium">
+                    <input
+                      type="checkbox"
+                      name="brand"
+                      value="<%= brandName %>"
+                      class="w-3.5 h-3.5 border-gray-300 rounded text-black focus:ring-black accent-black"
+                      <%= selectedBrand === brandName ? 'checked' : '' %>
+                      onchange="applyFilters()"
+                    >
+                    <span><%= brandName %></span>
+                  </label>
+                <% }); %>
+              </div>
+            </div>
+          <% } %>
+
+        </div>
+      </form>
+
+      <!-- Products Grid Section -->
+      <div class="w-full lg:w-3/4">
+        
+        <!-- Header Actions (Sort & Count) -->
+        <div class="flex justify-between items-center pb-4 mb-6 border-b border-gray-100 text-xs">
+          <span class="text-gray-400 font-medium tracking-wide">
+            Showing <%= products.length > 0 ? (currentPage - 1) * limit + 1 : 0 %>–<%= Math.min(currentPage * limit, totalProducts) %> of <%= totalProducts %> results
+          </span>
+
+          <!-- Sort dropdown -->
+          <div class="flex items-center gap-2">
+            <span class="text-gray-400 font-bold tracking-widest uppercase text-[10px]">Sort by:</span>
+            <select
+              onchange="changeSort(this.value)"
+              class="border border-gray-100 px-3 py-1.5 rounded-sm focus:outline-none focus:border-black font-bold tracking-widest uppercase text-[10px] text-gray-800 bg-white cursor-pointer"
+            >
+              <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>Featured / Newest</option>
+              <option value="priceAsc" <%= sort === 'priceAsc' ? 'selected' : '' %>>Price: Low to High</option>
+              <option value="priceDesc" <%= sort === 'priceDesc' ? 'selected' : '' %>>Price: High to Low</option>
+              <option value="az" <%= sort === 'az' ? 'selected' : '' %>>Alphabetical: A-Z</option>
+              <option value="za" <%= sort === 'za' ? 'selected' : '' %>>Alphabetical: Z-A</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Products Grid -->
+        <% if (products && products.length > 0) { %>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+            <% products.forEach(prod => { %>
+              
+              <!-- Product Card -->
+              <a href="/product/<%= prod.slug %>" class="group flex flex-col justify-between h-full bg-white border border-gray-50 hover:shadow-md transition-shadow duration-300 rounded-sm overflow-hidden p-3 relative">
+                
+                <!-- Discount Badge -->
+                <% 
+                  let currentPrice = prod.effectivePrice;
+                  let origPrice = prod.price;
+                  let hasDiscount = false;
+                  let discountPercent = 0;
+
+                  // Find discount if there is a sale price
+                  if (prod.variants && prod.variants.length > 0) {
+                    // Get cheapest listed variant details
+                    const listedVariants = prod.variants.filter(v => v.isListed);
+                    if (listedVariants.length > 0) {
+                      const cheapest = listedVariants.reduce((minV, v) => {
+                        const vPrice = v.salePrice !== null ? v.salePrice : v.price;
+                        const minPrice = minV.salePrice !== null ? minV.salePrice : minV.price;
+                        return vPrice < minPrice ? v : minV;
+                      }, listedVariants[0]);
+                      
+                      currentPrice = cheapest.salePrice !== null ? cheapest.salePrice : cheapest.price;
+                      origPrice = cheapest.price;
+                      if (cheapest.salePrice !== null) {
+                        hasDiscount = true;
+                        discountPercent = Math.round(((cheapest.price - cheapest.salePrice) / cheapest.price) * 100);
+                      }
+                    }
+                  } else {
+                    if (prod.salePrice !== null) {
+                      hasDiscount = true;
+                      discountPercent = Math.round(((prod.price - prod.salePrice) / prod.price) * 100);
+                    }
+                  }
+                %>
+
+                <% if (hasDiscount) { %>
+                  <div class="absolute top-4 left-4 bg-black text-white text-[9px] font-bold tracking-widest px-2 py-1 z-10 rounded-sm">
+                    SAVE <%= discountPercent %>%
+                  </div>
+                <% } %>
+
+                <!-- Wishlist heart placeholder / action -->
+                <button 
+                  type="button"
+                  onclick="toggleWishlist(event, '<%= prod._id %>')"
+                  class="absolute top-4 right-4 text-gray-300 hover:text-rose-500 z-10 transition-colors"
+                >
+                  <i class="fa-regular fa-heart text-base"></i>
+                </button>
+
+                <!-- Product Image -->
+                <div class="aspect-square bg-gray-50 overflow-hidden mb-4 rounded-sm">
+                  <img
+                    src="<%= prod.images && prod.images[0] ? prod.images[0] : '/images/placeholder.jpg' %>"
+                    alt="<%= prod.name %>"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  >
+                </div>
+
+                <!-- Card Content -->
+                <div class="flex flex-col flex-grow justify-between">
+                  <div>
+                    <!-- Brand -->
+                    <span class="text-[9px] font-bold text-gray-400 tracking-wider uppercase block mb-1">
+                      <%= prod.brand || 'Ziyaura Premium' %>
+                    </span>
+                    <!-- Product Title -->
+                    <h3 class="text-xs md:text-sm font-bold text-gray-800 tracking-tight leading-snug group-hover:text-black transition-colors mb-2 line-clamp-2">
+                      <%= prod.name %>
+                    </h3>
+                    
+                    <!-- Rating Mock -->
+                    <div class="flex items-center gap-1 mb-3">
+                      <div class="flex text-[10px] text-black">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star-half-stroke"></i>
+                      </div>
+                      <span class="text-[9px] text-gray-400 font-bold">(<%= 8 + Math.floor(Math.random() * 20) %>)</span>
+                    </div>
+                  </div>
+
+                  <!-- Price & Stock State -->
+                  <div class="flex justify-between items-end mt-auto pt-2 border-t border-gray-50">
+                    <div class="flex items-baseline gap-2">
+                      <span class="text-xs md:text-sm font-bold text-black">
+                        ₹<%= currentPrice ? currentPrice.toLocaleString() : 'N/A' %>
+                      </span>
+                      <% if (hasDiscount) { %>
+                        <span class="text-[10px] text-gray-400 line-through font-medium">
+                          ₹<%= origPrice.toLocaleString() %>
+                        </span>
+                      <% } %>
+                    </div>
+                    
+                    <% const outOfStock = prod.totalStock === 0; %>
+                    <% if (outOfStock) { %>
+                      <span class="text-[9px] font-bold tracking-widest text-rose-500 bg-rose-50 px-2 py-0.5 rounded-sm">
+                        SOLD OUT
+                      </span>
+                    <% } else if (prod.totalStock < 5) { %>
+                      <span class="text-[8px] font-bold tracking-widest text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-sm">
+                        ONLY <%= prod.totalStock %> LEFT
+                      </span>
+                    <% } else { %>
+                      <span class="text-[8px] font-bold tracking-widest text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-sm">
+                        IN STOCK
+                      </span>
+                    <% } %>
+                  </div>
+                </div>
+
+              </a>
+            <% }); %>
+          </div>
+
+          <!-- Pagination -->
+          <% if (totalPages > 1) { %>
+            <div class="flex justify-center items-center gap-2 mt-12 py-6 border-t border-gray-100">
+              <!-- Previous Button -->
+              <% if (currentPage > 1) { %>
+                <button
+                  type="button"
+                  onclick="changePage(<%= currentPage - 1 %>)"
+                  class="w-8 h-8 flex items-center justify-center border border-gray-200 hover:border-black text-xs text-gray-500 hover:text-black rounded-sm transition-colors"
+                >
+                  <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </button>
+              <% } %>
+
+              <!-- Page Numbers -->
+              <% for (let i = 1; i <= totalPages; i++) { %>
+                <button
+                  type="button"
+                  onclick="changePage(<%= i %>)"
+                  class="w-8 h-8 flex items-center justify-center text-xs font-bold tracking-wider rounded-sm transition-colors border <%= currentPage === i ? 'bg-black text-white border-black' : 'border-gray-200 hover:border-black text-gray-600 hover:text-black' %>"
+                >
+                  <%= i %>
+                </button>
+              <% } %>
+
+              <!-- Next Button -->
+              <% if (currentPage < totalPages) { %>
+                <button
+                  type="button"
+                  onclick="changePage(<%= currentPage + 1 %>)"
+                  class="w-8 h-8 flex items-center justify-center border border-gray-200 hover:border-black text-xs text-gray-500 hover:text-black rounded-sm transition-colors"
+                >
+                  <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+              <% } %>
+            </div>
+          <% } %>
+
+        <% } else { %>
+          <!-- Empty catalog state -->
+          <div class="text-center py-20 bg-gray-50 rounded-sm border border-dashed border-gray-200">
+            <i class="fa-regular fa-face-frown text-4xl text-gray-300 mb-4"></i>
+            <h3 class="text-sm font-bold tracking-widest text-gray-800 uppercase mb-2">No Products Found</h3>
+            <p class="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
+              We couldn't find any products matching your selected search or filters. Try adjusting your selections.
+            </p>
+            <button
+              type="button"
+              onclick="clearFilters()"
+              class="mt-6 bg-black hover:bg-gray-800 text-white text-[10px] font-bold tracking-widest uppercase px-6 py-2.5 rounded-sm transition-colors"
+            >
+              Reset Filters
+            </button>
+          </div>
+        <% } %>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <%- include("../partials/user/footer") %>
+
+  <!-- Toast system -->
+  <%- include("../partials/toast") %>
+
+  <!-- Page Javascript handlers -->
+  <script>
+    function applyFilters() {
+      // Reset to page 1 on filter trigger
+      document.getElementById('formPage').value = 1;
+      
+      // Update hidden inputs for price inputs to submit successfully
+      document.getElementById('filterForm').submit();
+    }
+
+    function applySearch() {
+      const searchVal = document.getElementById('searchInput').value.trim();
+      document.getElementById('formSearch').value = searchVal;
+      applyFilters();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('formSearch').value = '';
+      applyFilters();
+    }
+
+    function changeCategory(slug) {
+      document.getElementById('formCategory').value = slug;
+      applyFilters();
+    }
+
+    function changeSort(sortVal) {
+      document.getElementById('formSort').value = sortVal;
+      applyFilters();
+    }
+
+    function changePage(pageNum) {
+      document.getElementById('formPage').value = pageNum;
+      document.getElementById('filterForm').submit();
+    }
+
+    function clearFilters() {
+      window.location.href = '/products';
+    }
+
+    async function toggleWishlist(event, productId) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      try {
+        const response = await fetch('/wishlist/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (error) {
+        console.error('Error toggling wishlist:', error);
+        showToast('Something went wrong. Please try again.', 'error');
+      }
+    }
+  </script>
+</body>
+</html>
