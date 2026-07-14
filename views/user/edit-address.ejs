@@ -22,7 +22,7 @@
         </h1>
 
 
-                        <form action="/profile/address/edit/<%= address._id %>" method="POST">
+                        <form action="/profile/address/edit/<%= address._id %><%= locals.from ? '?from=' + from : '' %>" method="POST">
 
                             <div class="grid gap-5">
 

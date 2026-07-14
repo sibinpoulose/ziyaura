@@ -272,9 +272,14 @@
                 <button 
                   type="button"
                   onclick="toggleWishlist(event, '<%= prod._id %>')"
-                  class="absolute top-4 right-4 text-gray-300 hover:text-rose-500 z-10 transition-colors"
+                  class="absolute top-4 right-4 z-10 transition-colors"
+                  id="wishlist-btn-<%= prod._id %>"
                 >
-                  <i class="fa-regular fa-heart text-base"></i>
+                  <% if (locals.wishlistProductIds && wishlistProductIds.includes(prod._id.toString())) { %>
+                    <i class="fa-solid fa-heart text-rose-500 text-base"></i>
+                  <% } else { %>
+                    <i class="fa-regular fa-heart text-gray-300 hover:text-rose-500 text-base"></i>
+                  <% } %>
                 </button>
 
                 <!-- Product Image -->
@@ -458,16 +463,33 @@
       event.preventDefault();
       event.stopPropagation();
 
+      const btn = document.getElementById(`wishlist-btn-${productId}`);
+      const icon = btn ? btn.querySelector('i') : null;
+      if (!icon) return;
+
+      const isAdded = icon.classList.contains('fa-solid');
+
       try {
-        const response = await fetch('/wishlist/add', {
+        const url = isAdded ? `/wishlist/remove/${productId}` : `/wishlist/add`;
+        const body = isAdded ? null : JSON.stringify({ productId });
+
+        const response = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId })
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body
         });
 
         const data = await response.json();
         if (data.success) {
           showToast(data.message, 'success');
+          if (isAdded) {
+            icon.className = 'fa-regular fa-heart text-gray-300 hover:text-rose-500 text-base';
+          } else {
+            icon.className = 'fa-solid fa-heart text-rose-500 text-base';
+          }
         } else {
           showToast(data.message, 'error');
         }

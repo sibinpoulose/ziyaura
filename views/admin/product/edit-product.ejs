@@ -599,6 +599,9 @@ function generateCombinationsGrid() {
     const tr = document.createElement("tr");
     tr.className = "border-b hover:bg-gray-50/50 transition-colors text-sm font-medium";
     tr.setAttribute("data-combination", JSON.stringify(comb));
+    if (existingMatch && existingMatch._id) {
+      tr.setAttribute("data-variant-id", existingMatch._id);
+    }
     tr.innerHTML = `
       <td class="p-3 text-gray-800 font-bold">${combLabel}</td>
       <td class="p-3">
@@ -753,6 +756,7 @@ form.addEventListener("submit", async (e) => {
 
     for (const tr of rows) {
       const combination = JSON.parse(tr.getAttribute("data-combination"));
+      const variantIdVal = tr.getAttribute("data-variant-id");
       const skuVal = tr.querySelector('[data-field="sku"]').value.trim();
       const priceVal = tr.querySelector('[data-field="price"]').value;
       const salePriceInput = tr.querySelector('[data-field="salePrice"]').value;
@@ -784,6 +788,9 @@ form.addEventListener("submit", async (e) => {
           value: val
         }))
       };
+      if (variantIdVal) {
+        variantItem._id = variantIdVal;
+      }
 
       if (variantItem.salePrice !== null && variantItem.salePrice >= variantItem.price) {
         alert(`Sale Price for ${combination.join(' / ')} must be lower than original price`);

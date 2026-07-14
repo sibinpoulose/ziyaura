@@ -61,6 +61,7 @@ export const adminProtect = async (req, res, next) => {
       return res.redirect("/home");
     }
 
+    req.admin = user;
     req.user = user;
 
     next();

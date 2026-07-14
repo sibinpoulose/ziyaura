@@ -7,6 +7,7 @@ import {
 } from "../../services/user/authService.js";
 
 import User from "../../models/User.js";
+import Category from "../../models/category.js";
 
 export const signup = async (req, res) => {
   try {
@@ -232,4 +233,72 @@ export const resetPassword = async (req, res) => {
       email: req.body.email
     });
   }
+};
+
+export const redirectToHome = (req, res) => {
+  res.redirect("/home");
+};
+
+export const loadLoginPage = (req, res) => {
+  res.render("user/login");
+};
+
+export const loadSignupPage = (req, res) => {
+  res.render("user/signup");
+};
+
+export const loadOtpPage = async (req, res) => {
+  try {
+    const email = req.session.email;
+    if (!email) {
+      return res.redirect("/signup");
+    }
+    const user = await User.findOne({ email });
+    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 0;
+    res.render("user/otp", {
+      email,
+      timeLeft
+    });
+  } catch (err) {
+    req.session.error = err.message;
+    res.redirect("/signup");
+  }
+};
+
+export const loadHomePage = async (req, res) => {
+  try {
+    let featuredCategories = await Category.find({ isListed: true, isFeatured: true }).limit(4);
+    
+    // Fallback: if less than 4 are featured, fill with standard listed categories
+    if (featuredCategories.length < 4) {
+      const remaining = 4 - featuredCategories.length;
+      const featuredIds = featuredCategories.map(c => c._id);
+      const extraCategories = await Category.find({
+        isListed: true,
+        _id: { $not: { $in: featuredIds } }
+      }).limit(remaining);
+      featuredCategories = [...featuredCategories, ...extraCategories];
+    }
+    
+    res.render("user/home", { featuredCategories });
+  } catch (error) {
+    console.error("Load Home Page Categories Error:", error);
+    res.render("user/home", { featuredCategories: [] });
+  }
+};
+
+export const loadForgotPasswordPage = (req, res) => {
+  res.render("user/forgot-password");
+};
+
+export const handleGoogleCallback = (req, res) => {
+  res.cookie(
+    "userToken",
+    req.user.token,
+    {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000
+    }
+  );
+  res.redirect("/home");
 };

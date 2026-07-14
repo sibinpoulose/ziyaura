@@ -6,12 +6,15 @@ import {
   blockUser,
   unblockUser,
   adminLogout,
-  loadblockeduser
+  loadAdminLoginPage,
+  loadAdminDashboard
 } from "../../controllers/admin/adminController.js";
 import categoryRoutes from "./categoryRoutes.js"
 import productRoutes from "./productRoutes.js";
+import orderRoutes from "./orderRoutes.js";
+import inventoryRoutes from "./inventoryRoutes.js";
 import { adminProtect } from "../../middlewares/authMiddleware.js";
-import { isGuest } from "../../middlewares/guestMiddleware.js";
+import { isAdminGuest } from "../../middlewares/guestMiddleware.js";
 
 const router = express.Router();
 
@@ -19,11 +22,9 @@ const router = express.Router();
 
 router.get(
   "/login",
-  isGuest,
+  isAdminGuest,
 
-  (req, res) => {
-    res.render("admin/login");
-  }
+  loadAdminLoginPage
 );
 
 // ADMIN LOGIN
@@ -40,11 +41,8 @@ router.get(
   "/dashboard",
   adminProtect,
 
-  (req, res) => {
-    res.render("admin/dashboard");
-  }
+  loadAdminDashboard
 );
-router.get("/blockeduser", adminProtect, loadblockeduser);
 
 // CUSTOMERS PAGE
 
@@ -77,6 +75,14 @@ router.use(
 router.use(
   "/",
   productRoutes
+);
+router.use(
+  "/",
+  orderRoutes
+);
+router.use(
+  "/",
+  inventoryRoutes
 );
 
 export default router;

@@ -9,6 +9,11 @@ import { hashPassword } from "../../utils/hash.js";
 // LOAD PROFILE PAGE
 export const loadProfile = async (req, res) => {
   try {
+    // Clear pending email update session variables on fresh load
+    req.session.profileOtp = null;
+    req.session.profileOtpExpiry = null;
+    req.session.pendingProfile = null;
+
     const user = await User.findById(req.user._id);
 
     const addresses = await Address.find({
@@ -98,15 +103,11 @@ export const updateAccount = async (req, res) => {
 
     console.log("PROFILE OTP:", otp);
 
-    // OPEN OTP PAGE
+    // REDIRECT TO OTP PAGE
 
     req.session.success = "OTP sent successfully";
-    const timeLeft = Math.max(0, Math.floor((req.session.profileOtpExpiry - Date.now()) / 1000));
 
-    res.render("user/profile-otp", {
-      email,
-      timeLeft
-    });
+    res.redirect("/profile/profile-otp");
   } catch (err) {
     console.log(err);
 
@@ -191,6 +192,52 @@ export const verifyProfileOtp = async (req, res) => {
     req.session.error = "Failed to verify OTP: " + err.message;
 
     res.redirect("/profile");
+  }
+};
+
+// LOAD PROFILE OTP PAGE
+export const loadProfileOtpPage = async (req, res) => {
+  try {
+    if (!req.session.pendingProfile) {
+      return res.redirect("/profile");
+    }
+
+    const expiry = req.session.profileOtpExpiry || Date.now();
+    const timeLeft = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+
+    res.render("user/profile-otp", {
+      email: req.session.pendingProfile.email,
+      timeLeft
+    });
+  } catch (err) {
+    console.log(err);
+    res.redirect("/profile");
+  }
+};
+
+// RESEND PROFILE OTP
+export const resendProfileOtp = async (req, res) => {
+  try {
+    if (!req.session.pendingProfile) {
+      req.session.error = "No pending profile update found";
+      return res.redirect("/profile");
+    }
+
+    const email = req.session.pendingProfile.email;
+    const otp = generateOTP();
+
+    req.session.profileOtp = otp;
+    req.session.profileOtpExpiry = Date.now() + 5 * 60 * 1000;
+
+    await sendMail(email, otp);
+    console.log("RESENT PROFILE OTP:", otp);
+
+    req.session.success = "OTP resent successfully";
+    res.redirect("/profile/profile-otp");
+  } catch (err) {
+    console.log(err);
+    req.session.error = "Failed to resend OTP";
+    res.redirect("/profile/profile-otp");
   }
 };
 
@@ -314,9 +361,14 @@ export const addAddress = async (req, res) => {
     req.session.success = "Address added successfully";
 
     // Redirect to referer page so it reloads the source view correctly
-    const redirectTo = req.headers.referer && req.headers.referer.includes("profile/address")
-      ? "/profile/address"
-      : "/profile";
+    let redirectTo = "/profile";
+    if (req.headers.referer) {
+      if (req.headers.referer.includes("checkout")) {
+        redirectTo = "/checkout";
+      } else if (req.headers.referer.includes("profile/address")) {
+        redirectTo = "/profile/address";
+      }
+    }
 
     res.redirect(redirectTo);
   } catch (err) {
@@ -343,7 +395,8 @@ export const loadEditAddressPage = async (req, res) => {
     }
 
     res.render("user/edit-address", {
-      address
+      address,
+      from: req.query.from || ""
     });
   } catch (err) {
     console.log(err);
@@ -369,30 +422,32 @@ export const updateAddress = async (req, res) => {
       isDefault
     } = req.body;
 
+    const fromParam = req.query.from ? `?from=${req.query.from}` : "";
+
     // Backend Validation
     if (!fullName || !fullName.trim()) {
       req.session.error = "Full Name is required";
-      return res.redirect(`/profile/address/edit/${req.params.id}`);
+      return res.redirect(`/profile/address/edit/${req.params.id}${fromParam}`);
     }
     if (!phone || !/^[0-9]{10}$/.test(phone)) {
       req.session.error = "Phone number must be exactly 10 digits";
-      return res.redirect(`/profile/address/edit/${req.params.id}`);
+      return res.redirect(`/profile/address/edit/${req.params.id}${fromParam}`);
     }
     if (!address || !address.trim()) {
       req.session.error = "Address is required";
-      return res.redirect(`/profile/address/edit/${req.params.id}`);
+      return res.redirect(`/profile/address/edit/${req.params.id}${fromParam}`);
     }
     if (!city || !city.trim()) {
       req.session.error = "City is required";
-      return res.redirect(`/profile/address/edit/${req.params.id}`);
+      return res.redirect(`/profile/address/edit/${req.params.id}${fromParam}`);
     }
     if (!state || !state.trim()) {
       req.session.error = "State is required";
-      return res.redirect(`/profile/address/edit/${req.params.id}`);
+      return res.redirect(`/profile/address/edit/${req.params.id}${fromParam}`);
     }
     if (!pincode || !/^[0-9]{6}$/.test(pincode)) {
       req.session.error = "PIN code must be exactly 6 digits";
-      return res.redirect(`/profile/address/edit/${req.params.id}`);
+      return res.redirect(`/profile/address/edit/${req.params.id}${fromParam}`);
     }
 
     // CHECK PINCODE (gracefully check)
@@ -450,13 +505,21 @@ export const updateAddress = async (req, res) => {
 
     req.session.success = "Address updated successfully";
 
-    res.redirect("/profile/address");
+    let redirectTo = "/profile/address";
+    if (req.query.from === "checkout" || (req.headers.referer && req.headers.referer.includes("checkout"))) {
+      redirectTo = "/checkout";
+    }
+    res.redirect(redirectTo);
   } catch (err) {
     console.log(err);
 
     req.session.error = "Failed to update address: " + err.message;
 
-    res.redirect("/profile/address");
+    let redirectTo = "/profile/address";
+    if (req.query.from === "checkout" || (req.headers.referer && req.headers.referer.includes("checkout"))) {
+      redirectTo = "/checkout";
+    }
+    res.redirect(redirectTo);
   }
 };
 
@@ -490,13 +553,21 @@ export const setDefaultAddress = async (req, res) => {
 
     req.session.success = "Default address updated";
 
-    res.redirect("/profile/address");
+    let redirectTo = "/profile/address";
+    if (req.headers.referer && req.headers.referer.includes("checkout")) {
+      redirectTo = "/checkout";
+    }
+    res.redirect(redirectTo);
   } catch (err) {
     console.log(err);
 
     req.session.error = "Failed to update default address";
 
-    res.redirect("/profile/address");
+    let redirectTo = "/profile/address";
+    if (req.headers.referer && req.headers.referer.includes("checkout")) {
+      redirectTo = "/checkout";
+    }
+    res.redirect(redirectTo);
   }
 };
 // DELETE ADDRESS
@@ -509,13 +580,21 @@ export const deleteAddress = async (req, res) => {
 
     req.session.success = "Address deleted successfully";
 
-    res.redirect("/profile/address");
+    let redirectTo = "/profile/address";
+    if (req.headers.referer && req.headers.referer.includes("checkout")) {
+      redirectTo = "/checkout";
+    }
+    res.redirect(redirectTo);
   } catch (err) {
     console.log(err);
 
     req.session.error = "Failed to delete address";
 
-    res.redirect("/profile/address");
+    let redirectTo = "/profile/address";
+    if (req.headers.referer && req.headers.referer.includes("checkout")) {
+      redirectTo = "/checkout";
+    }
+    res.redirect(redirectTo);
   }
 };
 // UPDATE PROFILE IMAGE

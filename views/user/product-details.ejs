@@ -281,7 +281,11 @@
             id="wishlist-button"
             class="w-full border border-gray-200 hover:border-black py-3 text-xs font-bold tracking-widest uppercase transition-colors rounded-sm flex items-center justify-center gap-2 bg-white"
           >
-            <i class="fa-regular fa-heart"></i> ADD TO WISHLIST
+            <% if (locals.isProductInWishlist) { %>
+              <i class="fa-solid fa-heart text-rose-500"></i> <span id="wishlist-text">REMOVE FROM WISHLIST</span>
+            <% } else { %>
+              <i class="fa-regular fa-heart"></i> <span id="wishlist-text">ADD TO WISHLIST</span>
+            <% } %>
           </button>
         </div>
 
@@ -643,6 +647,15 @@
             const data = await response.json();
             if (data.success) {
               showToast(data.message, 'success');
+              const badge = document.getElementById('cart-badge');
+              if (badge && typeof data.cartCount !== 'undefined') {
+                badge.innerText = data.cartCount;
+                if (data.cartCount > 0) {
+                  badge.classList.remove('hidden');
+                } else {
+                  badge.classList.add('hidden');
+                }
+              }
             } else {
               showToast(data.message, 'error');
             }
@@ -656,23 +669,38 @@
       const wishlistBtn = document.getElementById('wishlist-button');
       if (wishlistBtn) {
         wishlistBtn.addEventListener('click', async () => {
+          const icon = wishlistBtn.querySelector('i');
+          const textSpan = document.getElementById('wishlist-text');
+          const isAdded = icon.classList.contains('fa-solid');
+
           try {
-            const response = await fetch('/wishlist/add', {
+            const url = isAdded ? `/wishlist/remove/<%= product._id %>` : `/wishlist/add`;
+            const body = isAdded ? null : JSON.stringify({ productId: '<%= product._id %>' });
+
+            const response = await fetch(url, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                productId: '<%= product._id %>'
-              })
+              headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body
             });
 
             const data = await response.json();
             if (data.success) {
               showToast(data.message, 'success');
+              if (isAdded) {
+                icon.className = 'fa-regular fa-heart';
+                textSpan.innerText = 'ADD TO WISHLIST';
+              } else {
+                icon.className = 'fa-solid fa-heart text-rose-500';
+                textSpan.innerText = 'REMOVE FROM WISHLIST';
+              }
             } else {
               showToast(data.message, 'error');
             }
           } catch (error) {
-            console.error('Add to wishlist error:', error);
+            console.error('Error toggling wishlist:', error);
             showToast('Something went wrong. Please try again.', 'error');
           }
         });

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory & Stock Management | ZIYAURA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F3F6F9;
+    }
+    .custom-shadow {
+      box-shadow: 0 2px 15px rgba(0,0,0,0.02);
+    }
+    .inline-edit-input {
+      width: 70px;
+    }
+  </style>
+</head>
+<body class="flex min-h-screen bg-[#F3F6F9]">
+
+  <%- include("../partials/admin/navbar") %>
+
+  <!-- Main Content -->
+  <main class="ml-64 flex-grow p-10">
+
+    <!-- Top Header -->
+    <header class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Inventory & Stock</h1>
+        <p class="text-sm text-gray-400 mt-1">Real-time stock monitoring and inline replenishment</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <p class="text-xs font-bold text-gray-800 tracking-wide uppercase leading-tight">Admin Panel</p>
+          <p class="text-[10px] text-gray-400 font-medium">Stock Controller</p>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+          <i class="fa-solid fa-warehouse text-sm"></i>
+        </div>
+      </div>
+    </header>
+
+    <!-- Filters & Search -->
+    <section class="bg-white rounded-2xl p-6 mb-8 custom-shadow border border-gray-100/50">
+      <form action="/admin/inventory" method="GET" class="flex flex-wrap items-center gap-4">
+        <!-- Search Input -->
+        <div class="relative flex-1 min-w-[280px]">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          </span>
+          <input
+            type="text"
+            name="search"
+            value="<%= search %>"
+            placeholder="Search by product name, SKU or variant SKU..."
+            class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-150 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-sm transition-all"
+          >
+        </div>
+
+        <!-- Category Filter -->
+        <div class="min-w-[160px]">
+          <select
+            name="category"
+            class="w-full border border-gray-150 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 bg-white text-gray-700 transition-all"
+          >
+            <option value="">All Categories</option>
+            <% categories.forEach(cat => { %>
+              <option value="<%= cat._id %>" <%= categoryFilter === cat._id.toString() ? 'selected' : '' %>><%= cat.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <!-- Stock Status Filter -->
+        <div class="min-w-[160px]">
+          <select
+            name="stockStatus"
+            class="w-full border border-gray-150 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 bg-white text-gray-700 transition-all"
+          >
+            <option value="all" <%= stockStatus === 'all' ? 'selected' : '' %>>All Stock Status</option>
+            <option value="outOfStock" <%= stockStatus === 'outOfStock' ? 'selected' : '' %>>Out of Stock</option>
+            <option value="lowStock" <%= stockStatus === 'lowStock' ? 'selected' : '' %>>Low Stock (< 5)</option>
+            <option value="inStock" <%= stockStatus === 'inStock' ? 'selected' : '' %>>In Stock (&ge; 5)</option>
+          </select>
+        </div>
+
+        <!-- Sort Filter -->
+        <div class="min-w-[180px]">
+          <select
+            name="sort"
+            class="w-full border border-gray-150 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 bg-white text-gray-700 transition-all"
+          >
+            <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>Date: Newest First</option>
+            <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Date: Oldest First</option>
+            <option value="nameAsc" <%= sort === 'nameAsc' ? 'selected' : '' %>>Name: A - Z</option>
+            <option value="nameDesc" <%= sort === 'nameDesc' ? 'selected' : '' %>>Name: Z - A</option>
+            <option value="stockAsc" <%= sort === 'stockAsc' ? 'selected' : '' %>>Stock: Low to High</option>
+            <option value="stockDesc" <%= sort === 'stockDesc' ? 'selected' : '' %>>Stock: High to Low</option>
+          </select>
+        </div>
+
+        <!-- Submit & Reset -->
+        <div class="flex items-center gap-2">
+          <button type="submit" class="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all">
+            Filter
+          </button>
+          <a href="/admin/inventory" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl text-sm font-semibold transition-all">
+            Reset
+          </a>
+        </div>
+      </form>
+    </section>
+
+    <!-- Inventory Table -->
+    <section class="bg-white rounded-2xl custom-shadow overflow-hidden border border-gray-100/50">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50/50 text-[11px] font-bold text-gray-400 border-b border-gray-100 uppercase tracking-widest">
+              <th class="px-8 py-5 w-24">Image</th>
+              <th class="px-6 py-5">Product Details</th>
+              <th class="px-6 py-5">Category</th>
+              <th class="px-6 py-5">SKU</th>
+              <th class="px-6 py-5">Pricing</th>
+              <th class="px-6 py-5">Stock Quantity</th>
+              <th class="px-8 py-5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% if (products.length > 0) { %>
+              <% products.forEach(product => { %>
+                
+                <!-- Product has variants: render each variant as a row -->
+                <% if (product.variants && product.variants.length > 0) { %>
+                  <% product.variants.forEach((variant, vIdx) => { %>
+                    <tr class="group hover:bg-gray-50/30 transition-colors">
+                      
+                      <!-- Image -->
+                      <td class="px-8 py-5">
+                        <img
+                          src="<%= product.images && product.images.length > 0 ? product.images[0] : '/placeholder-product.png' %>"
+                          alt="<%= product.name %>"
+                          class="w-12 h-12 rounded-lg object-cover border border-gray-150"
+                        >
+                      </td>
+
+                      <!-- Product Name & Variant attributes -->
+                      <td class="px-6 py-5">
+                        <div class="text-xs font-bold text-gray-800"><%= product.name %></div>
+                        <div class="text-[10px] text-gray-400 font-medium"><%= product.brand || 'No Brand' %></div>
+                        <div class="mt-1 flex items-center gap-1.5">
+                          <% const variantAttributes = variant.combination.map(c => `${c.name}: ${c.value}`).join(', '); %>
+                          <span class="text-[9px] font-extrabold tracking-wider bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100 uppercase">
+                            <%= variantAttributes %>
+                          </span>
+                        </div>
+                      </td>
+
+                      <!-- Category -->
+                      <td class="px-6 py-5">
+                        <span class="text-[10px] font-bold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full border border-blue-100">
+                          <%= product.category ? product.category.name : 'Unknown' %>
+                        </span>
+                      </td>
+
+                      <!-- SKU -->
+                      <td class="px-6 py-5 text-xs font-mono text-gray-500">
+                        <%= variant.sku %>
+                      </td>
+
+                      <!-- Price -->
+                      <td class="px-6 py-5 text-xs text-gray-900 font-bold">
+                        ₹<%= variant.price.toLocaleString() %>
+                        <% if (variant.salePrice) { %>
+                          <span class="block text-[9px] text-rose-500 line-through font-normal">₹<%= variant.salePrice.toLocaleString() %></span>
+                        <% } %>
+                      </td>
+
+                      <!-- Stock (Inline Editable) -->
+                      <td class="px-6 py-5">
+                        <!-- Read Mode -->
+                        <div id="stock-read-<%= product._id %>-<%= variant._id %>" class="flex items-center gap-3">
+                          <span id="stock-text-<%= product._id %>-<%= variant._id %>" class="text-xs font-bold text-gray-800">
+                            <%= variant.stock %>
+                          </span>
+                          
+                          <!-- Stock Status Badge -->
+                          <span id="stock-badge-<%= product._id %>-<%= variant._id %>">
+                            <% if (variant.stock === 0) { %>
+                              <span class="text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded uppercase">Out of Stock</span>
+                            <% } else if (variant.stock < 5) { %>
+                              <span class="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded uppercase">Low Stock</span>
+                            <% } else { %>
+                              <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded uppercase">In Stock</span>
+                            <% } %>
+                          </span>
+
+                          <!-- Edit Button -->
+                          <button
+                            type="button"
+                            onclick="enableInlineEdit('<%= product._id %>', '<%= variant._id %>', <%= variant.stock %>)"
+                            class="text-gray-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            title="Edit Stock"
+                          >
+                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                          </button>
+                        </div>
+
+                        <!-- Edit Mode -->
+                        <div id="stock-edit-<%= product._id %>-<%= variant._id %>" class="hidden flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            id="stock-input-<%= product._id %>-<%= variant._id %>"
+                            min="0"
+                            class="inline-edit-input border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                            onkeydown="handleInputKey(event, '<%= product._id %>', '<%= variant._id %>')"
+                          >
+                          <button
+                            type="button"
+                            onclick="saveInlineStock('<%= product._id %>', '<%= variant._id %>')"
+                            class="w-6 h-6 rounded bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 text-[10px]"
+                            title="Save"
+                          >
+                            <i class="fa-solid fa-check"></i>
+                          </button>
+                          <button
+                            type="button"
+                            onclick="disableInlineEdit('<%= product._id %>', '<%= variant._id %>')"
+                            class="w-6 h-6 rounded bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 text-[10px]"
+                            title="Cancel"
+                          >
+                            <i class="fa-solid fa-xmark"></i>
+                          </button>
+                        </div>
+                      </td>
+
+                      <!-- Actions -->
+                      <td class="px-8 py-5 text-right">
+                        <a
+                          href="/admin/products/edit/<%= product._id %>"
+                          class="text-blue-600 hover:text-blue-800 text-[11px] font-bold uppercase tracking-wider"
+                        >
+                          Edit Product
+                        </a>
+                      </td>
+
+                    </tr>
+                  <% }) %>
+
+                <!-- Product has no variants: render single product row -->
+                <% } else { %>
+                  <tr class="group hover:bg-gray-50/30 transition-colors">
+                    
+                    <!-- Image -->
+                    <td class="px-8 py-5">
+                      <img
+                        src="<%= product.images && product.images.length > 0 ? product.images[0] : '/placeholder-product.png' %>"
+                        alt="<%= product.name %>"
+                        class="w-12 h-12 rounded-lg object-cover border border-gray-150"
+                      >
+                    </td>
+
+                    <!-- Product Name -->
+                    <td class="px-6 py-5">
+                      <div class="text-xs font-bold text-gray-800"><%= product.name %></div>
+                      <div class="text-[10px] text-gray-400 font-medium"><%= product.brand || 'No Brand' %></div>
+                    </td>
+
+                    <!-- Category -->
+                    <td class="px-6 py-5">
+                      <span class="text-[10px] font-bold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full border border-blue-100">
+                        <%= product.category ? product.category.name : 'Unknown' %>
+                      </span>
+                    </td>
+
+                    <!-- SKU -->
+                    <td class="px-6 py-5 text-xs font-mono text-gray-500">
+                      <%= product.sku || 'N/A' %>
+                    </td>
+
+                    <!-- Price -->
+                    <td class="px-6 py-5 text-xs text-gray-900 font-bold">
+                      ₹<%= product.price.toLocaleString() %>
+                      <% if (product.salePrice) { %>
+                        <span class="block text-[9px] text-rose-500 line-through font-normal">₹<%= product.salePrice.toLocaleString() %></span>
+                      <% } %>
+                    </td>
+
+                    <!-- Stock (Inline Editable) -->
+                    <td class="px-6 py-5">
+                      <!-- Read Mode -->
+                      <div id="stock-read-<%= product._id %>-no-var" class="flex items-center gap-3">
+                        <span id="stock-text-<%= product._id %>-no-var" class="text-xs font-bold text-gray-800">
+                          <%= product.stock %>
+                        </span>
+                        
+                        <!-- Stock Status Badge -->
+                        <span id="stock-badge-<%= product._id %>-no-var">
+                          <% if (product.stock === 0) { %>
+                            <span class="text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded uppercase">Out of Stock</span>
+                          <% } else if (product.stock < 5) { %>
+                            <span class="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded uppercase">Low Stock</span>
+                          <% } else { %>
+                            <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded uppercase">In Stock</span>
+                          <% } %>
+                        </span>
+
+                        <!-- Edit Button -->
+                        <button
+                          type="button"
+                          onclick="enableInlineEdit('<%= product._id %>', 'no-var', <%= product.stock %>)"
+                          class="text-gray-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Edit Stock"
+                        >
+                          <i class="fa-solid fa-pen-to-square text-xs"></i>
+                        </button>
+                      </div>
+
+                      <!-- Edit Mode -->
+                      <div id="stock-edit-<%= product._id %>-no-var" class="hidden flex items-center gap-1.5">
+                        <input
+                          type="number"
+                          id="stock-input-<%= product._id %>-no-var"
+                          min="0"
+                          class="inline-edit-input border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                          onkeydown="handleInputKey(event, '<%= product._id %>', 'no-var')"
+                        >
+                        <button
+                          type="button"
+                          onclick="saveInlineStock('<%= product._id %>', '')"
+                          class="w-6 h-6 rounded bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 text-[10px]"
+                          title="Save"
+                        >
+                          <i class="fa-solid fa-check"></i>
+                        </button>
+                        <button
+                          type="button"
+                          onclick="disableInlineEdit('<%= product._id %>', 'no-var')"
+                          class="w-6 h-6 rounded bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 text-[10px]"
+                          title="Cancel"
+                        >
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      </div>
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="px-8 py-5 text-right">
+                      <a
+                        href="/admin/products/edit/<%= product._id %>"
+                        class="text-blue-600 hover:text-blue-800 text-[11px] font-bold uppercase tracking-wider"
+                      >
+                        Edit Product
+                      </a>
+                    </td>
+
+                  </tr>
+                <% } %>
+
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center py-16 text-gray-500">
+                  <i class="fa-regular fa-folder-open text-4xl mb-3 block text-gray-300"></i>
+                  No products or variants found in stock.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <% if (totalPages > 1) { %>
+        <div class="flex justify-between items-center px-8 py-5 border-t border-gray-100 bg-gray-50/50">
+          <span class="text-xs text-gray-500 font-medium">Page <%= currentPage %> of <%= totalPages %></span>
+          <div class="flex items-center gap-1.5">
+            <% for(let i = 1; i <= totalPages; i++){ %>
+              <a
+                href="/admin/inventory?page=<%= i %>&search=<%= search %>&category=<%= categoryFilter %>&stockStatus=<%= stockStatus %>&sort=<%= sort %>"
+                class="px-3.5 py-1.5 rounded-lg border text-xs font-semibold tracking-wide transition-all <%= currentPage === i ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50' %>"
+              >
+                <%= i %>
+              </a>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    </section>
+
+  </main>
+
+  <%- include("../partials/toast") %>
+
+  <!-- Inline Edit Scripts -->
+  <script>
+    function enableInlineEdit(productId, variantId, currentStock) {
+      document.getElementById(`stock-read-${productId}-${variantId}`).classList.add('hidden');
+      
+      const editDiv = document.getElementById(`stock-edit-${productId}-${variantId}`);
+      editDiv.classList.remove('hidden');
+      editDiv.classList.add('flex');
+      
+      const input = document.getElementById(`stock-input-${productId}-${variantId}`);
+      input.value = currentStock;
+      input.focus();
+      input.select();
+    }
+
+    function disableInlineEdit(productId, variantId) {
+      document.getElementById(`stock-edit-${productId}-${variantId}`).classList.add('hidden');
+      document.getElementById(`stock-read-${productId}-${variantId}`).classList.remove('hidden');
+    }
+
+    function handleInputKey(event, productId, variantId) {
+      if (event.key === 'Enter') {
+        saveInlineStock(productId, variantId === 'no-var' ? '' : variantId);
+      } else if (event.key === 'Escape') {
+        disableInlineEdit(productId, variantId);
+      }
+    }
+
+    async function saveInlineStock(productId, variantId) {
+      const displayVariantId = variantId === '' ? 'no-var' : variantId;
+      const input = document.getElementById(`stock-input-${productId}-${displayVariantId}`);
+      const newStockVal = input.value;
+
+      if (newStockVal === '' || isNaN(newStockVal) || parseInt(newStockVal) < 0) {
+        showToast('Please enter a valid stock number (&ge; 0)', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/inventory/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            productId: productId,
+            variantId: variantId || null,
+            newStock: parseInt(newStockVal)
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          
+          // Update the UI text
+          const stockVal = data.newStock;
+          document.getElementById(`stock-text-${productId}-${displayVariantId}`).textContent = stockVal;
+          
+          // Update the Stock Status Badge dynamically
+          let badgeHTML = '';
+          if (stockVal === 0) {
+            badgeHTML = '<span class="text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded uppercase">Out of Stock</span>';
+          } else if (stockVal < 5) {
+            badgeHTML = '<span class="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded uppercase">Low Stock</span>';
+          } else {
+            badgeHTML = '<span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded uppercase">In Stock</span>';
+          }
+          document.getElementById(`stock-badge-${productId}-${displayVariantId}`).innerHTML = badgeHTML;
+
+          // Re-attach edit trigger on the edit button for the new value
+          const editBtn = document.querySelector(`#stock-read-${productId}-${displayVariantId} button`);
+          editBtn.setAttribute('onclick', `enableInlineEdit('${productId}', '${displayVariantId}', ${stockVal})`);
+
+          disableInlineEdit(productId, displayVariantId);
+        } else {
+          showToast(data.message || 'Failed to update stock', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Network error, please try again.', 'error');
+      }
+    }
+  </script>
+
+</body>
+</html>

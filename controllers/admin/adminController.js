@@ -1,4 +1,6 @@
 import { loginUser } from "../../services/user/authService.js";
+import User from "../../models/User.js";
+
 
 export const adminLogin = async (req, res) => {
   try {
@@ -47,7 +49,6 @@ export const adminLogin = async (req, res) => {
     res.redirect("/admin/login");
   }
 };
-import User from "../../models/User.js";
 
 // LOAD CUSTOMERS
 
@@ -69,6 +70,7 @@ export const loadCustomers = async (req, res) => {
 
     const searchQuery = {
       role: "user",
+      
 
       $or: [
         {
@@ -92,10 +94,14 @@ export const loadCustomers = async (req, res) => {
     // GET USERS
 
     const users = await User.find(searchQuery)
+     
+      
 
       .sort({
-        createdAt: -1
+        isBlocked: 1
       })
+      
+      
 
       .skip(skip)
 
@@ -169,12 +175,14 @@ export const unblockUser = async (req, res) => {
     res.redirect("/admin/customers");
   }
 };
-export const loadblockeduser = async (req, res) => {
-  const blockedusers = User.find({
-    isBlocked: true
-  });
-  res.render("/blockeduser", { blockedusers });
+export const loadAdminLoginPage = (req, res) => {
+  res.render("admin/login");
 };
+
+export const loadAdminDashboard = (req, res) => {
+  res.render("admin/dashboard");
+};
+
 // ADMIN LOGOUT
 
 export const adminLogout = (req, res) => {

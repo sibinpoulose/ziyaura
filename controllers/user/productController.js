@@ -1,5 +1,6 @@
 import Product from "../../models/product.js";
 import Category from "../../models/category.js";
+import Wishlist from "../../models/Wishlist.js";
 
 // LOAD PRODUCTS LIST PAGE (WITH ADVANCED FILTERS, SORT, SEARCH, PAGINATION)
 export const loadProductsPage = async (req, res) => {
@@ -156,6 +157,14 @@ export const loadProductsPage = async (req, res) => {
       category: { $in: activeCategoryIds }
     })).filter(Boolean);
 
+    let wishlistProductIds = [];
+    if (req.user) {
+      const wishlist = await Wishlist.findOne({ userId: req.user._id });
+      if (wishlist) {
+        wishlistProductIds = wishlist.items.map(item => item.productId.toString());
+      }
+    }
+
     res.render("user/products", {
       products,
       categories: activeCategories,
@@ -170,8 +179,10 @@ export const loadProductsPage = async (req, res) => {
       inStock,
       minPrice: req.query.minPrice || "",
       maxPrice: req.query.maxPrice || "",
-      limit
+      limit,
+      wishlistProductIds
     });
+
   } catch (error) {
     console.error("Load Products Page Error:", error);
     req.session.error = "Unable to load products";
@@ -201,11 +212,23 @@ export const loadProductDetailsPage = async (req, res) => {
       .populate("category")
       .limit(4);
 
+    let isProductInWishlist = false;
+    if (req.user) {
+      const wishlist = await Wishlist.findOne({ userId: req.user._id });
+      if (wishlist) {
+        isProductInWishlist = wishlist.items.some(
+          item => item.productId.toString() === product._id.toString()
+        );
+      }
+    }
+
     res.render("user/product-details", {
       product,
       relatedProducts,
-      category: product.category
+      category: product.category,
+      isProductInWishlist
     });
+
   } catch (error) {
     console.error("Load Product Details Page Error:", error);
     req.session.error = "Unable to load product details";

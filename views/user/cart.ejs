@@ -57,8 +57,12 @@
                 
                 <!-- Product Image & Basic Info -->
                 <div class="flex gap-4 flex-grow">
-                  <div class="w-20 h-20 bg-gray-50 flex-shrink-0 border border-gray-100 rounded-sm overflow-hidden">
-                    <img src="<%= item.details.image || '/images/placeholder.jpg' %>" alt="Product Image" class="w-full h-full object-cover">
+                  <div class="w-20 h-20 bg-gray-50 flex-shrink-0 border border-gray-100 rounded-sm overflow-hidden flex items-center justify-center">
+                    <% if (item.details.image) { %>
+                      <img src="<%= item.details.image %>" alt="Product Image" class="w-full h-full object-cover">
+                    <% } else { %>
+                      <i class="fa-regular fa-image text-gray-300 text-xl"></i>
+                    <% } %>
                   </div>
                   
                   <div class="space-y-1">
@@ -96,7 +100,7 @@
                     <% } else { %>
                       <!-- Invalid/Blocked state -->
                       <span class="text-[8px] font-bold text-red-400 tracking-wider uppercase block">UNAVAILABLE</span>
-                      <span class="text-xs font-bold text-gray-400 line-through"><%= item.productId ? 'Blocked Product' : 'Product Deleted' %></span>
+                      <span class="text-xs font-bold text-gray-400 line-through"><%= item.details.name || 'Blocked Product' %></span>
                       <p class="text-[10px] text-red-500 font-semibold mt-1"><%= item.details.reason %></p>
                     <% } %>
                   </div>
@@ -107,28 +111,31 @@
                   
                   <% if (item.details.isValid) { %>
                     <!-- Quantity controls -->
-                    <div class="flex items-center border border-gray-200 rounded-sm">
-                      <button 
-                        type="button" 
-                        onclick="updateQuantity('<%= item._id %>', 'decrement')"
-                        class="w-8 h-8 flex items-center justify-center text-xs font-bold text-gray-500 hover:text-black hover:bg-gray-50 transition-colors border-r border-gray-200"
-                        <%= item.quantity <= 1 ? 'disabled' : '' %>
-                        id="dec-btn-<%= item._id %>"
-                      >
-                        <i class="fa-solid fa-minus text-[8px]"></i>
-                      </button>
-                      <span class="w-10 text-center text-xs font-bold text-gray-800" id="qty-<%= item._id %>">
-                        <%= item.quantity %>
-                      </span>
-                      <button 
-                        type="button" 
-                        onclick="updateQuantity('<%= item._id %>', 'increment')"
-                        class="w-8 h-8 flex items-center justify-center text-xs font-bold text-gray-500 hover:text-black hover:bg-gray-50 transition-colors border-l border-gray-200"
-                        <%= item.quantity >= item.details.stock || item.quantity >= maxQtyLimit ? 'disabled' : '' %>
-                        id="inc-btn-<%= item._id %>"
-                      >
-                        <i class="fa-solid fa-plus text-[8px]"></i>
-                      </button>
+                    <div class="flex flex-col items-center gap-1.5">
+                      <div class="flex items-center border border-gray-200 rounded-sm">
+                        <button 
+                          type="button" 
+                          onclick="updateQuantity('<%= item._id %>', 'decrement')"
+                          class="w-8 h-8 flex items-center justify-center text-xs font-bold text-gray-500 hover:text-black hover:bg-gray-50 transition-colors border-r border-gray-200"
+                          <%= item.quantity <= 1 ? 'disabled' : '' %>
+                          id="dec-btn-<%= item._id %>"
+                        >
+                          <i class="fa-solid fa-minus text-[8px]"></i>
+                        </button>
+                        <span class="w-10 text-center text-xs font-bold text-gray-800" id="qty-<%= item._id %>">
+                          <%= item.quantity %>
+                        </span>
+                        <button 
+                          type="button" 
+                          onclick="updateQuantity('<%= item._id %>', 'increment')"
+                          class="w-8 h-8 flex items-center justify-center text-xs font-bold text-gray-500 hover:text-black hover:bg-gray-50 transition-colors border-l border-gray-200"
+                          <%= item.quantity >= item.details.stock || item.quantity >= maxQtyLimit ? 'disabled' : '' %>
+                          id="inc-btn-<%= item._id %>"
+                        >
+                          <i class="fa-solid fa-plus text-[8px]"></i>
+                        </button>
+                      </div>
+                      <span class="text-[9px] text-gray-400 font-semibold uppercase tracking-widest">Max Qty: <%= maxQtyLimit %></span>
                     </div>
 
                     <!-- Item Price Total -->
@@ -275,6 +282,17 @@
           shippingLabel.innerText = data.shippingCharge === 0 ? 'FREE' : '₹' + data.shippingCharge.toLocaleString();
           grandTotalLabel.innerText = '₹' + data.grandTotal.toLocaleString();
 
+          // Update navbar badge count
+          const badge = document.getElementById('cart-badge');
+          if (badge && typeof data.cartCount !== 'undefined') {
+            badge.innerText = data.cartCount;
+            if (data.cartCount > 0) {
+              badge.classList.remove('hidden');
+            } else {
+              badge.classList.add('hidden');
+            }
+          }
+
           // Disable/enable local dec button if qty is 1
           if (data.newQty <= 1) {
             decBtn.setAttribute('disabled', 'true');
@@ -308,7 +326,7 @@
     function proceedToCheckout() {
       // Direct user to checkout page when implemented
       showToast('Proceeding to checkout...', 'success');
-      // window.location.href = '/checkout';
+      window.location.href = '/checkout';
     }
   </script>
 </body>

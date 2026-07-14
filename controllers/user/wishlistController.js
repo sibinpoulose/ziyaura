@@ -111,13 +111,15 @@ export const addToWishlist = async (req, res) => {
   }
 };
 
-// REMOVE FROM WISHLIST
 export const removeFromWishlist = async (req, res) => {
   try {
     const { id } = req.params; // Can be item ID or productId
 
     const wishlist = await Wishlist.findOne({ userId: req.user._id });
     if (!wishlist) {
+      if (req.headers['accept']?.includes('application/json') || req.xhr) {
+        return res.status(404).json({ success: false, message: "Wishlist not found." });
+      }
       req.session.error = "Wishlist not found.";
       return res.redirect("/wishlist");
     }
@@ -127,10 +129,16 @@ export const removeFromWishlist = async (req, res) => {
     );
     await wishlist.save();
 
+    if (req.headers['accept']?.includes('application/json') || req.xhr) {
+      return res.status(200).json({ success: true, message: "Product removed from wishlist." });
+    }
     req.session.success = "Product removed from wishlist.";
     res.redirect("/wishlist");
   } catch (error) {
     console.error("Remove from Wishlist Error:", error);
+    if (req.headers['accept']?.includes('application/json') || req.xhr) {
+      return res.status(500).json({ success: false, message: "Failed to remove product from wishlist." });
+    }
     req.session.error = "Failed to remove product from wishlist.";
     res.redirect("/wishlist");
   }

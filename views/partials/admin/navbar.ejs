@@ -30,7 +30,7 @@
 
             <a
                 href="/admin/dashboard"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath === '/admin/dashboard' ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
             >
 
                 <i class="fa-solid fa-table-cells-large"></i>
@@ -65,13 +65,25 @@
 
 
             <a
-                href="#"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+                href="/admin/orders"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/orders') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
             >
 
                 <i class="fa-solid fa-receipt"></i>
 
                 Orders
+
+            </a>
+
+
+            <a
+                href="/admin/inventory"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/inventory') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+            >
+
+                <i class="fa-solid fa-warehouse"></i>
+
+                Inventory
 
             </a>
 
@@ -91,7 +103,7 @@
 
             <a
                 href="/admin/customers"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/customers') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
             >
 
                 <i class="fa-solid fa-user-group"></i>

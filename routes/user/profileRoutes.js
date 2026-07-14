@@ -1,7 +1,5 @@
 import express from "express";
 
-import { sendOtp } from "../../services/user/authService.js";
-
 import { protect } from "../../middlewares/authMiddleware.js";
 
 import upload from "../../middlewares/uploadMiddleware.js";
@@ -19,7 +17,9 @@ import {
   updateProfileImage,
   setDefaultAddress,
   logout,
-  changePassword
+  changePassword,
+  loadProfileOtpPage,
+  resendProfileOtp
 } from "../../controllers/user/profileController.js";
 
 const router = express.Router();
@@ -36,18 +36,7 @@ router.get(
 
   protect,
 
-  (req, res) => {
-    const expiry = req.session.profileOtpExpiry || Date.now();
-    const timeLeft = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
-    res.render(
-      "user/profile-otp",
-
-      {
-        email: req.user.email,
-        timeLeft
-      }
-    );
-  }
+  loadProfileOtpPage
 );
 
 router.get(
@@ -178,19 +167,7 @@ router.post(
 
   protect,
 
-  async (req, res) => {
-    try {
-      await sendOtp(req.user.email);
-
-      req.session.success = "OTP resent successfully";
-
-      res.redirect("/profile/profile-otp");
-    } catch (err) {
-      req.session.error = "Failed to resend OTP";
-
-      res.redirect("/profile/profile-otp");
-    }
-  }
+  resendProfileOtp
 );
 
 // ADD ADDRESS

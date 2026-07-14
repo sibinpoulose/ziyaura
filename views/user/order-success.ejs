@@ -1,0 +1,113 @@
+<%- include("../partials/user/header") %>
+
+<!-- Success Content Section -->
+<div class="bg-white min-h-screen py-16 flex items-center justify-center">
+  <div class="max-w-xl w-full mx-auto px-6 text-center space-y-8">
+    
+    <!-- Elegant Minimal SVG Checkmark Illustration -->
+    <div class="flex justify-center">
+      <div class="w-20 h-20 rounded-full border border-gray-100 flex items-center justify-center bg-gray-50/50 shadow-sm relative">
+        <!-- Minimal animated outer ring -->
+        <div class="absolute inset-0 rounded-full border border-black opacity-20 animate-ping"></div>
+        <svg 
+          class="w-8 h-8 text-black" 
+          fill="none" 
+          stroke="currentColor" 
+          stroke-width="1.5" 
+          viewBox="0 0 24 24" 
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            d="M4.5 12.75l6 6 9-13.5"
+          ></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Thank You Header -->
+    <div class="space-y-3">
+      <span class="text-[10px] font-bold tracking-[0.25em] text-emerald-600 uppercase bg-emerald-50 px-3 py-1 rounded-sm inline-block">
+        ORDER PLACED SUCCESSFULLY
+      </span>
+      <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 uppercase">
+        THANK YOU FOR YOUR ORDER
+      </h1>
+      <p class="text-xs text-gray-500 font-medium leading-relaxed max-w-md mx-auto">
+        Your order has been recorded. A confirmation email and SMS with tracking details will be sent to your registered contact information shortly.
+      </p>
+    </div>
+
+    <!-- Order Details Card (Optional / Local check) -->
+    <div class="border border-gray-100 rounded-sm p-6 bg-white space-y-4 text-left shadow-sm">
+      <span class="text-[10px] font-bold tracking-widest block text-gray-800 border-b border-gray-100 pb-2 uppercase">
+        SHIPPING & BILLING SUMMARY
+      </span>
+
+      <div class="space-y-3 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400 font-medium">Order ID</span>
+          <span class="font-bold text-gray-900 tracking-wider">
+            <%= locals.order ? order.orderId : 'ORD-xxxxxxxx' %>
+          </span>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400 font-medium">Payment Mode</span>
+          <span class="font-bold text-gray-900 uppercase">
+            <%= locals.order ? order.paymentMethod : 'Cash On Delivery (COD)' %>
+          </span>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400 font-medium">Amount Total</span>
+          <span class="font-extrabold text-black">
+            ₹<%= locals.order ? order.grandTotal.toLocaleString() : '0' %>
+          </span>
+        </div>
+
+        <hr class="border-gray-50">
+
+        <div class="space-y-1">
+          <span class="text-gray-400 font-medium block">Shipping Address</span>
+          <p class="text-[11px] text-gray-600 font-semibold leading-relaxed">
+            <% if (locals.order && order.shippingAddress) { %>
+              <%= order.shippingAddress.fullName %><br>
+              <%= order.shippingAddress.address %><br>
+              <% if (order.shippingAddress.landmark) { %>
+                <%= order.shippingAddress.landmark %>, 
+              <% } %>
+              <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> - <%= order.shippingAddress.pincode %><br>
+              Phone: +91 <%= order.shippingAddress.phone %>
+            <% } else { %>
+              No shipping address details found.
+            <% } %>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 text-[10px] font-bold tracking-widest uppercase">
+      <!-- Continue Shopping Button -->
+      <a 
+        href="/products" 
+        class="w-full sm:w-auto bg-black text-white hover:bg-gray-800 text-center py-4 px-8 rounded-sm transition-colors block"
+      >
+        CONTINUE SHOPPING
+      </a>
+      
+      <!-- Order History / Details Button (Pointing to Profile page for now) -->
+      <a 
+        href="/profile" 
+        class="w-full sm:w-auto border border-gray-200 text-gray-700 hover:text-black hover:border-black text-center py-4 px-8 rounded-sm transition-colors block"
+      >
+        VIEW ORDER DETAILS
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<%- include("../partials/user/footer") %>

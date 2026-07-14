@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Management | ZIYAURA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F3F6F9;
+    }
+    .custom-shadow {
+      box-shadow: 0 2px 15px rgba(0,0,0,0.02);
+    }
+  </style>
+</head>
+<body class="flex min-h-screen">
+
+  <%- include("../partials/admin/navbar") %>
+
+  <!-- Main Content -->
+  <main class="ml-64 flex-grow p-10">
+
+    <!-- Top Header -->
+    <header class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Order Management</h1>
+        <p class="text-sm text-gray-400 mt-1">Monitor, filter, and dispatch customer orders</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <p class="text-xs font-bold text-gray-800 tracking-wide uppercase leading-tight">Admin Panel</p>
+          <p class="text-[10px] text-gray-400 font-medium">Control Center</p>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+          <i class="fa-solid fa-user-shield text-sm"></i>
+        </div>
+      </div>
+    </header>
+
+    <!-- Search, Sort & Filter Panel -->
+    <section class="bg-white rounded-2xl p-6 mb-8 custom-shadow border border-gray-100/50">
+      <form action="/admin/orders" method="GET" class="flex flex-wrap items-center gap-4">
+        <!-- Search Input -->
+        <div class="relative flex-1 min-w-[280px]">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          </span>
+          <input
+            type="text"
+            name="search"
+            value="<%= search %>"
+            placeholder="Search by Order ID, customer name or email..."
+            class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-150 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-sm transition-all"
+          >
+        </div>
+
+        <!-- Status Filter -->
+        <div class="min-w-[160px]">
+          <select
+            name="status"
+            class="w-full border border-gray-150 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 bg-white text-gray-700 transition-all"
+          >
+            <option value="">All Statuses</option>
+            <option value="Pending" <%= statusFilter === 'Pending' ? 'selected' : '' %>>Pending</option>
+            <option value="Shipped" <%= statusFilter === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+            <option value="Out for Delivery" <%= statusFilter === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
+            <option value="Delivered" <%= statusFilter === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+            <option value="Cancelled" <%= statusFilter === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+          </select>
+        </div>
+
+        <!-- Sort Filter -->
+        <div class="min-w-[180px]">
+          <select
+            name="sort"
+            class="w-full border border-gray-150 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 bg-white text-gray-700 transition-all"
+          >
+            <option value="dateDesc" <%= sort === 'dateDesc' ? 'selected' : '' %>>Date: Newest First</option>
+            <option value="dateAsc" <%= sort === 'dateAsc' ? 'selected' : '' %>>Date: Oldest First</option>
+            <option value="totalDesc" <%= sort === 'totalDesc' ? 'selected' : '' %>>Total: High to Low</option>
+            <option value="totalAsc" <%= sort === 'totalAsc' ? 'selected' : '' %>>Total: Low to High</option>
+          </select>
+        </div>
+
+        <!-- Submit & Reset -->
+        <div class="flex items-center gap-2">
+          <button type="submit" class="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all">
+            Apply Filters
+          </button>
+          <a href="/admin/orders" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl text-sm font-semibold transition-all">
+            Reset
+          </a>
+        </div>
+      </form>
+    </section>
+
+    <!-- Orders Table -->
+    <section class="bg-white rounded-2xl custom-shadow overflow-hidden border border-gray-100/50">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50/50 text-[11px] font-bold text-gray-400 border-b border-gray-100 uppercase tracking-widest">
+              <th class="px-8 py-5">Order ID</th>
+              <th class="px-6 py-5">Date</th>
+              <th class="px-6 py-5">Customer Info</th>
+              <th class="px-6 py-5">Grand Total</th>
+              <th class="px-6 py-5">Payment Method</th>
+              <th class="px-6 py-5">Order Status</th>
+              <th class="px-8 py-5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% if (orders.length > 0) { %>
+              <% orders.forEach(order => { %>
+                <tr class="group hover:bg-gray-50/30 transition-colors">
+                  <!-- Order ID -->
+                  <td class="px-8 py-5">
+                    <span class="text-xs font-bold text-blue-600 font-mono"><%= order.orderId %></span>
+                  </td>
+
+                  <!-- Date -->
+                  <td class="px-6 py-5 text-xs text-gray-500 font-medium">
+                    <%= new Date(order.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) %>
+                    <span class="block text-[10px] text-gray-400 mt-0.5"><%= new Date(order.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) %></span>
+                  </td>
+
+                  <!-- Customer Info -->
+                  <td class="px-6 py-5">
+                    <div class="text-xs font-bold text-gray-800"><%= order.userId ? order.userId.name : 'Unknown User' %></div>
+                    <div class="text-[10px] text-gray-400 font-medium mt-0.5"><%= order.userId ? order.userId.email : 'N/A' %></div>
+                  </td>
+
+                  <!-- Grand Total -->
+                  <td class="px-6 py-5">
+                    <span class="text-xs font-extrabold text-gray-900">₹<%= order.grandTotal.toLocaleString() %></span>
+                    <span class="block text-[9px] text-gray-400 font-semibold mt-0.5"><%= order.products.length %> items</span>
+                  </td>
+
+                  <!-- Payment Details -->
+                  <td class="px-6 py-5 text-xs">
+                    <span class="font-bold text-gray-700 uppercase tracking-tight"><%= order.paymentMethod %></span>
+                    <% if (order.paymentStatus === 'Paid') { %>
+                      <span class="inline-block ml-1.5 text-[8px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase">Paid</span>
+                    <% } else if (order.paymentStatus === 'Failed') { %>
+                      <span class="inline-block ml-1.5 text-[8px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded uppercase">Failed</span>
+                    <% } else { %>
+                      <span class="inline-block ml-1.5 text-[8px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded uppercase">Pending</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Order Status Dropdown / Badge -->
+                  <td class="px-6 py-5">
+                    <% if (order.orderStatus === 'Cancelled') { %>
+                      <span class="inline-block text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-3 py-1 rounded-full uppercase">Cancelled</span>
+                    <% } else if (order.orderStatus === 'Delivered') { %>
+                      <span class="inline-block text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full uppercase">Delivered</span>
+                    <% } else { %>
+                      <div class="relative inline-block w-40">
+                        <select
+                          onchange="changeOrderStatus('<%= order._id %>', this)"
+                          class="appearance-none w-full bg-amber-50 border border-amber-100 hover:border-amber-200 text-amber-700 text-[10px] font-bold tracking-wider uppercase px-3 py-1.5 pr-8 rounded-full focus:outline-none cursor-pointer"
+                        >
+                          <option value="Pending" <%= order.orderStatus === 'Pending' ? 'selected' : '' %>>Pending</option>
+                          <option value="Shipped" <%= order.orderStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                          <option value="Out for Delivery" <%= order.orderStatus === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
+                          <option value="Delivered" <%= order.orderStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                          <option value="Cancelled" <%= order.orderStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                        </select>
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-amber-500 text-[9px]">
+                          <i class="fa-solid fa-chevron-down"></i>
+                        </span>
+                      </div>
+                    <% } %>
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="px-8 py-5 text-right">
+                    <a
+                      href="/admin/orders/<%= order._id %>"
+                      class="inline-block bg-gray-50 border border-gray-200 hover:border-black text-black text-[9px] font-bold uppercase tracking-widest px-4 py-2 rounded-sm transition-all"
+                    >
+                      View Details
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center py-16 text-gray-500">
+                  <i class="fa-regular fa-folder-open text-4xl mb-3 block text-gray-300"></i>
+                  No orders found matching the filter query.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <% if (totalPages > 1) { %>
+        <div class="flex justify-between items-center px-8 py-5 border-t border-gray-100 bg-gray-50/50">
+          <span class="text-xs text-gray-500 font-medium">Page <%= currentPage %> of <%= totalPages %></span>
+          <div class="flex items-center gap-1.5">
+            <% for(let i = 1; i <= totalPages; i++){ %>
+              <a
+                href="/admin/orders?page=<%= i %>&search=<%= search %>&status=<%= statusFilter %>&sort=<%= sort %>"
+                class="px-3.5 py-1.5 rounded-lg border text-xs font-semibold tracking-wide transition-all <%= currentPage === i ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50' %>"
+              >
+                <%= i %>
+              </a>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    </section>
+
+  </main>
+
+  <%- include("../partials/toast") %>
+
+  <!-- Change Status AJAX Logic -->
+  <script>
+    async function changeOrderStatus(orderId, selectElem) {
+      const originalValue = selectElem.getAttribute('data-original') || selectElem.value;
+      const newStatus = selectElem.value;
+      
+      // If setting to Cancelled or Delivered, ask for confirmation
+      if (newStatus === 'Cancelled') {
+        if (!confirm('Are you sure you want to Cancel this order? This will restore stock levels and cannot be undone.')) {
+          selectElem.value = originalValue;
+          return;
+        }
+      } else if (newStatus === 'Delivered') {
+        if (!confirm('Mark order as Delivered? This will mark COD payment as Paid and cannot be undone.')) {
+          selectElem.value = originalValue;
+          return;
+        }
+      }
+
+      try {
+        const response = await fetch(`/admin/orders/${orderId}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ orderStatus: newStatus })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          showToast(data.message, 'success');
+          // Save the value as original
+          selectElem.setAttribute('data-original', newStatus);
+          // If status is terminal (Cancelled/Delivered), reload to update the UI correctly
+          if (['Cancelled', 'Delivered'].includes(newStatus)) {
+            setTimeout(() => window.location.reload(), 1200);
+          }
+        } else {
+          showToast(data.message || 'Failed to update order status', 'error');
+          selectElem.value = originalValue;
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Network error, please try again.', 'error');
+        selectElem.value = originalValue;
+      }
+    }
+
+    // Set initial custom attributes on load
+    document.querySelectorAll('table select').forEach(select => {
+      select.setAttribute('data-original', select.value);
+    });
+  </script>
+
+</body>
+</html>

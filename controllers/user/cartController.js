@@ -7,10 +7,52 @@ const MAX_QTY_LIMIT = 5;
 // HELPER: Validate product, category, and variant and return current details
 const getCartItemDetails = (item) => {
   const product = item.productId;
-  if (!product || product.isDeleted || !product.isListed || !product.category || !product.category.isListed) {
+  if (!product) {
     return {
       isValid: false,
-      reason: "This product is currently unavailable or blocked."
+      reason: "This product is no longer available (deleted).",
+      name: "Deleted Product",
+      image: null,
+      brand: "ZIYAURA",
+      slug: ""
+    };
+  }
+
+  const name = product.name || "Unavailable Product";
+  const image = product.images && product.images[0] ? product.images[0] : null;
+  const brand = product.brand || "ZIYAURA";
+  const slug = product.slug || "";
+
+  if (product.isDeleted) {
+    return {
+      isValid: false,
+      reason: "This product has been deleted.",
+      name,
+      image,
+      brand,
+      slug
+    };
+  }
+
+  if (!product.isListed) {
+    return {
+      isValid: false,
+      reason: "This product is currently unlisted/unavailable.",
+      name,
+      image,
+      brand,
+      slug
+    };
+  }
+
+  if (!product.category || !product.category.isListed) {
+    return {
+      isValid: false,
+      reason: "This product's category is currently unavailable.",
+      name,
+      image,
+      brand,
+      slug
     };
   }
 
@@ -25,7 +67,11 @@ const getCartItemDetails = (item) => {
     if (!variant || !variant.isListed) {
       return {
         isValid: false,
-        reason: "Selected product option is unavailable."
+        reason: "Selected product option is unavailable.",
+        name,
+        image,
+        brand,
+        slug
       };
     }
     price = variant.salePrice !== null ? variant.salePrice : variant.price;
@@ -45,10 +91,10 @@ const getCartItemDetails = (item) => {
     stock,
     variantDetails,
     sku,
-    name: product.name,
-    image: product.images && product.images[0] ? product.images[0] : "/images/placeholder.jpg",
-    slug: product.slug,
-    brand: product.brand
+    name,
+    image,
+    slug,
+    brand
   };
 };
 
@@ -100,7 +146,14 @@ export const loadCartPage = async (req, res) => {
           productId: item.productId ? item.productId._id : null,
           variantId: item.variantId,
           quantity: item.quantity,
-          details: { isValid: false, reason: details.reason },
+          details: { 
+            isValid: false, 
+            reason: details.reason,
+            name: details.name,
+            image: details.image,
+            brand: details.brand,
+            slug: details.slug
+          },
           itemTotal: 0,
           isOutOfStock: false,
           isInsufficientStock: false
@@ -215,9 +268,12 @@ export const addToCart = async (req, res) => {
       { $pull: { items: { productId } } }
     );
 
+    const cartCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+
     return res.status(200).json({
       success: true,
-      message: "Product added to bag successfully."
+      message: "Product added to bag successfully.",
+      cartCount
     });
   } catch (error) {
     console.error("Add to Cart Error:", error);
@@ -299,6 +355,8 @@ export const updateCartQuantity = async (req, res) => {
     const shippingCharge = cartSubtotal > 50000 || cartSubtotal === 0 ? 0 : 500;
     const grandTotal = cartSubtotal + shippingCharge;
 
+    const cartCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+
     return res.status(200).json({
       success: true,
       message: "Bag updated.",
@@ -307,7 +365,8 @@ export const updateCartQuantity = async (req, res) => {
       cartSubtotal,
       shippingCharge,
       grandTotal,
-      hasOutOfStockOrInvalid
+      hasOutOfStockOrInvalid,
+      cartCount
     });
   } catch (error) {
     console.error("Update Cart Quantity Error:", error);

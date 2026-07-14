@@ -11,17 +11,9 @@ import passport from "./config/passport.js";
 
 // ROUTES
 
-import authRoutes from "./routes/user/authRoutes.js";
+import mainRouter from "./routes/index.js";
 
-import profileRoutes from "./routes/user/profileRoutes.js";
 
-import adminroutes from "./routes/admin/adminauth.js";
-
-import productRoutes from "./routes/user/productRoutes.js";
-import cartRoutes from "./routes/user/cartRoutes.js";
-import wishlistRoutes from "./routes/user/wishlistRoutes.js";
-
-import Category from "./models/category.js";
 
 // MIDDLEWARES
 
@@ -75,15 +67,19 @@ app.use(
   })
 );
 
-// FLASH MESSAGES
-
-app.use(flashMiddleware);
-
 // PASSPORT
 
 app.use(passport.initialize());
 
 app.use(passport.session());
+
+// ATTACH USER
+
+app.use(attachUser);
+
+// FLASH MESSAGES
+
+app.use(flashMiddleware);
 
 // VIEW ENGINE
 
@@ -103,43 +99,12 @@ app.set(
 
 app.use(express.static("public"));
 
-// ATTACH USER
 
-app.use(attachUser);
 
-// GLOBAL LOCALS
 
-app.use(async (req, res, next) => {
-  res.locals.user = req.user || null;
 
-  res.locals.requestPath = req.path;
 
-  try {
-    res.locals.categories = await Category.find({ isListed: true });
-  } catch (error) {
-    res.locals.categories = [];
-  }
 
-  next();
-});
-
-// ROUTES
-
-app.use("/", authRoutes);
-app.use("/", productRoutes);
-app.use("/", cartRoutes);
-app.use("/", wishlistRoutes);
-
-app.use(
-  "/profile",
-
-  profileRoutes
-);
-
-app.use(
-  "/admin",
-
-  adminroutes
-);
+app.use("/", mainRouter);
 
 export default app;
