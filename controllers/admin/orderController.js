@@ -1,6 +1,7 @@
 import Order from "../../models/order.js";
 import User from "../../models/User.js";
 import Product from "../../models/product.js";
+import WalletTransaction from "../../models/walletTransaction.js";
 
 // 1. LOAD ORDERS LIST PAGE (WITH SEARCH, SORT, FILTER, PAGINATION)
 export const loadOrdersPage = async (req, res) => {
@@ -120,7 +121,6 @@ export const updateOrderStatus = async (req, res) => {
     // Handle stock restoration if changing to Cancelled
     if (orderStatus === "Cancelled" && oldStatus !== "Cancelled") {
       for (const item of order.products) {
-        // Stock restoration for non-cancelled items
         if (item.orderStatus === "Cancelled" && item.cancelReason === "") {
           item.cancelReason = "Cancelled by admin";
         }
@@ -154,5 +154,124 @@ export const updateOrderStatus = async (req, res) => {
   } catch (error) {
     console.error("Admin Update Order Status Error:", error);
     return res.status(500).json({ success: false, message: "Failed to update order status." });
+  }
+};
+
+// 4. FETCH RETURN REQUESTS LIST PAGE
+export const loadReturnorder = async (req, res) => {
+  try {
+    // Find orders containing items with Return Requested state or main status as Return Requested
+    const orders = await Order.find({
+      $or: [
+        { orderStatus: "Return Requested" },
+        { "products.orderStatus": "Return Requested" }
+      ]
+    }).populate("userId", "name email");
+
+    res.render("admin/returnedorder", { orders });
+  } catch (error) {
+    console.error("Load Returns Page Error:", error);
+    res.redirect("/admin/dashboard");
+  }
+};
+
+// 5. PROCESS ITEM OR ORDER RETURNS (ACCEPT/REJECT & ISSUE WALLET REFUND)
+export const processReturnRequest = async (req, res) => {
+  try {
+    const { orderId, itemId, action } = req.body; // action: 'accept' or 'reject'
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found." });
+    }
+
+    let refundAmount = 0;
+
+    if (itemId) {
+      const item = order.products.id(itemId);
+      if (!item || item.orderStatus !== "Return Requested") {
+        return res.status(400).json({ success: false, message: "Item is not in Return Requested status." });
+      }
+
+      if (action === "accept") {
+        item.orderStatus = "Returned";
+        
+        // Restore stock
+        const product = await Product.findById(item.productId);
+        if (product) {
+          if (item.variantId) {
+            const variant = product.variants.id(item.variantId);
+            if (variant) variant.stock += item.quantity;
+          } else {
+            product.stock += item.quantity;
+          }
+          await product.save();
+        }
+
+        // Proportional refund formula
+        const priceRatio = item.total / order.subtotal;
+        const discountReduction = order.discount * priceRatio;
+        refundAmount = item.total - discountReduction;
+      } else {
+        item.orderStatus = "Return Rejected";
+      }
+
+      // Check if all items in order are processed
+      const allReturned = order.products.every(p => ["Returned", "Cancelled", "Return Rejected"].includes(p.orderStatus));
+      if (allReturned) {
+        order.orderStatus = "Returned";
+      }
+    } else {
+      // Entire Order Return Request Process
+      if (action === "accept") {
+        order.orderStatus = "Returned";
+        refundAmount = order.grandTotal;
+
+        for (const item of order.products) {
+          if (item.orderStatus === "Return Requested") {
+            item.orderStatus = "Returned";
+            
+            // Restore stock
+            const product = await Product.findById(item.productId);
+            if (product) {
+              if (item.variantId) {
+                const variant = product.variants.id(item.variantId);
+                if (variant) variant.stock += item.quantity;
+              } else {
+                product.stock += item.quantity;
+              }
+              await product.save();
+            }
+          }
+        }
+      } else {
+        order.orderStatus = "Return Rejected";
+        order.products.forEach(p => {
+          if (p.orderStatus === "Return Requested") p.orderStatus = "Return Rejected";
+        });
+      }
+    }
+
+    // Process Wallet Refund upon accept confirmation
+    if (action === "accept" && refundAmount > 0) {
+      const user = await User.findById(order.userId);
+      user.walletBalance = (user.walletBalance || 0) + refundAmount;
+      await user.save();
+
+      await WalletTransaction.create({
+        userId: order.userId,
+        amount: refundAmount,
+        type: "credit",
+        description: `Refund for Approved Return: ${order.orderId}`,
+        orderId: order.orderId
+      });
+
+      order.paymentStatus = "Refunded";
+    }
+
+    await order.save();
+    return res.status(200).json({ success: true, message: `Return request ${action}ed successfully. Refunded: ₹${refundAmount.toFixed(2)}` });
+  } catch (error) {
+    console.error("Process Return Error:", error);
+    res.status(500).json({ success: false, message: "Failed to process return request." });
   }
 };

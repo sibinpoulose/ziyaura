@@ -1,5 +1,8 @@
 import { loginUser } from "../../services/user/authService.js";
 import User from "../../models/User.js";
+import Order from "../../models/order.js";
+import Product from "../../models/product.js";
+import Category from "../../models/category.js";
 
 
 export const adminLogin = async (req, res) => {
@@ -179,8 +182,126 @@ export const loadAdminLoginPage = (req, res) => {
   res.render("admin/login");
 };
 
-export const loadAdminDashboard = (req, res) => {
-  res.render("admin/dashboard");
+export const loadAdminDashboard = async (req, res) => {
+  try {
+    // 1. Calculate overall figures
+    const totalOrdersCount = await Order.countDocuments();
+    const successfulOrders = await Order.find({ orderStatus: { $ne: "Cancelled" } });
+    
+    let totalRevenue = 0;
+    let totalDiscount = 0;
+    successfulOrders.forEach(o => {
+      totalRevenue += o.grandTotal;
+      totalDiscount += o.discount;
+    });
+
+    // 2. Query monthly stats
+    const monthlyStats = await Order.aggregate([
+      { $match: { orderStatus: { $ne: "Cancelled" } } },
+      {
+        $group: {
+          _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
+          revenue: { $sum: "$grandTotal" },
+          salesCount: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+
+    // 3. Top 10 Best Selling Products
+    const bestSellingProducts = await Order.aggregate([
+      { $unwind: "$products" },
+      { $match: { "products.orderStatus": { $nin: ["Cancelled", "Returned"] } } },
+      {
+        $group: {
+          _id: "$products.productId",
+          productName: { $first: "$products.name" },
+          quantitySold: { $sum: "$products.quantity" },
+          totalRevenue: { $sum: "$products.total" }
+        }
+      },
+      { $sort: { quantitySold: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // 4. Top 10 Best Selling Categories
+    const bestSellingCategories = await Order.aggregate([
+      { $unwind: "$products" },
+      { $match: { "products.orderStatus": { $nin: ["Cancelled", "Returned"] } } },
+      {
+        $lookup: {
+          from: "products",
+          localField: "products.productId",
+          foreignField: "_id",
+          as: "prodInfo"
+        }
+      },
+      { $unwind: "$prodInfo" },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "prodInfo.category",
+          foreignField: "_id",
+          as: "catInfo"
+        }
+      },
+      { $unwind: "$catInfo" },
+      {
+        $group: {
+          _id: "$catInfo._id",
+          categoryName: { $first: "$catInfo.name" },
+          quantitySold: { $sum: "$products.quantity" }
+        }
+      },
+      { $sort: { quantitySold: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // 5. Top 10 Best Selling Brands
+    const bestSellingBrands = await Order.aggregate([
+      { $unwind: "$products" },
+      { $match: { "products.orderStatus": { $nin: ["Cancelled", "Returned"] } } },
+      {
+        $lookup: {
+          from: "products",
+          localField: "products.productId",
+          foreignField: "_id",
+          as: "prodInfo"
+        }
+      },
+      { $unwind: "$prodInfo" },
+      {
+        $group: {
+          _id: "$prodInfo.brand",
+          brandName: { $first: "$prodInfo.brand" },
+          quantitySold: { $sum: "$products.quantity" }
+        }
+      },
+      { $sort: { quantitySold: -1 } },
+      { $limit: 10 }
+    ]);
+
+    res.render("admin/dashboard", {
+      totalOrdersCount,
+      totalRevenue,
+      totalDiscount,
+      monthlyStats,
+      bestSellingProducts,
+      bestSellingCategories,
+      bestSellingBrands
+    });
+  } catch (error) {
+    console.error("Dashboard calculation error:", error);
+    res.render("admin/dashboard", {
+      totalOrdersCount: 0,
+      totalRevenue: 0,
+      totalDiscount: 0,
+      monthlyStats: [],
+      bestSellingProducts: [],
+      bestSellingCategories: [],
+      bestSellingBrands: []
+    });
+  }
 };
 
 // ADMIN LOGOUT

@@ -132,10 +132,8 @@
 
           <div class="space-y-3">
             <!-- Cash on Delivery Option -->
-            <label class="relative border-2 border-black bg-gray-50/30 rounded-sm p-5 cursor-pointer block flex items-center gap-4">
-              <div class="w-4 h-4 rounded-full border border-black flex items-center justify-center bg-white">
-                <div class="w-2 h-2 rounded-full bg-black"></div>
-              </div>
+            <label class="relative border-2 border-black bg-gray-50/30 rounded-sm p-5 cursor-pointer block flex items-center gap-4 hover:border-black transition-all">
+              <input type="radio" name="paymentMethodRadio" value="COD" checked onclick="setPaymentMethod('COD')" class="accent-black">
               <div class="space-y-1">
                 <span class="text-xs font-bold text-gray-900 tracking-wider">CASH ON DELIVERY (COD)</span>
                 <p class="text-[10px] text-gray-500 font-medium">Pay with cash upon delivery of your order. No extra charges.</p>
@@ -145,17 +143,23 @@
               </span>
             </label>
 
-            <!-- Disabled Online Option as placeholder -->
-            <div class="relative border border-gray-100 rounded-sm p-5 opacity-50 cursor-not-allowed flex items-center gap-4">
-              <div class="w-4 h-4 rounded-full border border-gray-200 flex items-center justify-center bg-white"></div>
+            <!-- Active Online Option -->
+            <label class="relative border border-gray-100 rounded-sm p-5 cursor-pointer flex items-center gap-4 hover:border-black transition-all">
+              <input type="radio" name="paymentMethodRadio" value="ONLINE" onclick="setPaymentMethod('ONLINE')" class="accent-black">
               <div class="space-y-1">
-                <span class="text-xs font-bold text-gray-400 tracking-wider">ONLINE PAYMENT (UPI, CARD, NETBANKING)</span>
-                <p class="text-[10px] text-gray-400 font-medium">Pay securely online using credit/debit card, UPI or Netbanking.</p>
+                <span class="text-xs font-bold text-gray-900 tracking-wider">ONLINE PAYMENT (CARD, UPI, NETBANKING)</span>
+                <p class="text-[10px] text-gray-500 font-medium">Pay securely online using Razorpay checkout gateway options.</p>
               </div>
-              <span class="ml-auto text-[10px] font-bold text-gray-400 tracking-widest uppercase bg-gray-50 px-2 py-0.5 rounded-sm">
-                TEMPORARILY UNAVAILABLE
-              </span>
-            </div>
+            </label>
+
+            <!-- Wallet Option -->
+            <label class="relative border border-gray-100 rounded-sm p-5 cursor-pointer flex items-center gap-4 hover:border-black transition-all <%= walletBalance <= 0 ? 'opacity-50 cursor-not-allowed' : '' %>">
+              <input type="radio" name="paymentMethodRadio" value="WALLET" <%= walletBalance <= 0 ? 'disabled' : '' %> onclick="setPaymentMethod('WALLET')" class="accent-black">
+              <div class="space-y-1 flex-grow">
+                <span class="text-xs font-bold text-gray-900 tracking-wider">WALLET BALANCE (Balance: ₹<%= walletBalance.toLocaleString() %>)</span>
+                <p class="text-[10px] text-gray-500 font-medium">Deduct order totals directly from your pre-loaded Ziyaura balance.</p>
+              </div>
+            </label>
           </div>
         </div>
 
@@ -201,6 +205,24 @@
           <% }); %>
         </div>
 
+        <!-- Coupon Form Container -->
+        <div class="flex gap-2 py-2 border-t border-gray-100 mt-4">
+          <input 
+            type="text" 
+            id="coupon-input" 
+            placeholder="ENTER COUPON CODE" 
+            value="<%= couponCode || '' %>" 
+            class="border border-gray-200 text-xs px-3 py-2.5 w-full uppercase focus:outline-none focus:border-black rounded-sm"
+            <%= couponCode ? 'disabled' : '' %>
+          />
+          <% if(couponCode) { %>
+            <button type="button" onclick="removeCouponCode()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-[10px] px-4 py-2 uppercase tracking-wider rounded-sm">Remove</button>
+          <% } else { %>
+            <button type="button" onclick="applyCouponCode()" class="bg-black hover:bg-gray-800 text-white font-bold text-[10px] px-4 py-2 uppercase tracking-wider rounded-sm">Apply</button>
+          <% } %>
+        </div>
+        <p id="coupon-message" class="text-[9px] font-bold uppercase tracking-wider mb-2"></p>
+
         <!-- Prices breakdown -->
         <div class="space-y-4 text-xs border-t border-gray-100 pt-4">
           <div class="flex justify-between items-center">
@@ -223,7 +245,7 @@
 
           <% if (discount > 0) { %>
             <div class="flex justify-between items-center text-emerald-600">
-              <span class="font-medium">Discounts</span>
+              <span class="font-medium">Coupon Discount</span>
               <span class="font-bold">-₹<%= discount.toLocaleString() %></span>
             </div>
           <% } %>
@@ -237,14 +259,14 @@
         </div>
 
         <!-- Place Order Form -->
-        <form id="checkout-form" action="/checkout/place-order" method="POST" class="pt-2">
+        <form id="checkout-form" onsubmit="event.preventDefault(); submitOrder();" class="pt-2">
           <input 
             type="hidden" 
             name="addressId" 
             id="selected-address-id" 
             value="<%= defaultAddress ? defaultAddress._id : (addresses.length > 0 ? addresses[0]._id : '') %>"
           >
-          <input type="hidden" name="paymentMethod" value="COD">
+          <input type="hidden" name="paymentMethod" id="checkout-payment-method" value="COD">
 
           <button 
             type="submit" 
@@ -546,18 +568,149 @@
     }
   });
 
-  // Form Submission Validation
-  document.getElementById('checkout-form').addEventListener('submit', function(e) {
-    const addressId = document.getElementById('selected-address-id').value;
-    if (!addressId) {
-      e.preventDefault();
-      alert('Please select or add a shipping address before placing your order.');
+  // Set active payment method
+  function setPaymentMethod(method) {
+    document.getElementById('checkout-payment-method').value = method;
+  }
+
+  // Coupon handling logic
+  function applyCouponCode() {
+    const code = document.getElementById('coupon-input').value;
+    const msg = document.getElementById('coupon-message');
+    if(!code) {
+      msg.className = 'text-[9px] font-bold text-rose-500';
+      msg.innerText = 'ENTER A VALID COUPON CODE';
       return;
     }
+    
+    fetch('/coupons/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ couponCode: code })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        msg.className = 'text-[9px] font-bold text-emerald-600';
+        msg.innerText = data.message;
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        msg.className = 'text-[9px] font-bold text-rose-500';
+        msg.innerText = data.message;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      msg.className = 'text-[9px] font-bold text-rose-500';
+      msg.innerText = 'FAILED TO APPLY COUPON';
+    });
+  }
+
+  function removeCouponCode() {
+    fetch('/coupons/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.success) {
+        window.location.reload();
+      }
+    });
+  }
+
+  // Form Submission Validation and payment processing
+  function submitOrder() {
+    const addressId = document.getElementById('selected-address-id').value;
+    const paymentMethod = document.getElementById('checkout-payment-method').value;
+    const couponCode = document.getElementById('coupon-input')?.value || null;
+
+    if (!addressId) {
+      showToast('Please select or add a shipping address before placing your order.', 'error', 'high');
+      return;
+    }
+
     const submitBtn = document.getElementById('submit-btn');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> PLACING ORDER...';
-  });
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> PROCESSING ORDER...';
+
+    fetch('/checkout/place-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ addressId, paymentMethod, couponCode })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.success) {
+        if(data.paymentNeeded) {
+          // Trigger Razorpay Modal
+          const options = {
+            key: data.key_id,
+            amount: data.amount,
+            currency: "INR",
+            name: "ZIYAURA Store",
+            description: "Purchase Order Checkout",
+            order_id: data.razorpayOrderId,
+            handler: function (response) {
+              // Verify payment on the server side
+              fetch('/checkout/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderId: data.orderId
+                })
+              })
+              .then(res => res.json())
+              .then(verifData => {
+                if(verifData.success) {
+                  window.location.href = `/order-success/${data.orderId}`;
+                } else {
+                  window.location.href = `/payment-failure/${data.orderId}`;
+                }
+              });
+            },
+            prefill: {
+              name: data.user.name,
+              email: data.user.email,
+              contact: data.user.phone
+            },
+            theme: { color: "#000000" },
+            modal: {
+              ondismiss: function() {
+                // Mark payment failed
+                fetch('/checkout/payment-failure', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ orderId: data.orderId })
+                })
+                .then(() => {
+                  window.location.href = `/payment-failure/${data.orderId}`;
+                });
+              }
+            }
+          };
+          const rzp = new Razorpay(options);
+          rzp.open();
+        } else {
+          window.location.href = `/order-success/${data.orderId}`;
+        }
+      } else {
+        showToast(data.message || 'Failed to place order.', 'error', 'high');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'PLACE ORDER';
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('An error occurred. Please try again.', 'error', 'high');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'PLACE ORDER';
+    });
+  }
 </script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <%- include("../partials/user/footer") %>

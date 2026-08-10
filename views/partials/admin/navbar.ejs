@@ -86,6 +86,52 @@
                 Inventory
 
             </a>
+            <a
+                href="/admin/return"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/return') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+            >
+
+                <i class="fa-solid fa-rotate-left"></i>
+
+                Returned orders
+
+            </a>
+
+
+            <a
+                href="/admin/coupons"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/coupons') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+            >
+
+                <i class="fa-solid fa-ticket"></i>
+
+                Coupons
+
+            </a>
+
+
+            <a
+                href="/admin/offers"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/offers') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+            >
+
+                <i class="fa-solid fa-percent"></i>
+
+                Offers
+
+            </a>
+
+
+            <a
+                href="/admin/sales-report"
+                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/sales-report') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+            >
+
+                <i class="fa-solid fa-chart-line"></i>
+
+                Sales Report
+
+            </a>
 
         </div>
 

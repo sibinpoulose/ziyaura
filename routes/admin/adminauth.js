@@ -16,6 +16,13 @@ import inventoryRoutes from "./inventoryRoutes.js";
 import { adminProtect } from "../../middlewares/authMiddleware.js";
 import { isAdminGuest } from "../../middlewares/guestMiddleware.js";
 
+// Coupon Admin Imports
+import { loadCouponsPage, createCoupon, deleteCoupon } from "../../controllers/admin/adminCouponController.js";
+// Offer Admin Imports
+import { loadOffersPage, createOffer, deleteOffer } from "../../controllers/admin/adminOfferController.js";
+// Reports Imports
+import { loadSalesReport, downloadExcelReport, downloadPDFReport } from "../../controllers/admin/reportsController.js";
+
 const router = express.Router();
 
 // ADMIN LOGIN PAGE
@@ -84,5 +91,20 @@ router.use(
   "/",
   inventoryRoutes
 );
+
+// Coupons Admin Routes
+router.get("/coupons", adminProtect, loadCouponsPage);
+router.post("/coupons/create", adminProtect, createCoupon);
+router.delete("/coupons/delete/:id", adminProtect, deleteCoupon);
+
+// Offers Admin Routes
+router.get("/offers", adminProtect, loadOffersPage);
+router.post("/offers/create", adminProtect, createOffer);
+router.delete("/offers/delete/:id", adminProtect, deleteOffer);
+
+// Sales Reports Routes
+router.get("/sales-report", adminProtect, loadSalesReport);
+router.get("/sales-report/excel", adminProtect, downloadExcelReport);
+router.get("/sales-report/pdf", adminProtect, downloadPDFReport);
 
 export default router;

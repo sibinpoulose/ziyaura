@@ -324,7 +324,7 @@ export const updateCartQuantity = async (req, res) => {
       return res.status(400).json({ success: false, message: `Maximum limit per product is ${MAX_QTY_LIMIT} items.` });
     }
 
-    if (newQty > details.stock) {
+    if (action === 'increment' && newQty > details.stock) {
       return res.status(400).json({ success: false, message: `Only ${details.stock} items are available in stock.` });
     }
 

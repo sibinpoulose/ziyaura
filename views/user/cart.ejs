@@ -313,9 +313,9 @@
             checkoutBtn.innerText = "PROCEED TO CHECKOUT";
           }
 
-          showToast(data.message, 'success');
+          // Success message is not needed for simple cart quantity changes
         } else {
-          showToast(data.message, 'error');
+          showToast(data.message, 'error', 'low');
         }
       } catch (error) {
         console.error('AJAX Error:', error);

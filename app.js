@@ -101,10 +101,6 @@ app.use(express.static("public"));
 
 
 
-
-
-
-
 app.use("/", mainRouter);
 
 export default app;

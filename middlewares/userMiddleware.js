@@ -65,11 +65,13 @@ export const attachUser = async (req, res, next) => {
 
     // Global Wishlist IDs
     res.locals.wishlistProductIds = [];
+    res.locals.wishlistCount = 0;
     if (req.user && req.user.role === "user") {
       try {
         const wishlist = await Wishlist.findOne({ userId: req.user._id });
         if (wishlist) {
           res.locals.wishlistProductIds = wishlist.items.map(item => item.productId.toString());
+          res.locals.wishlistCount = wishlist.items.length;
         }
       } catch (error) {
         console.error("Global wishlist IDs error:", error);
@@ -89,6 +91,7 @@ export const attachUser = async (req, res, next) => {
     res.locals.admin = null;
     res.locals.cartCount = 0;
     res.locals.wishlistProductIds = [];
+    res.locals.wishlistCount = 0;
     res.locals.categories = [];
   }
 

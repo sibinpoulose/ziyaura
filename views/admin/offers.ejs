@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offers & Discounts | ZIYAURA Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F6F9;
+        }
+        .custom-shadow {
+            box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <%- include("../partials/admin/navbar")%>
+
+    <!-- Main Content -->
+    <main class="ml-64 flex-grow p-10">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Offers Module</h2>
+                <p class="text-xs text-gray-400 font-medium mt-1">Manage product, category and referral campaigns</p>
+            </div>
+            <button onclick="toggleForm()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs uppercase px-4 py-2.5 rounded-lg tracking-widest transition-all">
+                <i class="fa-solid fa-plus mr-1.5"></i> Add Offer
+            </button>
+        </header>
+
+        <!-- Create Offer Form Section (Collapsible) -->
+        <section id="offerForm" class="bg-white p-8 rounded-2xl custom-shadow mb-8 hidden">
+            <h4 class="text-sm font-bold text-gray-800 mb-6">Create New Offer Campaign</h4>
+            <form onsubmit="event.preventDefault(); submitOffer();" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Campaign Name</label>
+                    <input type="text" id="name" required class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Discount Type</label>
+                    <select id="discountType" required class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg bg-white">
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Fixed Discount (₹)</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Discount value</label>
+                    <input type="number" id="discountValue" min="0" required class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Target Target Campaign Type</label>
+                    <select id="targetType" onchange="adjustTargetSelectors()" required class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg bg-white">
+                        <option value="product">Product Specific</option>
+                        <option value="category">Category Specific</option>
+                    </select>
+                </div>
+
+                <!-- Product dropdown selector -->
+                <div id="productSelectorContainer" class="space-y-2">
+                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Select Product Target</label>
+                    <select id="productTarget" class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg bg-white">
+                        <% products.forEach(p => { %>
+                            <option value="<%= p._id %>"><%= p.name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <!-- Category dropdown selector -->
+                <div id="categorySelectorContainer" class="space-y-2 hidden">
+                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Select Category Target</label>
+                    <select id="categoryTarget" class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg bg-white">
+                        <% categories.forEach(c => { %>
+                            <option value="<%= c._id %>"><%= c.name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Expiry Date</label>
+                    <input type="date" id="expiryDate" required class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
+                </div>
+
+                <div class="md:col-span-3 flex justify-end gap-3 pt-4 border-t border-gray-50 text-[10px] font-bold tracking-widest uppercase">
+                    <button type="button" onclick="toggleForm()" class="bg-gray-100 text-gray-600 px-6 py-3 rounded-lg hover:bg-gray-200">Cancel</button>
+                    <button type="submit" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600">Save Offer Campaign</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Offer Listing Table -->
+        <section class="bg-white rounded-2xl custom-shadow overflow-hidden">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-[11px] font-bold text-gray-400 border-b border-gray-50 uppercase tracking-wider">
+                        <th class="px-8 py-5">Campaign Name</th>
+                        <th class="px-6 py-5">Target Type</th>
+                        <th class="px-6 py-5">Target Scope</th>
+                        <th class="px-6 py-5">Discount Offer</th>
+                        <th class="px-6 py-5">Expiry Date</th>
+                        <th class="px-8 py-5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50 text-xs font-semibold text-gray-700">
+                    <% if (offers.length === 0) { %>
+                        <tr>
+                            <td colspan="6" class="text-center py-10 text-gray-400 uppercase tracking-wider">No offer campaigns created yet.</td>
+                        </tr>
+                    <% } else { %>
+                        <% offers.forEach(o => { 
+                            const isExpired = new Date() > new Date(o.expiryDate);
+                        %>
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-8 py-5 text-gray-900 font-bold"><%= o.name %></td>
+                                <td class="px-6 py-5 uppercase text-[10px] font-bold"><span class="bg-blue-50 text-blue-500 px-2 py-0.5 rounded-sm"><%= o.targetType %></span></td>
+                                <td class="px-6 py-5 text-gray-500 font-medium">
+                                    <% if (o.targetType === 'product' && o.productTarget) { %>
+                                        <%= o.productTarget.name %>
+                                    <% } else if (o.targetType === 'category' && o.categoryTarget) { %>
+                                        <%= o.categoryTarget.name %>
+                                    <% } else { %>
+                                        -
+                                    <% } %>
+                                </td>
+                                <td class="px-6 py-5 text-emerald-600 font-extrabold">
+                                    <%= o.discountType === 'percentage' ? o.discountValue + '%' : '₹' + o.discountValue %>
+                                </td>
+                                <td class="px-6 py-5 <%= isExpired ? 'text-rose-500 font-bold' : 'text-gray-400' %>">
+                                    <%= new Date(o.expiryDate).toLocaleDateString() %>
+                                    <% if (isExpired) { %> (EXPIRED) <% } %>
+                                </td>
+                                <td class="px-8 py-5 text-right">
+                                    <button onclick="deleteOffer('<%= o._id %>')" class="text-rose-500 hover:text-rose-700 transition-colors font-bold text-[10px] uppercase tracking-widest"><i class="fa-solid fa-trash-can text-sm mr-1"></i> Delete</button>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+
+    <script>
+        function toggleForm() {
+            const form = document.getElementById('offerForm');
+            form.classList.toggle('hidden');
+        }
+
+        function adjustTargetSelectors() {
+            const targetType = document.getElementById('targetType').value;
+            const prodCont = document.getElementById('productSelectorContainer');
+            const catCont = document.getElementById('categorySelectorContainer');
+            
+            if(targetType === 'product') {
+                prodCont.classList.remove('hidden');
+                catCont.classList.add('hidden');
+            } else if (targetType === 'category') {
+                prodCont.classList.add('hidden');
+                catCont.classList.remove('hidden');
+            }
+        }
+
+        function submitOffer() {
+            const name = document.getElementById('name').value;
+            const discountType = document.getElementById('discountType').value;
+            const discountValue = document.getElementById('discountValue').value;
+            const targetType = document.getElementById('targetType').value;
+            const productTarget = document.getElementById('productTarget').value;
+            const categoryTarget = document.getElementById('categoryTarget').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+
+            fetch('/admin/offers/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, discountType, discountValue, targetType, productTarget, categoryTarget, expiryDate })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(err => console.error(err));
+        }
+
+        function deleteOffer(id) {
+            if(!confirm('Are you sure you want to delete this campaign?')) return;
+            fetch(`/admin/offers/delete/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

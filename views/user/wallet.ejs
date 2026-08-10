@@ -1,0 +1,64 @@
+<%- include("../partials/user/header") %>
+<div class="bg-white min-h-screen py-12">
+  <div class="max-w-5xl mx-auto px-4">
+    <h1 class="text-xl font-bold tracking-tight text-gray-900 mb-8 uppercase">My Wallet Statement</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+      <!-- Balance Card -->
+      <div class="bg-black text-white p-8 rounded-sm shadow-md flex flex-col justify-between min-h-[160px]">
+        <span class="text-xs font-bold tracking-widest uppercase text-gray-400">Available Balance</span>
+        <h2 class="text-3xl font-extrabold">₹<%= walletBalance.toLocaleString() %></h2>
+        <span class="text-[10px] text-gray-400">Used automatically at checkout when selecting Wallet as payment method.</span>
+      </div>
+      
+      <!-- Quick Info -->
+      <div class="border border-gray-100 p-8 rounded-sm md:col-span-2 space-y-4">
+        <h3 class="text-xs font-bold tracking-widest uppercase text-gray-800">Wallet Usage Policy</h3>
+        <p class="text-xs text-gray-500 font-medium leading-relaxed">
+          Credits are processed instantly on order cancellations for prepaid/wallet payments. Product return refunds will be credited immediately to this wallet after admin verification and confirmation.
+        </p>
+      </div>
+    </div>
+
+    <!-- Transaction Table -->
+    <div class="border border-gray-100 rounded-sm overflow-hidden">
+      <div class="bg-gray-50 px-6 py-4 border-b border-gray-100">
+        <h3 class="text-xs font-bold tracking-widest text-gray-800 uppercase">Transaction History</h3>
+      </div>
+      
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-gray-100 text-gray-600 font-bold uppercase tracking-wider">
+            <th class="px-6 py-3">Date</th>
+            <th class="px-6 py-3">Type</th>
+            <th class="px-6 py-3">Amount</th>
+            <th class="px-6 py-3">Description</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% if (transactions.length === 0) { %>
+            <tr>
+              <td colspan="4" class="px-6 py-10 text-center text-gray-400 font-medium">No wallet transactions recorded yet.</td>
+            </tr>
+          <% } else { %>
+            <% transactions.forEach(tx => { %>
+              <tr class="hover:bg-gray-50/50">
+                <td class="px-6 py-4 text-gray-500"><%= tx.createdAt.toLocaleDateString() %></td>
+                <td class="px-6 py-4">
+                  <span class="px-2 py-0.5 rounded-sm font-bold text-[9px] uppercase <%= tx.type === 'credit' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600' %>">
+                    <%= tx.type %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 font-bold text-gray-900">
+                  <%= tx.type === 'credit' ? '+' : '-' %> ₹<%= tx.amount.toLocaleString() %>
+                </td>
+                <td class="px-6 py-4 text-gray-600 font-medium"><%= tx.description %></td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<%- include("../partials/user/footer") %>

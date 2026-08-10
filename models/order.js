@@ -46,7 +46,9 @@ const orderProductSchema = new mongoose.Schema({
       "Out for Delivery",
       "Delivered",
       "Cancelled",
-      "Returned"
+      "Return Requested",
+      "Returned",
+      "Return Rejected"
     ],
     default: "Pending"
   },
@@ -134,7 +136,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed"],
+      enum: ["Pending", "Paid", "Failed","Refunded"],
       default: "Pending"
     },
     orderStatus: {
@@ -144,9 +146,28 @@ const orderSchema = new mongoose.Schema(
         "Shipped",
         "Out for Delivery",
         "Delivered",
-        "Cancelled"
+        "Cancelled",
+        "Returned",
+        "Return Requested",
+        "Return Rejected"
       ],
       default: "Pending"
+    },
+    couponCode: {
+      type: String,
+      default: null
+    },
+    couponDiscount: {
+      type: Number,
+      default: 0
+    },
+    razorpayOrderId: {
+      type: String,
+      default: null
+    },
+    razorpayPaymentId: {
+      type: String,
+      default: null
     }
   },
   {
