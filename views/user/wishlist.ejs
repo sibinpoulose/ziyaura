@@ -109,14 +109,29 @@
                 </div>
 
                 <% if (item.inStock) { %>
-                  <% if (item.variantsCount > 0) { %>
-                    <!-- Has Variants -> Redirect to select options -->
-                    <a
-                      href="/product/<%= item.slug %>"
-                      class="block w-full bg-black text-white hover:bg-gray-800 py-2 text-[9px] font-bold tracking-widest uppercase text-center rounded-sm transition-colors"
+                  <% if (item.variants && item.variants.length > 0) { %>
+                    <!-- Has Variants -> Inline Quick Selection Dropdown -->
+                    <div class="mb-2">
+                      <select id="variant-select-<%= item.productId %>" class="w-full text-[10px] font-semibold border border-gray-200 rounded-sm py-1.5 px-2 bg-white focus:outline-none focus:border-black">
+                        <% item.variants.forEach(v => { %>
+                          <% 
+                            const comboText = v.combination.map(c => c.value).join(' / ');
+                            const vPrice = v.salePrice !== null ? v.salePrice : v.price;
+                            const isOut = v.stock <= 0;
+                          %>
+                          <option value="<%= v._id %>" <%= isOut ? 'disabled' : '' %>>
+                            <%= comboText %> - ₹<%= vPrice.toLocaleString() %> <%= isOut ? '(Out of Stock)' : '' %>
+                          </option>
+                        <% }); %>
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onclick="moveToBag('<%= item.productId %>', document.getElementById('variant-select-<%= item.productId %>') ? document.getElementById('variant-select-<%= item.productId %>').value : null)"
+                      class="w-full bg-black text-white hover:bg-gray-800 py-2 text-[9px] font-bold tracking-widest uppercase rounded-sm transition-colors"
                     >
-                      SELECT OPTIONS
-                    </a>
+                      ADD TO BAG
+                    </button>
                   <% } else { %>
                     <!-- Simple product -> Add directly -->
                     <button
@@ -169,15 +184,18 @@
   <%- include("../partials/toast") %>
 
   <script>
-    async function moveToBag(productId) {
+    async function moveToBag(productId, variantId = null) {
       try {
+        const bodyObj = { productId, quantity: 1 };
+        if (variantId) bodyObj.variantId = variantId;
+
         const response = await fetch('/cart/add', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          body: JSON.stringify({ productId, quantity: 1 })
+          body: JSON.stringify(bodyObj)
         });
 
         if (response.status === 401 || response.redirected) {

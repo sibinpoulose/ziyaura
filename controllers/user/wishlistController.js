@@ -64,7 +64,8 @@ export const loadWishlistPage = async (req, res) => {
         hasDiscount,
         discountPercent,
         inStock,
-        variantsCount: prod.variants ? prod.variants.length : 0
+        variantsCount: prod.variants ? prod.variants.length : 0,
+        variants: prod.variants ? prod.variants.filter(v => v.isListed) : []
       });
     }
 
