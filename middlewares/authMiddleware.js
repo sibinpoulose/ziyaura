@@ -7,6 +7,9 @@ export const protect = async (req, res, next) => {
     const token = req.cookies.userToken;
 
     if (!token) {
+      if (req.xhr || req.headers.accept?.includes("application/json") || req.headers["content-type"]?.includes("application/json")) {
+        return res.status(401).json({ success: false, message: "Please login to proceed.", redirect: "/login" });
+      }
       return res.redirect("/login");
     }
 

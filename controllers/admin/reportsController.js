@@ -5,8 +5,7 @@ import XLSX from "xlsx";
 // Fetch sales report data helper
 const getSalesReportData = async (startDate, endDate) => {
   const query = {
-    orderStatus: { $ne: "Cancelled" },
-    paymentStatus: "Paid"
+    orderStatus: { $ne: "Cancelled" }
   };
 
   if (startDate && endDate) {
@@ -16,15 +15,15 @@ const getSalesReportData = async (startDate, endDate) => {
     };
   }
 
-  const orders = await Order.find(query).populate("userId", "name");
+  const orders = await Order.find(query).populate("userId", "name email").sort({createdAt:-1});
   
   let overallSalesCount = orders.length;
   let overallOrderAmount = 0;
   let overallDiscount = 0;
   
   orders.forEach(order => {
-    overallOrderAmount += order.grandTotal;
-    overallDiscount += order.discount;
+    overallOrderAmount += order.grandTotal || 0;
+    overallDiscount += order.discount || 0;
   });
 
   return {
@@ -79,13 +78,14 @@ export const downloadExcelReport = async (req, res) => {
 
     const rows = orders.map(o => ({
       "Order ID": o.orderId,
-      "Customer Name": o.shippingAddress.fullName,
+      "Customer Name": o.shippingAddress?.fullName || "",
       "Subtotal (INR)": o.subtotal,
       "Discount Applied (INR)": o.discount,
       "Shipping Charge (INR)": o.shippingCharge,
       "Net Amount (INR)": o.grandTotal,
-      "Payment Mode": o.paymentMethod,
-      "Date": o.createdAt.toISOString().slice(0, 10)
+      "Payment Method": o.paymentMethod || "COD",
+      "Payment Status": o.paymentStatus || "Paid",
+      "Date": o.createdAt ? o.createdAt.toISOString().slice(0, 10) : ""
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
@@ -109,45 +109,72 @@ export const downloadPDFReport = async (req, res) => {
     const { startDate, endDate } = req.query;
     const { orders, overallSalesCount, overallOrderAmount, overallDiscount } = await getSalesReportData(startDate, endDate);
 
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new PDFDocument({ margin: 40 });
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename=Sales-Report-${Date.now()}.pdf`);
     doc.pipe(res);
 
     // Title & Info
-    doc.fontSize(20).text("ZIYAURA SALES LEDGER BOOK REPORT", { align: "center" });
-    doc.moveDown();
-    doc.fontSize(10).text(`Generated On: ${new Date().toLocaleString()}`);
+    doc.fontSize(18).font("Helvetica-Bold").text("ZIYAURA SALES LEDGER BOOK REPORT", { align: "center" });
+    doc.moveDown(0.5);
+    doc.fontSize(9).font("Helvetica").text(`Generated On: ${new Date().toLocaleString()}`);
     doc.text(`Report Period: ${startDate || "All Time"} to ${endDate || "All Time"}`);
     doc.moveDown();
 
     // Summary block
-    doc.fontSize(12).text("Summary Statement:", { underline: true });
+    doc.fontSize(11).font("Helvetica-Bold").text("Summary Statement:", { underline: true });
+    doc.fontSize(9).font("Helvetica");
     doc.text(`Total Successful Sales count: ${overallSalesCount}`);
     doc.text(`Total Amount Collected: INR ${overallOrderAmount.toLocaleString()}`);
     doc.text(`Total Deductions / Discounts: INR ${overallDiscount.toLocaleString()}`);
-    doc.moveDown(2);
+    doc.moveDown();
 
     // Table Header
-    doc.fontSize(10).text("Order ID", 50, doc.y, { width: 100 });
-    doc.text("Date", 150, doc.y, { width: 80 });
-    doc.text("Amount", 230, doc.y, { width: 80 });
-    doc.text("Discount", 310, doc.y, { width: 80 });
-    doc.text("Total Paid", 390, doc.y, { width: 80 });
-    doc.text("Status", 470, doc.y, { width: 80 });
-    doc.moveDown();
-    doc.strokeColor("#aaaaaa").lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown();
+    let currentY = doc.y;
+    doc.fontSize(9).font("Helvetica-Bold");
+    doc.text("Order ID", 40, currentY, { width: 105, align: "left" });
+    doc.text("Date", 145, currentY, { width: 65, align: "left" });
+    doc.text("Payment Method", 210, currentY, { width: 85, align: "center" });
+    doc.text("Subtotal", 295, currentY, { width: 60, align: "right" });
+    doc.text("Discount", 355, currentY, { width: 55, align: "right" });
+    doc.text("Total Paid", 410, currentY, { width: 65, align: "right" });
+    doc.text("Status", 475, currentY, { width: 65, align: "center" });
+
+    currentY += 18;
+    doc.strokeColor("#cccccc").lineWidth(1).moveTo(40, currentY).lineTo(540, currentY).stroke();
+    currentY += 8;
 
     // Table Rows
     orders.forEach(o => {
-      doc.text(o.orderId, 50, doc.y, { width: 100 });
-      doc.text(o.createdAt.toISOString().slice(0, 10), 150, doc.y, { width: 80 });
-      doc.text(`INR ${o.subtotal}`, 230, doc.y, { width: 80 });
-      doc.text(`INR ${o.discount}`, 310, doc.y, { width: 80 });
-      doc.text(`INR ${o.grandTotal}`, 390, doc.y, { width: 80 });
-      doc.text(o.paymentStatus, 470, doc.y, { width: 80 });
-      doc.moveDown();
+      if (currentY > 720) {
+        doc.addPage();
+        currentY = 40;
+
+        // Re-draw Header on new page
+        doc.fontSize(9).font("Helvetica-Bold");
+        doc.text("Order ID", 40, currentY, { width: 105, align: "left" });
+        doc.text("Date", 145, currentY, { width: 65, align: "left" });
+        doc.text("Payment Method", 210, currentY, { width: 85, align: "center" });
+        doc.text("Subtotal", 295, currentY, { width: 60, align: "right" });
+        doc.text("Discount", 355, currentY, { width: 55, align: "right" });
+        doc.text("Total Paid", 410, currentY, { width: 65, align: "right" });
+        doc.text("Status", 475, currentY, { width: 65, align: "center" });
+
+        currentY += 18;
+        doc.strokeColor("#cccccc").lineWidth(1).moveTo(40, currentY).lineTo(540, currentY).stroke();
+        currentY += 8;
+      }
+
+      doc.fontSize(8).font("Helvetica");
+      doc.text(o.orderId, 40, currentY, { width: 105, align: "left" });
+      doc.text(o.createdAt ? o.createdAt.toISOString().slice(0, 10) : "", 145, currentY, { width: 65, align: "left" });
+      doc.text(o.paymentMethod || "COD", 210, currentY, { width: 85, align: "center" });
+      doc.text(`INR ${o.subtotal.toLocaleString()}`, 295, currentY, { width: 60, align: "right" });
+      doc.text(`INR ${o.discount.toLocaleString()}`, 355, currentY, { width: 55, align: "right" });
+      doc.text(`INR ${o.grandTotal.toLocaleString()}`, 410, currentY, { width: 65, align: "right" });
+      doc.text(o.paymentStatus || "Paid", 475, currentY, { width: 65, align: "center" });
+
+      currentY += 18;
     });
 
     doc.end();

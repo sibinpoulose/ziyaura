@@ -150,11 +150,9 @@
                   <% } %>
 
                   <!-- Remove action -->
-                  <form action="/cart/remove/<%= item._id %>" method="POST" class="inline">
-                    <button type="submit" class="w-8 h-8 flex items-center justify-center border border-gray-100 hover:border-black text-gray-400 hover:text-black rounded-sm transition-all" title="Remove from bag">
-                      <i class="fa-regular fa-trash-can text-xs"></i>
-                    </button>
-                  </form>
+                  <button type="button" onclick="removeItem('<%= item._id %>')" class="w-8 h-8 flex items-center justify-center border border-gray-100 hover:border-black text-gray-400 hover:text-black rounded-sm transition-all" title="Remove from bag">
+                    <i class="fa-regular fa-trash-can text-xs"></i>
+                  </button>
                 </div>
 
               </div>
@@ -323,9 +321,82 @@
       }
     }
 
+    async function removeItem(itemId) {
+      try {
+        const response = await fetch(`/cart/remove/${itemId}`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+
+          // If no items remain, reload to render empty state
+          if (data.cartItemsLength === 0) {
+            window.location.reload();
+            return;
+          }
+
+          // Remove item card from DOM
+          const itemCard = document.getElementById(`item-card-${itemId}`);
+          if (itemCard) itemCard.remove();
+
+          // Update header badge & count
+          const cartCountHeader = document.getElementById('cart-count');
+          if (cartCountHeader) cartCountHeader.innerText = `(${data.cartItemsLength} items)`;
+
+          const badge = document.getElementById('cart-badge');
+          if (badge && typeof data.cartCount !== 'undefined') {
+            badge.innerText = data.cartCount;
+            if (data.cartCount > 0) {
+              badge.classList.remove('hidden');
+            } else {
+              badge.classList.add('hidden');
+            }
+          }
+
+          // Update subtotal, shipping, grandTotal
+          const subtotalLabel = document.getElementById('subtotal');
+          const shippingLabel = document.getElementById('shipping');
+          const grandTotalLabel = document.getElementById('grand-total');
+          const checkoutBtn = document.getElementById('checkout-btn');
+          const banner = document.getElementById('out-of-stock-banner');
+
+          if (subtotalLabel) subtotalLabel.innerText = '₹' + data.cartSubtotal.toLocaleString();
+          if (shippingLabel) shippingLabel.innerText = data.shippingCharge === 0 ? 'FREE' : '₹' + data.shippingCharge.toLocaleString();
+          if (grandTotalLabel) grandTotalLabel.innerText = '₹' + data.grandTotal.toLocaleString();
+
+          // Toggle checkout restriction banner
+          if (data.hasOutOfStockOrInvalid) {
+            if (banner) banner.classList.remove('hidden');
+            if (checkoutBtn) {
+              checkoutBtn.setAttribute('disabled', 'true');
+              checkoutBtn.className = "w-full bg-gray-200 text-gray-400 py-3.5 rounded-sm text-[10px] font-bold tracking-widest uppercase transition-colors cursor-not-allowed";
+              checkoutBtn.innerText = "CHECKOUT RESTRICTED";
+            }
+          } else {
+            if (banner) banner.classList.add('hidden');
+            if (checkoutBtn) {
+              checkoutBtn.removeAttribute('disabled');
+              checkoutBtn.className = "w-full bg-black text-white hover:bg-gray-800 py-3.5 rounded-sm text-[10px] font-bold tracking-widest uppercase transition-colors";
+              checkoutBtn.innerText = "PROCEED TO CHECKOUT";
+            }
+          }
+        } else {
+          showToast(data.message || 'Failed to remove item', 'error');
+        }
+      } catch (error) {
+        console.error('Remove Item Error:', error);
+        showToast('Something went wrong. Please try again.', 'error');
+      }
+    }
+
     function proceedToCheckout() {
-      // Direct user to checkout page when implemented
-      showToast('Proceeding to checkout...', 'success');
+      // Direct user to checkout page
       window.location.href = '/checkout';
     }
   </script>

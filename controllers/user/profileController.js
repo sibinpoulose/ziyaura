@@ -16,18 +16,25 @@ export const loadProfile = async (req, res) => {
 
     const user = await User.findById(req.user._id);
 
+    if (!user.referralCode) {
+      user.referralCode = "REF-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+      await user.save();
+    }
+
     const addresses = await Address.find({
       userId: req.user._id
     });
 
+    const referralUrl = `${req.protocol}://${req.get("host")}/signup?ref=${user.referralCode}`;
+
     res.render("user/profile", {
       user,
       addresses,
+      referralUrl,
       scrollToPassword: false
     });
   } catch (err) {
     console.log(err);
-
     res.redirect("/");
   }
 };
@@ -53,11 +60,9 @@ export const updateAccount = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     // EMAIL NOT CHANGED
-
     if (email === user.email) {
       await User.findByIdAndUpdate(
         req.user._id,
-
         {
           name: nameTrimmed,
           phone
@@ -65,132 +70,115 @@ export const updateAccount = async (req, res) => {
       );
 
       req.session.success = "Account updated successfully";
-
       return res.redirect("/profile");
     }
 
-    // EMAIL CHANGED
-
+    // EMAIL CHANGED - START 2-STEP OTP (Step 1: Verify Old Email)
     const existingUser = await User.findOne({
       email
     });
 
     if (existingUser) {
       req.session.error = "Email is already in use by another account";
-
       return res.redirect("/profile");
     }
 
-    // GENERATE OTP
-
     const otp = generateOTP();
 
-    // SAVE TEMPORARY DATA IN SESSION
-
     req.session.profileOtp = otp;
-
     req.session.profileOtpExpiry = Date.now() + 5 * 60 * 1000;
-
+    req.session.emailChangeStage = "verify_old";
     req.session.pendingProfile = {
       name: nameTrimmed,
       email,
       phone
     };
 
-    // SEND MAIL
+    // Send OTP to CURRENT email first for security verification
+    await sendMail(user.email, otp);
 
-    await sendMail(email, otp);
+    console.log("PROFILE OTP (OLD EMAIL):", otp);
 
-    console.log("PROFILE OTP:", otp);
-
-    // REDIRECT TO OTP PAGE
-
-    req.session.success = "OTP sent successfully";
-
+    req.session.success = `Security Check: OTP sent to your current email address (${user.email})`;
     res.redirect("/profile/profile-otp");
   } catch (err) {
     console.log(err);
-
     req.session.error = "Failed to update account: " + err.message;
-
     res.redirect("/profile");
   }
 };
+
 // VERIFY PROFILE OTP
 export const verifyProfileOtp = async (req, res) => {
   try {
     const { otp } = req.body;
 
-    // GET SESSION DATA
-
     const sessionOtp = req.session.profileOtp;
-
     const expiry = req.session.profileOtpExpiry;
-
     const pendingProfile = req.session.pendingProfile;
+    const stage = req.session.emailChangeStage || "verify_new";
 
+    const displayEmail = stage === "verify_old" ? req.user.email : pendingProfile?.email;
     const timeLeft = expiry ? Math.max(0, Math.floor((expiry - Date.now()) / 1000)) : 0;
-
-    // CHECK OTP EXISTS
 
     if (!sessionOtp) {
       return res.render("user/profile-otp", {
-        email: pendingProfile?.email,
+        email: displayEmail,
         error: "OTP not found",
         timeLeft
       });
     }
 
-    // CHECK OTP MATCH
-
     if (otp !== sessionOtp) {
       return res.render("user/profile-otp", {
-        email: pendingProfile?.email,
+        email: displayEmail,
         error: "Invalid OTP",
         timeLeft
       });
     }
 
-    // CHECK OTP EXPIRY
-
     if (Date.now() > expiry) {
       return res.render("user/profile-otp", {
-        email: pendingProfile?.email,
+        email: displayEmail,
         error: "OTP expired",
         timeLeft
       });
     }
 
-    // UPDATE USER FINALLY
+    // IF STEP 1 (OLD EMAIL) WAS VERIFIED -> MOVE TO STEP 2 (NEW EMAIL)
+    if (stage === "verify_old") {
+      const newOtp = generateOTP();
+      req.session.profileOtp = newOtp;
+      req.session.profileOtpExpiry = Date.now() + 5 * 60 * 1000;
+      req.session.emailChangeStage = "verify_new";
 
+      await sendMail(pendingProfile.email, newOtp);
+      console.log("PROFILE OTP (NEW EMAIL):", newOtp);
+
+      req.session.success = `Current email verified! Now enter the OTP sent to your new email (${pendingProfile.email})`;
+      return res.redirect("/profile/profile-otp");
+    }
+
+    // STEP 2 (NEW EMAIL) VERIFIED -> UPDATE USER FINALLY
     await User.findByIdAndUpdate(
       req.user._id,
-
       {
         name: pendingProfile.name,
-
         email: pendingProfile.email,
-
         phone: pendingProfile.phone
       }
     );
 
-    // CLEAR SESSION
-
     req.session.profileOtp = null;
-
     req.session.profileOtpExpiry = null;
-
+    req.session.emailChangeStage = null;
     req.session.pendingProfile = null;
 
-    // REDIRECT
-    req.session.success = "Profile updated successfully";
+    req.session.success = "Email address and profile updated successfully";
     res.redirect("/profile");
   } catch (err) {
     console.log(err);
-
     req.session.error = "Failed to verify OTP: " + err.message;
-
     res.redirect("/profile");
   }
 };
@@ -204,9 +192,11 @@ export const loadProfileOtpPage = async (req, res) => {
 
     const expiry = req.session.profileOtpExpiry || Date.now();
     const timeLeft = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+    const stage = req.session.emailChangeStage || "verify_new";
+    const displayEmail = stage === "verify_old" ? req.user.email : req.session.pendingProfile.email;
 
     res.render("user/profile-otp", {
-      email: req.session.pendingProfile.email,
+      email: displayEmail,
       timeLeft
     });
   } catch (err) {
@@ -223,7 +213,8 @@ export const resendProfileOtp = async (req, res) => {
       return res.redirect("/profile");
     }
 
-    const email = req.session.pendingProfile.email;
+    const stage = req.session.emailChangeStage || "verify_new";
+    const email = stage === "verify_old" ? req.user.email : req.session.pendingProfile.email;
     const otp = generateOTP();
 
     req.session.profileOtp = otp;
@@ -232,7 +223,7 @@ export const resendProfileOtp = async (req, res) => {
     await sendMail(email, otp);
     console.log("RESENT PROFILE OTP:", otp);
 
-    req.session.success = "OTP resent successfully";
+    req.session.success = `OTP resent successfully to ${email}`;
     res.redirect("/profile/profile-otp");
   } catch (err) {
     console.log(err);
@@ -279,8 +270,9 @@ export const addAddress = async (req, res) => {
     } = req.body;
 
     // Backend Validation
-    if (!fullName || !fullName.trim()) {
-      req.session.error = "Full Name is required";
+    const nameTrimmed = fullName ? fullName.trim() : "";
+    if (!nameTrimmed || nameTrimmed.length < 3 || nameTrimmed.length > 50) {
+      req.session.error = "Full Name must be between 3 and 50 characters";
       return res.redirect(req.headers.referer || "/profile/address");
     }
     if (!phone || !/^[0-9]{10}$/.test(phone)) {
@@ -425,8 +417,9 @@ export const updateAddress = async (req, res) => {
     const fromParam = req.query.from ? `?from=${req.query.from}` : "";
 
     // Backend Validation
-    if (!fullName || !fullName.trim()) {
-      req.session.error = "Full Name is required";
+    const nameTrimmed = fullName ? fullName.trim() : "";
+    if (!nameTrimmed || nameTrimmed.length < 3 || nameTrimmed.length > 50) {
+      req.session.error = "Full Name must be between 3 and 50 characters";
       return res.redirect(`/profile/address/edit/${req.params.id}${fromParam}`);
     }
     if (!phone || !/^[0-9]{10}$/.test(phone)) {

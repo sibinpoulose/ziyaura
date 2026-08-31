@@ -2,113 +2,259 @@
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8">
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Add Address</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
-
 </head>
 
 <body class="bg-gray-100">
 
-<div class="max-w-2xl mx-auto mt-10 bg-white p-8 rounded-xl">
+<div class="max-w-2xl mx-auto mt-10 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
 
-  <h1 class="text-3xl font-bold mb-8">
+  <h1 class="text-3xl font-bold mb-8 text-gray-900">
     Add Address
   </h1>
 
-
-
-  <form action="/profile/add-address" method="POST">
-
+  <form id="addAddressForm" action="/profile/add-address" method="POST" novalidate>
     <div class="grid gap-5">
 
-      <input
-        type="text"
-        name="fullName"
-        placeholder="Full Name"
-        required
-        class="border p-3 rounded-lg"
-      >
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Full Name</label>
+        <input
+          id="fullName"
+          type="text"
+          name="fullName"
+          placeholder="Full Name (3-50 chars)"
+          class="border p-3 rounded-lg w-full focus:outline-none focus:border-black transition-colors"
+        >
+        <span id="nameError" class="text-red-500 text-xs hidden mt-1 block"></span>
+      </div>
 
-      <input
-        type="text"
-        name="phone"
-        placeholder="Phone (10 digits)"
-        maxlength="10"
-        pattern="[0-9]{10}"
-        required
-        class="border p-3 rounded-lg"
-      >
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
+        <input
+          id="phone"
+          type="text"
+          name="phone"
+          placeholder="Phone (10 digits)"
+          maxlength="10"
+          class="border p-3 rounded-lg w-full focus:outline-none focus:border-black transition-colors"
+        >
+        <span id="phoneError" class="text-red-500 text-xs hidden mt-1 block"></span>
+      </div>
 
-      <textarea
-        name="address"
-        placeholder="Address"
-        required
-        class="border p-3 rounded-lg"
-      ></textarea>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Address</label>
+        <textarea
+          id="address"
+          name="address"
+          placeholder="House No, Building, Street"
+          class="border p-3 rounded-lg w-full focus:outline-none focus:border-black transition-colors"
+        ></textarea>
+        <span id="addressError" class="text-red-500 text-xs hidden mt-1 block"></span>
+      </div>
 
-      <input
-        type="text"
-        name="landmark"
-        placeholder="Landmark (optional)"
-        class="border p-3 rounded-lg"
-      >
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Landmark (Optional)</label>
+        <input
+          id="landmark"
+          type="text"
+          name="landmark"
+          placeholder="Landmark / Nearby place"
+          class="border p-3 rounded-lg w-full focus:outline-none focus:border-black transition-colors"
+        >
+      </div>
 
-      <input
-        type="text"
-        name="city"
-        placeholder="City"
-        required
-        class="border p-3 rounded-lg"
-      >
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">City</label>
+        <input
+          id="city"
+          type="text"
+          name="city"
+          placeholder="City"
+          class="border p-3 rounded-lg w-full focus:outline-none focus:border-black transition-colors"
+        >
+        <span id="cityError" class="text-red-500 text-xs hidden mt-1 block"></span>
+      </div>
 
-      <input
-        type="text"
-        name="state"
-        placeholder="State"
-        required
-        class="border p-3 rounded-lg"
-      >
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">State</label>
+        <input
+          id="state"
+          type="text"
+          name="state"
+          placeholder="State"
+          class="border p-3 rounded-lg w-full focus:outline-none focus:border-black transition-colors"
+        >
+        <span id="stateError" class="text-red-500 text-xs hidden mt-1 block"></span>
+      </div>
 
-      <input
-        type="text"
-        name="pincode"
-        placeholder="Pincode (6 digits)"
-        maxlength="6"
-        pattern="[0-9]{6}"
-        required
-        class="border p-3 rounded-lg"
-      >
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">PIN Code</label>
+        <input
+          id="pincode"
+          type="text"
+          name="pincode"
+          placeholder="Pincode (6 digits)"
+          maxlength="6"
+          class="border p-3 rounded-lg w-full focus:outline-none focus:border-black transition-colors"
+        >
+        <span id="pincodeError" class="text-red-500 text-xs hidden mt-1 block"></span>
+      </div>
 
-      <select
-        name="addressType"
-        class="border p-3 rounded-lg"
-      >
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Address Type</label>
+        <select
+          name="addressType"
+          class="border p-3 rounded-lg w-full focus:outline-none focus:border-black"
+        >
+          <option value="Home">Home</option>
+          <option value="Work">Work</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
 
-        <option value="Home">Home</option>
-
-        <option value="Work">Work</option>
-
-        <option value="Other">Other</option>
-
-      </select>
-
-      <button class="bg-black text-white py-3 rounded-lg">
-
+      <button type="submit" class="bg-black text-white py-3.5 rounded-lg font-bold uppercase tracking-wider text-xs hover:bg-gray-800 transition-colors">
         Save Address
-
       </button>
 
     </div>
-
   </form>
 
 </div>
+
+<script>
+const form = document.getElementById("addAddressForm");
+const fullNameInput = document.getElementById("fullName");
+const phoneInput = document.getElementById("phone");
+const addressInput = document.getElementById("address");
+const cityInput = document.getElementById("city");
+const stateInput = document.getElementById("state");
+const pincodeInput = document.getElementById("pincode");
+
+function setFieldError(inputEl, errorId, message) {
+  const errEl = document.getElementById(errorId);
+  if (errEl) {
+    errEl.innerText = message;
+    errEl.classList.remove("hidden");
+  }
+  if (inputEl) {
+    inputEl.classList.add("border-red-500");
+  }
+}
+
+function clearFieldError(inputEl, errorId) {
+  const errEl = document.getElementById(errorId);
+  if (errEl) {
+    errEl.innerText = "";
+    errEl.classList.add("hidden");
+  }
+  if (inputEl) {
+    inputEl.classList.remove("border-red-500");
+  }
+}
+
+function clearAllAddressErrors() {
+  clearFieldError(fullNameInput, "nameError");
+  clearFieldError(phoneInput, "phoneError");
+  clearFieldError(addressInput, "addressError");
+  clearFieldError(cityInput, "cityError");
+  clearFieldError(stateInput, "stateError");
+  clearFieldError(pincodeInput, "pincodeError");
+}
+
+fullNameInput.addEventListener("input", () => {
+  const val = fullNameInput.value.trim();
+  if (val && (val.length < 3 || val.length > 50)) {
+    setFieldError(fullNameInput, "nameError", "Full Name must be between 3 and 50 characters");
+  } else {
+    clearFieldError(fullNameInput, "nameError");
+  }
+});
+
+phoneInput.addEventListener("input", () => {
+  const val = phoneInput.value.trim();
+  if (val && !/^[0-9]{10}$/.test(val)) {
+    setFieldError(phoneInput, "phoneError", "Phone number must be exactly 10 digits");
+  } else {
+    clearFieldError(phoneInput, "phoneError");
+  }
+});
+
+addressInput.addEventListener("input", () => {
+  if (addressInput.value.trim()) {
+    clearFieldError(addressInput, "addressError");
+  }
+});
+
+cityInput.addEventListener("input", () => {
+  if (cityInput.value.trim()) {
+    clearFieldError(cityInput, "cityError");
+  }
+});
+
+stateInput.addEventListener("input", () => {
+  if (stateInput.value.trim()) {
+    clearFieldError(stateInput, "stateError");
+  }
+});
+
+pincodeInput.addEventListener("input", () => {
+  const val = pincodeInput.value.trim();
+  if (val && !/^[0-9]{6}$/.test(val)) {
+    setFieldError(pincodeInput, "pincodeError", "PIN code must be exactly 6 digits");
+  } else {
+    clearFieldError(pincodeInput, "pincodeError");
+  }
+});
+
+form.addEventListener("submit", (e) => {
+  clearAllAddressErrors();
+  let valid = true;
+
+  const nameVal = fullNameInput.value.trim();
+  const phoneVal = phoneInput.value.trim();
+  const addressVal = addressInput.value.trim();
+  const cityVal = cityInput.value.trim();
+  const stateVal = stateInput.value.trim();
+  const pincodeVal = pincodeInput.value.trim();
+
+  if (!nameVal || nameVal.length < 3 || nameVal.length > 50) {
+    setFieldError(fullNameInput, "nameError", "Full Name must be between 3 and 50 characters");
+    valid = false;
+  }
+
+  if (!phoneVal || !/^[0-9]{10}$/.test(phoneVal)) {
+    setFieldError(phoneInput, "phoneError", "Phone number must be exactly 10 digits");
+    valid = false;
+  }
+
+  if (!addressVal) {
+    setFieldError(addressInput, "addressError", "Address is required");
+    valid = false;
+  }
+
+  if (!cityVal) {
+    setFieldError(cityInput, "cityError", "City is required");
+    valid = false;
+  }
+
+  if (!stateVal) {
+    setFieldError(stateInput, "stateError", "State is required");
+    valid = false;
+  }
+
+  if (!pincodeVal || !/^[0-9]{6}$/.test(pincodeVal)) {
+    setFieldError(pincodeInput, "pincodeError", "PIN code must be exactly 6 digits");
+    valid = false;
+  }
+
+  if (!valid) {
+    e.preventDefault();
+  }
+});
+</script>
 
   <%- include("../partials/toast") %>
 </body>

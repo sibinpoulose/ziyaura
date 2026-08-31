@@ -131,7 +131,10 @@
                       <% if (order.paymentStatus === 'Paid') { %>
                         <span class="text-emerald-600 font-bold">PAID</span>
                       <% } else if (order.paymentStatus === 'Failed') { %>
-                        <span class="text-rose-600 font-bold">FAILED</span>
+                        <div class="flex items-center gap-2 justify-end">
+                          <span class="text-rose-600 font-bold">FAILED</span>
+                          <a href="/payment-failure/<%= order._id %>" class="bg-amber-600 hover:bg-amber-700 text-white text-[9px] uppercase px-2 py-1 rounded font-bold">Retry</a>
+                        </div>
                       <% } else { %>
                         <span class="text-amber-600 font-bold">PENDING</span>
                       <% } %>

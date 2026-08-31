@@ -3,6 +3,7 @@ import Product from "../../models/product.js";
 import User from "../../models/User.js";
 import WalletTransaction from "../../models/walletTransaction.js";
 import { generateInvoicePDF } from "../../utils/invoiceGenerator.js";
+import { recalculateOrderFinancials } from "../../utils/orderUtils.js";
 
 //  ORDER LISTING WITH SEARCH & PAGINATION
 export const loadOrdersPage = async (req, res) => {
@@ -75,8 +76,6 @@ export const cancelOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Cannot cancel this order." });
     }
 
-    let refundAmount = 0;
-
     if (itemId) {
       // Cancel a single item
       const item = order.products.id(itemId);
@@ -104,19 +103,6 @@ export const cancelOrder = async (req, res) => {
         }
         await product.save();
       }
-
-      // Calculate refund proportional share
-      if (order.paymentStatus === "Paid" && (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET")) {
-        const priceRatio = item.total / order.subtotal;
-        const discountReduction = order.discount * priceRatio;
-        refundAmount = item.total - discountReduction;
-      }
-
-      // Check if all items in order are now cancelled
-      const allCancelled = order.products.every(p => p.orderStatus === "Cancelled");
-      if (allCancelled) {
-        order.orderStatus = "Cancelled";
-      }
     } else {
       // Cancel the entire order
       order.orderStatus = "Cancelled";
@@ -141,12 +127,10 @@ export const cancelOrder = async (req, res) => {
           }
         }
       }
-
-      // Refund entire paid total
-      if (order.paymentStatus === "Paid" && (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET")) {
-        refundAmount = order.grandTotal;
-      }
     }
+
+    // Recalculate order financials and coupon discount eligibility
+    const refundAmount = await recalculateOrderFinancials(order);
 
     // Process Refund to wallet instantly for cancellation
     if (refundAmount > 0) {

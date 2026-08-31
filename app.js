@@ -103,4 +103,15 @@ app.use(express.static("public"));
 
 app.use("/", mainRouter);
 
+// 404 Page Not Found Handler
+app.use((req, res, next) => {
+  res.status(404).render("404");
+});
+
+// 500 Internal Server Error Handler
+app.use((err, req, res, next) => {
+  console.error("Internal Error:", err);
+  res.status(500).render("500", { error: err.message });
+});
+
 export default app;

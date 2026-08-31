@@ -97,7 +97,7 @@
 
                   <!-- User Details -->
 
-                  <form action="/profile/account/update" method="POST" class="flex-1">
+                  <form id="profileAccountForm" action="/profile/account/update" method="POST" class="flex-1">
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -111,8 +111,9 @@
 
                         </label>
 
-                        <input type="text" name="name" value="<%= user?.name || '' %>"
-                          class="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:border-gray-500">
+                        <input id="profileNameInput" type="text" name="name" value="<%= user?.name || '' %>"
+                          class="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:border-gray-500 transition-colors">
+                        <span id="profileNameError" class="text-red-500 text-xs hidden mt-1 block"></span>
 
                       </div>
 
@@ -127,8 +128,9 @@
 
                         </label>
 
-                        <input type="email" name="email" value="<%= user?.email || '' %>"
-                          class="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:border-gray-500">
+                        <input id="profileEmailInput" type="email" name="email" value="<%= user?.email || '' %>"
+                          class="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:border-gray-500 transition-colors">
+                        <span id="profileEmailError" class="text-red-500 text-xs hidden mt-1 block"></span>
 
                       </div>
 
@@ -145,9 +147,10 @@
 
                       </label>
 
-                      <input type="text" name="phone" value="<%= user?.phone || '' %>" placeholder="Enter phone number"
-                        maxlength="10" pattern="[0-9]{10}" required
-                        class="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:border-gray-500">
+                      <input id="profilePhoneInput" type="text" name="phone" value="<%= user?.phone || '' %>" placeholder="Enter phone number"
+                        maxlength="10"
+                        class="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:border-gray-500 transition-colors">
+                      <span id="profilePhoneError" class="text-red-500 text-xs hidden mt-1 block"></span>
                     </div>
 
 
@@ -170,6 +173,34 @@
 
               </div>
 
+            </div>
+
+
+            <!-- Referral & Rewards Section -->
+            <div id="referral-section" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-100 p-8 my-6">
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <span class="text-[10px] font-bold tracking-widest text-blue-600 uppercase bg-blue-100 px-3 py-1 rounded-full inline-block mb-2">Refer & Earn Rewards</span>
+                  <h3 class="text-xl font-bold text-gray-900">Invite Friends to ZIYAURA</h3>
+                  <p class="text-xs text-gray-600 mt-1 max-w-lg">
+                    Share your unique referral code with friends. When they register using your link, both of you earn wallet cash rewards credited instantly upon verification!
+                  </p>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-blue-150 shadow-sm min-w-[280px]">
+                  <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Your Referral Code</span>
+                  <div class="flex items-center justify-between bg-gray-50 border rounded-lg px-4 py-2.5 font-mono font-bold text-blue-600 text-sm mb-3">
+                    <span><%= user?.referralCode || 'REF-ZIYAURA' %></span>
+                    <button type="button" onclick="copyReferralCode('<%= user?.referralCode %>')" class="text-xs text-gray-500 hover:text-black font-sans font-semibold flex items-center gap-1">
+                      <i class="fa-regular fa-copy"></i> Copy
+                    </button>
+                  </div>
+
+                  <button type="button" onclick="copyReferralLink('<%= locals.referralUrl || '' %>')" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 uppercase tracking-wider">
+                    <i class="fa-solid fa-share-nodes"></i> Copy Invite Link
+                  </button>
+                </div>
+              </div>
             </div>
 
 
@@ -464,7 +495,7 @@
                   </div>
 
                   <!-- Form -->
-                  <form action="/profile/add-address" method="POST" class="p-8 space-y-6">
+                  <form id="modalAddressForm" action="/profile/add-address" method="POST" class="p-8 space-y-6" novalidate>
 
                     <!-- Full Name -->
                     <div>
@@ -473,8 +504,9 @@
                         Full Name
                       </label>
 
-                      <input type="text" name="fullName" placeholder="Enter full name" required autofocus
-                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+                      <input id="modalFullName" type="text" name="fullName" placeholder="Enter full name" autofocus
+                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black transition-colors">
+                      <span id="modalNameError" class="text-red-500 text-xs hidden mt-1 block"></span>
 
                     </div>
 
@@ -493,10 +525,11 @@
 
                         </div>
 
-                        <input type="text" name="phone" maxlength="10" placeholder="9876543210" required
-                          class="w-full border rounded-r-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+                        <input id="modalPhone" type="text" name="phone" maxlength="10" placeholder="9876543210"
+                          class="w-full border rounded-r-xl px-5 py-4 text-lg focus:outline-none focus:border-black transition-colors">
 
                       </div>
+                      <span id="modalPhoneError" class="text-red-500 text-xs hidden mt-1 block"></span>
 
                     </div>
 
@@ -507,8 +540,9 @@
                         Address
                       </label>
 
-                      <input type="text" name="address" placeholder="House number and street name" required
-                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+                      <input id="modalAddress" type="text" name="address" placeholder="House number and street name"
+                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black transition-colors">
+                      <span id="modalAddressError" class="text-red-500 text-xs hidden mt-1 block"></span>
 
                     </div>
 
@@ -531,8 +565,9 @@
                         PIN Code
                       </label>
 
-                      <input id="pincode" type="text" name="pincode" maxlength="6" placeholder="Enter PIN code" required
-                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+                      <input id="pincode" type="text" name="pincode" maxlength="6" placeholder="Enter PIN code"
+                        class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black transition-colors">
+                      <span id="modalPincodeError" class="text-red-500 text-xs hidden mt-1 block"></span>
 
                       <p id="pincodeMessage" class="text-sm text-gray-500 mt-2">
                       </p>
@@ -549,8 +584,9 @@
                           City
                         </label>
 
-                        <input id="city" type="text" name="city" placeholder="City" required
-                          class="w-full border rounded-xl px-5 py-4 text-lg bg-gray-50 focus:outline-none focus:border-black">
+                        <input id="city" type="text" name="city" placeholder="City"
+                          class="w-full border rounded-xl px-5 py-4 text-lg bg-gray-50 focus:outline-none focus:border-black transition-colors">
+                        <span id="modalCityError" class="text-red-500 text-xs hidden mt-1 block"></span>
 
                       </div>
 
@@ -561,14 +597,15 @@
                           State
                         </label>
 
-                        <select id="state" name="state" required
-                          class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black">
+                        <select id="state" name="state"
+                          class="w-full border rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-black transition-colors">
 
                           <option value="">
                             Select State
                           </option>
 
                         </select>
+                        <span id="modalStateError" class="text-red-500 text-xs hidden mt-1 block"></span>
 
                       </div>
 
@@ -1121,6 +1158,197 @@
 
       });
 
+      const profileAccountForm = document.getElementById("profileAccountForm");
+      if (profileAccountForm) {
+        const pNameInput = document.getElementById("profileNameInput");
+        const pEmailInput = document.getElementById("profileEmailInput");
+        const pPhoneInput = document.getElementById("profilePhoneInput");
+
+        function setProfileError(inputEl, errorId, message) {
+          const errEl = document.getElementById(errorId);
+          if (errEl) {
+            errEl.innerText = message;
+            errEl.classList.remove("hidden");
+          }
+          if (inputEl) {
+            inputEl.classList.add("border-red-500");
+          }
+        }
+
+        function clearProfileError(inputEl, errorId) {
+          const errEl = document.getElementById(errorId);
+          if (errEl) {
+            errEl.innerText = "";
+            errEl.classList.add("hidden");
+          }
+          if (inputEl) {
+            inputEl.classList.remove("border-red-500");
+          }
+        }
+
+        function clearAllProfileErrors() {
+          clearProfileError(pNameInput, "profileNameError");
+          clearProfileError(pEmailInput, "profileEmailError");
+          clearProfileError(pPhoneInput, "profilePhoneError");
+        }
+
+        if (pNameInput) {
+          pNameInput.addEventListener("input", () => {
+            const val = pNameInput.value.trim();
+            if (val && (val.length < 3 || val.length > 50 || !/^[A-Za-z\s]+$/.test(val))) {
+              setProfileError(pNameInput, "profileNameError", "Name must be 3-50 letters and spaces only");
+            } else {
+              clearProfileError(pNameInput, "profileNameError");
+            }
+          });
+        }
+
+        if (pEmailInput) {
+          pEmailInput.addEventListener("input", () => {
+            const val = pEmailInput.value.trim();
+            if (val && !/^[^ ]+@[^ ]+\.[a-z]{2,3}$/i.test(val)) {
+              setProfileError(pEmailInput, "profileEmailError", "Enter a valid email address");
+            } else {
+              clearProfileError(pEmailInput, "profileEmailError");
+            }
+          });
+        }
+
+        if (pPhoneInput) {
+          pPhoneInput.addEventListener("input", () => {
+            const val = pPhoneInput.value.trim();
+            if (val && !/^[0-9]{10}$/.test(val)) {
+              setProfileError(pPhoneInput, "profilePhoneError", "Phone number must be exactly 10 digits");
+            } else {
+              clearProfileError(pPhoneInput, "profilePhoneError");
+            }
+          });
+        }
+
+        profileAccountForm.addEventListener("submit", (e) => {
+          clearAllProfileErrors();
+          let valid = true;
+
+          const nameVal = pNameInput ? pNameInput.value.trim() : "";
+          const emailVal = pEmailInput ? pEmailInput.value.trim() : "";
+          const phoneVal = pPhoneInput ? pPhoneInput.value.trim() : "";
+
+          if (!nameVal || nameVal.length < 3 || nameVal.length > 50 || !/^[A-Za-z\s]+$/.test(nameVal)) {
+            setProfileError(pNameInput, "profileNameError", "Name must be 3-50 letters and spaces only");
+            valid = false;
+          }
+
+          if (!emailVal || !/^[^ ]+@[^ ]+\.[a-z]{2,3}$/i.test(emailVal)) {
+            setProfileError(pEmailInput, "profileEmailError", "Enter a valid email address");
+            valid = false;
+          }
+
+          if (!phoneVal || !/^[0-9]{10}$/.test(phoneVal)) {
+            setProfileError(pPhoneInput, "profilePhoneError", "Phone number must be exactly 10 digits");
+            valid = false;
+          }
+
+          if (!valid) {
+            e.preventDefault();
+          }
+        });
+      }
+
+      const modalAddressForm = document.getElementById("modalAddressForm");
+      if (modalAddressForm) {
+        const mName = document.getElementById("modalFullName");
+        const mPhone = document.getElementById("modalPhone");
+        const mAddress = document.getElementById("modalAddress");
+        const mPincode = document.getElementById("pincode");
+        const mCity = document.getElementById("city");
+        const mState = document.getElementById("state");
+
+        function setModalErr(inputEl, errorId, msg) {
+          const errEl = document.getElementById(errorId);
+          if (errEl) {
+            errEl.innerText = msg;
+            errEl.classList.remove("hidden");
+          }
+          if (inputEl) {
+            inputEl.classList.add("border-red-500");
+          }
+        }
+
+        function clearModalErr(inputEl, errorId) {
+          const errEl = document.getElementById(errorId);
+          if (errEl) {
+            errEl.innerText = "";
+            errEl.classList.add("hidden");
+          }
+          if (inputEl) {
+            inputEl.classList.remove("border-red-500");
+          }
+        }
+
+        modalAddressForm.addEventListener("submit", (e) => {
+          let valid = true;
+          const nameVal = mName ? mName.value.trim() : "";
+          const phoneVal = mPhone ? mPhone.value.trim() : "";
+          const addressVal = mAddress ? mAddress.value.trim() : "";
+          const pincodeVal = mPincode ? mPincode.value.trim() : "";
+          const cityVal = mCity ? mCity.value.trim() : "";
+          const stateVal = mState ? mState.value.trim() : "";
+
+          if (!nameVal || nameVal.length < 3 || nameVal.length > 50) {
+            setModalErr(mName, "modalNameError", "Full Name must be between 3 and 50 characters");
+            valid = false;
+          } else { clearModalErr(mName, "modalNameError"); }
+
+          if (!phoneVal || !/^[0-9]{10}$/.test(phoneVal)) {
+            setModalErr(mPhone, "modalPhoneError", "Phone number must be exactly 10 digits");
+            valid = false;
+          } else { clearModalErr(mPhone, "modalPhoneError"); }
+
+          if (!addressVal) {
+            setModalErr(mAddress, "modalAddressError", "Address is required");
+            valid = false;
+          } else { clearModalErr(mAddress, "modalAddressError"); }
+
+          if (!pincodeVal || !/^[0-9]{6}$/.test(pincodeVal)) {
+            setModalErr(mPincode, "modalPincodeError", "PIN code must be exactly 6 digits");
+            valid = false;
+          } else { clearModalErr(mPincode, "modalPincodeError"); }
+
+          if (!cityVal) {
+            setModalErr(mCity, "modalCityError", "City is required");
+            valid = false;
+          } else { clearModalErr(mCity, "modalCityError"); }
+
+          if (!stateVal) {
+            setModalErr(mState, "modalStateError", "State is required");
+            valid = false;
+          } else { clearModalErr(mState, "modalStateError"); }
+
+          if (!valid) {
+            e.preventDefault();
+          }
+        });
+      }
+
+      function copyReferralCode(code) {
+        if (!code) return;
+        navigator.clipboard.writeText(code);
+        if (typeof showToast === 'function') {
+          showToast('Referral code copied to clipboard!', 'success');
+        } else {
+          alert('Referral code copied to clipboard: ' + code);
+        }
+      }
+
+      function copyReferralLink(url) {
+        if (!url) return;
+        navigator.clipboard.writeText(url);
+        if (typeof showToast === 'function') {
+          showToast('Referral link copied to clipboard!', 'success');
+        } else {
+          alert('Referral link copied to clipboard!');
+        }
+      }
 
     </script>
   <%- include("../partials/toast") %>

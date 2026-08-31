@@ -184,18 +184,75 @@ export const loadAdminLoginPage = (req, res) => {
 
 export const loadAdminDashboard = async (req, res) => {
   try {
-    // 1. Calculate overall figures
-    const totalOrdersCount = await Order.countDocuments();
-    const successfulOrders = await Order.find({ orderStatus: { $ne: "Cancelled" } });
+    const { startDate, endDate, filterType } = req.query;
+
+    let start = startDate ? new Date(startDate) : null;
+    let end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
+
+    const today = new Date();
+    let selectedFilter = filterType || "";
+
+    if (filterType === "daily") {
+      start = new Date(today.setHours(0, 0, 0, 0));
+      end = new Date(today.setHours(23, 59, 59, 999));
+    } else if (filterType === "weekly") {
+      const lastWeek = new Date();
+      lastWeek.setDate(today.getDate() - 6);
+      start = new Date(lastWeek.setHours(0, 0, 0, 0));
+      end = new Date(today.setHours(23, 59, 59, 999));
+    } else if (filterType === "monthly") {
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+      end = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+    } else if (filterType === "yearly") {
+      start = new Date(today.getFullYear(), 0, 1);
+      end = new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999);
+    }
+
+    const dateMatch = {};
+    if (start || end) {
+      dateMatch.createdAt = {};
+      if (start) dateMatch.createdAt.$gte = start;
+      if (end) dateMatch.createdAt.$lte = end;
+    }
+
+    const successfulOrdersMatch = { orderStatus: { $ne: "Cancelled" }, ...dateMatch };
+
+    // 1. Calculate overall figures for filtered range
+    const totalOrdersCount = await Order.countDocuments({ ...dateMatch });
+    const successfulOrders = await Order.find(successfulOrdersMatch);
     
     let totalRevenue = 0;
     let totalDiscount = 0;
     successfulOrders.forEach(o => {
-      totalRevenue += o.grandTotal;
-      totalDiscount += o.discount;
+      totalRevenue += o.grandTotal || 0;
+      totalDiscount += o.discount || 0;
     });
 
-    // 2. Query monthly stats
+    // 2. Build time-series data for line graph
+    let groupFormat = "%Y-%m";
+    let isDailyGroup = false;
+
+    if (filterType === "daily" || filterType === "weekly" || (start && end && (end - start) <= 31 * 24 * 60 * 60 * 1000)) {
+      groupFormat = "%Y-%m-%d";
+      isDailyGroup = true;
+    }
+
+    const timeSeriesStats = await Order.aggregate([
+      { $match: successfulOrdersMatch },
+      {
+        $group: {
+          _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
+          revenue: { $sum: "$grandTotal" },
+          salesCount: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    const chartLabels = timeSeriesStats.map(s => s._id);
+    const chartData = timeSeriesStats.map(s => s.revenue);
+
+    // Monthly stats for backward compatibility / fallback
     const monthlyStats = await Order.aggregate([
       { $match: { orderStatus: { $ne: "Cancelled" } } },
       {
@@ -210,6 +267,7 @@ export const loadAdminDashboard = async (req, res) => {
 
     // 3. Top 10 Best Selling Products
     const bestSellingProducts = await Order.aggregate([
+      { $match: successfulOrdersMatch },
       { $unwind: "$products" },
       { $match: { "products.orderStatus": { $nin: ["Cancelled", "Returned"] } } },
       {
@@ -226,6 +284,7 @@ export const loadAdminDashboard = async (req, res) => {
 
     // 4. Top 10 Best Selling Categories
     const bestSellingCategories = await Order.aggregate([
+      { $match: successfulOrdersMatch },
       { $unwind: "$products" },
       { $match: { "products.orderStatus": { $nin: ["Cancelled", "Returned"] } } },
       {
@@ -259,6 +318,7 @@ export const loadAdminDashboard = async (req, res) => {
 
     // 5. Top 10 Best Selling Brands
     const bestSellingBrands = await Order.aggregate([
+      { $match: successfulOrdersMatch },
       { $unwind: "$products" },
       { $match: { "products.orderStatus": { $nin: ["Cancelled", "Returned"] } } },
       {
@@ -286,9 +346,14 @@ export const loadAdminDashboard = async (req, res) => {
       totalRevenue,
       totalDiscount,
       monthlyStats,
+      chartLabels,
+      chartData,
       bestSellingProducts,
       bestSellingCategories,
-      bestSellingBrands
+      bestSellingBrands,
+      filterType: selectedFilter,
+      startDate: startDate || "",
+      endDate: endDate || ""
     });
   } catch (error) {
     console.error("Dashboard calculation error:", error);
@@ -297,9 +362,14 @@ export const loadAdminDashboard = async (req, res) => {
       totalRevenue: 0,
       totalDiscount: 0,
       monthlyStats: [],
+      chartLabels: [],
+      chartData: [],
       bestSellingProducts: [],
       bestSellingCategories: [],
-      bestSellingBrands: []
+      bestSellingBrands: [],
+      filterType: "",
+      startDate: "",
+      endDate: ""
     });
   }
 };

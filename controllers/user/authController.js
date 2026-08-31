@@ -1,3 +1,4 @@
+import passport from "../../config/passport.js";
 import {
   registerUser,
   loginUser,
@@ -8,13 +9,14 @@ import {
 
 import User from "../../models/User.js";
 import Category from "../../models/category.js";
+import { handleReferralSignup } from "./referralController.js";
 
 export const signup = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, phone } = req.body;
+    const { name, email, password, confirmPassword, phone, referralCode } = req.body;
 
     if (!name || !email || !password || !confirmPassword) {
-      req.session.error = "All fields are required";
+      req.session.error = "All required fields must be filled";
       return res.redirect("/signup");
     }
 
@@ -26,7 +28,7 @@ export const signup = async (req, res) => {
     }
 
     // Email Validation
-    const emailRegex = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+    const emailRegex = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/i;
     if (!email.match(emailRegex)) {
       req.session.error = "Please enter a valid email address";
       return res.redirect("/signup");
@@ -53,6 +55,16 @@ export const signup = async (req, res) => {
       return res.redirect("/signup");
     }
 
+    // Check referral code if provided
+    if (referralCode && referralCode.trim()) {
+      const referrer = await User.findOne({ referralCode: referralCode.trim() });
+      if (!referrer) {
+        req.session.error = "Invalid referral code provided";
+        return res.redirect("/signup");
+      }
+      req.session.referralCode = referralCode.trim();
+    }
+
     await registerUser({
       name: nameTrimmed,
       email,
@@ -77,30 +89,20 @@ export const login = async (req, res) => {
 
     if (!email || !password) {
       req.session.error = "All fields are required";
-
       return res.redirect("/login");
     }
 
     const data = await loginUser(req.body);
 
-    res.cookie(
-      "userToken",
-
-      data.token,
-
-      {
-        httpOnly: true,
-
-        maxAge: 24 * 60 * 60 * 1000
-      }
-    );
+    res.cookie("userToken", data.token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000
+    });
 
     req.session.success = "Login successful";
-
     res.redirect("/home");
   } catch (err) {
     req.session.error = err.message;
-
     res.redirect("/login");
   }
 };
@@ -108,11 +110,9 @@ export const login = async (req, res) => {
 export const sendOTP = async (req, res) => {
   try {
     const { email } = req.body;
-
     await sendOtp(email);
 
     req.session.success = "OTP sent successfully";
-
     const user = await User.findOne({ email });
     const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 300;
 
@@ -122,7 +122,6 @@ export const sendOTP = async (req, res) => {
     });
   } catch (err) {
     req.session.error = err.message;
-
     res.redirect("/login");
   }
 };
@@ -130,11 +129,15 @@ export const sendOTP = async (req, res) => {
 export const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
+    const user = await verifyOtp(email, otp);
 
-    await verifyOtp(email, otp);
+    // Process referral reward if referralCode was used at signup
+    if (req.session.referralCode) {
+      await handleReferralSignup(user._id, req.session.referralCode);
+      delete req.session.referralCode;
+    }
 
     req.session.success = "Account verified successfully";
-
     res.redirect("/login");
   } catch (err) {
     const user = await User.findOne({ email: req.body.email });
@@ -153,7 +156,6 @@ export const logout = (req, res) => {
   res.clearCookie("token");
 
   req.session.success = "Logged out successfully";
-
   res.redirect("/login");
 };
 
@@ -164,7 +166,6 @@ export const forgotPassword = async (req, res) => {
     await sendOtp(email);
 
     req.session.success = "OTP sent to your email";
-
     const user = await User.findOne({ email });
     const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 300;
 
@@ -174,34 +175,27 @@ export const forgotPassword = async (req, res) => {
     });
   } catch (err) {
     req.session.error = err.message;
-
     res.redirect("/forgot-password");
   }
 };
+
 export const verifyOtpReset = async (req, res) => {
   const { email, otp } = req.body;
-
   try {
-
     await verifyOtp(email, otp);
 
     return res.render("user/reset-password", {
       email
     });
-
   } catch (err) {
     const user = await User.findOne({ email });
     const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 0;
 
-    return res.status(400).render(
-      "user/verify-otp",
-      {
-        email,
-        error: err.message,
-        timeLeft
-      }
-    );
-
+    return res.status(400).render("user/verify-otp", {
+      email,
+      error: err.message,
+      timeLeft
+    });
   }
 };
 
@@ -211,24 +205,19 @@ export const resetPassword = async (req, res) => {
 
     if (!password || !confirmPassword) {
       req.session.error = "All fields are required";
-
       return res.render("user/reset-password", { email });
     }
 
     if (password !== confirmPassword) {
       req.session.error = "Passwords do not match";
-
       return res.render("user/reset-password", { email });
     }
 
     await resetPasswordService(email, password);
-
     req.session.success = "Password reset successful";
-
     res.redirect("/login");
   } catch (err) {
     req.session.error = err.message;
-
     res.render("user/reset-password", {
       email: req.body.email
     });
@@ -244,7 +233,8 @@ export const loadLoginPage = (req, res) => {
 };
 
 export const loadSignupPage = (req, res) => {
-  res.render("user/signup");
+  const referralCode = req.query.ref || "";
+  res.render("user/signup", { referralCode });
 };
 
 export const loadOtpPage = async (req, res) => {
@@ -269,7 +259,6 @@ export const loadHomePage = async (req, res) => {
   try {
     let featuredCategories = await Category.find({ isListed: true, isFeatured: true }).limit(4);
     
-    // Fallback: if less than 4 are featured, fill with standard listed categories
     if (featuredCategories.length < 4) {
       const remaining = 4 - featuredCategories.length;
       const featuredIds = featuredCategories.map(c => c._id);
@@ -291,14 +280,29 @@ export const loadForgotPasswordPage = (req, res) => {
   res.render("user/forgot-password");
 };
 
-export const handleGoogleCallback = (req, res) => {
-  res.cookie(
-    "userToken",
-    req.user.token,
-    {
+export const handleGoogleCallback = (req, res, next) => {
+  passport.authenticate("google", { session: false }, (err, data, info) => {
+    if (err) {
+      console.error("Google Auth Error:", err);
+      req.session.error = "Google authentication failed: " + (err.message || "Unknown error");
+      return res.redirect("/login");
+    }
+
+    if (!data || !data.token) {
+      req.session.error = "Your account is blocked or Google authentication failed";
+      return res.redirect("/login");
+    }
+
+    res.cookie("userToken", data.token, {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000
-    }
-  );
-  res.redirect("/home");
+    });
+
+    req.session.success = "Login successful";
+    return res.redirect("/home");
+  })(req, res, (err) => {
+    console.error("Google Passport Execution Error:", err);
+    req.session.error = "Google authentication failed. Please try again.";
+    return res.redirect("/login");
+  });
 };

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Product - ZIYAURA</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <!-- Cropper.js -->
@@ -396,7 +397,12 @@ imageInput.addEventListener("change", (e) => {
   const files = Array.from(e.target.files);
   files.forEach(file => {
     if (!file.type.startsWith("image/")) {
-      alert("Only images are allowed!");
+      Swal.fire({
+        title: "Error!",
+        text: "Only images are allowed!",
+        icon: "error",
+        confirmButtonText: "OK"
+      });
       return;
     }
     const previewUrl = URL.createObjectURL(file);
@@ -747,7 +753,12 @@ form.addEventListener("submit", async (e) => {
   if (hasVariantsConfigured) {
     const rows = Array.from(document.querySelectorAll("#combinationsTableBody tr"));
     if (rows.length === 0) {
-      alert("At least one variant option combination must be checked!");
+      Swal.fire({
+        title: "Error!",
+        text: "At least one variant option combination must be checked!",
+        icon: "error",
+        confirmButtonText: "OK"
+      });
       return;
     }
 
@@ -763,17 +774,32 @@ form.addEventListener("submit", async (e) => {
       const stockVal = tr.querySelector('[data-field="stock"]').value;
 
       if (!skuVal) {
-        alert("SKU is required for all combinations");
+        Swal.fire({
+          title: "Error!",
+          text: "SKU is required for all combinations",
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         variantsValid = false;
         break;
       }
       if (priceVal === "" || Number(priceVal) < 0) {
-        alert("A valid original price is required for all combinations");
+        Swal.fire({
+          title: "Error!",
+          text: "A valid original price is required for all combinations",
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         variantsValid = false;
         break;
       }
       if (stockVal === "" || Number(stockVal) < 0) {
-        alert("A valid stock quantity is required for all combinations");
+        Swal.fire({
+          title: "Error!",
+          text: "A valid stock quantity is required for all combinations",
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         variantsValid = false;
         break;
       }
@@ -793,7 +819,12 @@ form.addEventListener("submit", async (e) => {
       }
 
       if (variantItem.salePrice !== null && variantItem.salePrice >= variantItem.price) {
-        alert(`Sale Price for ${combination.join(' / ')} must be lower than original price`);
+        Swal.fire({
+          title: "Error!",
+          text: `Sale Price for ${combination.join(' / ')} must be lower than original price`,
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         variantsValid = false;
         break;
       }
@@ -852,12 +883,22 @@ form.addEventListener("submit", async (e) => {
     if (data.success) {
       window.location.href = "/admin/products";
     } else {
-      alert(data.message || "Error updating product");
+      Swal.fire({
+        title: "Error!",
+        text: data.message || "Error updating product",
+        icon: "error",
+        confirmButtonText: "OK"
+      });
     }
   } catch (error) {
     document.getElementById("loadingOverlay").classList.add("hidden");
     console.error("Submission error:", error);
-    alert("An error occurred during submission. Please try again.");
+    Swal.fire({
+      title: "Error!",
+      text: "An error occurred during submission. Please try again.",
+      icon: "error",
+      confirmButtonText: "OK"
+    });
   }
 });
 </script>

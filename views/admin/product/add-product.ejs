@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Add Product - ZIYAURA</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <!-- Cropper.js -->
@@ -119,6 +120,7 @@
                   <th class="p-3">Price (₹) *</th>
                   <th class="p-3">Sale Price (₹)</th>
                   <th class="p-3">Stock *</th>
+                  <th class="p-3">Variant Image</th>
                 </tr>
               </thead>
               <tbody id="combinationsTableBody">
@@ -320,11 +322,21 @@ imageInput.addEventListener("change", (e) => {
   files.forEach(file => {
     // Basic file validations
     if (!file.type.startsWith("image/")) {
-      alert("Only image files are allowed!");
+      Swal.fire({
+        title: "Error!",
+        text: "Only image files are allowed!",
+        icon: "error",
+        confirmButtonText: "OK"
+      });
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert(`Image "${file.name}" is too large (max 10MB)`);
+      Swal.fire({
+        title: "Error!",
+        text: `Image "${file.name}" is too large (max 10MB)`,
+        icon: "error",
+        confirmButtonText: "OK"
+      });
       return;
     }
     
@@ -371,6 +383,8 @@ function renderImagePreviews() {
   if (selectedImages.length >= 3) {
     document.getElementById("imageError").textContent = "";
   }
+
+  updateVariantImageDropdowns();
 }
 
 function removePreview(idx) {
@@ -378,6 +392,37 @@ function removePreview(idx) {
   URL.revokeObjectURL(selectedImages[idx].previewUrl);
   selectedImages.splice(idx, 1);
   renderImagePreviews();
+}
+
+function updateVariantImageDropdowns() {
+  const dropdowns = document.querySelectorAll('[data-field="imageIndex"]');
+  dropdowns.forEach(select => {
+    const currentSelectedVal = select.value || "0";
+    let optionsHtml = "";
+    if (selectedImages.length === 0) {
+      optionsHtml = `<option value="0">Default Image</option>`;
+    } else {
+      selectedImages.forEach((img, i) => {
+        optionsHtml += `<option value="${i}" ${Number(currentSelectedVal) === i ? 'selected' : ''}>Image ${i + 1}</option>`;
+      });
+    }
+    select.innerHTML = optionsHtml;
+    updateVariantRowThumbnail(select);
+  });
+}
+
+function updateVariantRowThumbnail(select) {
+  const index = Number(select.value) || 0;
+  const thumbEl = select.previousElementSibling;
+  if (thumbEl) {
+    if (selectedImages[index]) {
+      thumbEl.src = selectedImages[index].previewUrl;
+      thumbEl.classList.remove("hidden");
+    } else {
+      thumbEl.src = "";
+      thumbEl.classList.add("hidden");
+    }
+  }
 }
 
 // 2. CROPPER MODAL CONTROLS
@@ -555,6 +600,18 @@ function generateCombinationsGrid() {
     const combSuffix = comb.map(c => c.toUpperCase().replace(/\s+/g, "")).join("-");
     const defaultSku = `${prodNameNormalized || "PROD"}-${combSuffix}`;
 
+    let imageOptionsHtml = "";
+    if (selectedImages.length === 0) {
+      imageOptionsHtml = `<option value="0">Default Image</option>`;
+    } else {
+      selectedImages.forEach((img, i) => {
+        imageOptionsHtml += `<option value="${i}">Image ${i + 1}</option>`;
+      });
+    }
+
+    const initialThumbSrc = selectedImages[0]?.previewUrl || "";
+    const thumbClass = initialThumbSrc ? "w-8 h-8 rounded object-cover border border-gray-200 shadow-sm shrink-0" : "w-8 h-8 rounded object-cover border border-gray-200 shadow-sm shrink-0 hidden";
+
     const tr = document.createElement("tr");
     tr.className = "border-b hover:bg-gray-50/50 transition-colors text-sm font-medium";
     tr.setAttribute("data-combination", JSON.stringify(comb));
@@ -599,6 +656,18 @@ function generateCombinationsGrid() {
           data-field="stock"
           required
         >
+      </td>
+      <td class="p-3">
+        <div class="flex items-center gap-2">
+          <img src="${initialThumbSrc}" class="${thumbClass}">
+          <select
+            data-field="imageIndex"
+            onchange="updateVariantRowThumbnail(this)"
+            class="border px-2 py-1.5 rounded w-full text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+          >
+            ${imageOptionsHtml}
+          </select>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
@@ -703,7 +772,12 @@ form.addEventListener("submit", async (e) => {
   if (hasVariantsConfigured) {
     const rows = Array.from(document.querySelectorAll("#combinationsTableBody tr"));
     if (rows.length === 0) {
-      alert("At least one variant option combination must be checked and configured!");
+      Swal.fire({
+        title: "Error!",
+        text: "At least one variant option combination must be checked and configured!",
+        icon: "error",
+        confirmButtonText: "OK"
+      });
       return;
     }
 
@@ -718,26 +792,44 @@ form.addEventListener("submit", async (e) => {
       const stockVal = tr.querySelector('[data-field="stock"]').value;
 
       if (!skuVal) {
-        alert("SKU is required for all combinations");
+        Swal.fire({
+          title: "Error!",
+          text: "SKU is required for all combinations",
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         variantsValid = false;
         break;
       }
       if (priceVal === "" || Number(priceVal) < 0) {
-        alert("A valid original price is required for all combinations");
+        Swal.fire({
+          title: "Error!",
+          text: "A valid original price is required for all combinations",
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         variantsValid = false;
         break;
       }
       if (stockVal === "" || Number(stockVal) < 0) {
-        alert("A valid stock quantity is required for all combinations");
+        Swal.fire({
+          title: "Error!",
+          text: "A valid stock quantity is required for all combinations",
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         variantsValid = false;
         break;
       }
+
+      const imageIndex = tr.querySelector('[data-field="imageIndex"]')?.value || 0;
 
       const variantItem = {
         sku: skuVal,
         price: Number(priceVal),
         salePrice: salePriceInput !== "" ? Number(salePriceInput) : null,
         stock: Number(stockVal),
+        imageIndex: Number(imageIndex),
         // Map combination values back to category types format
         combination: combination.map((val, dimIndex) => ({
           name: categoryVariantTypes[dimIndex].name,
@@ -746,7 +838,12 @@ form.addEventListener("submit", async (e) => {
       };
 
       if (variantItem.salePrice !== null && variantItem.salePrice >= variantItem.price) {
-        alert(`Sale Price for ${combination.join(' / ')} must be lower than original price`);
+        Swal.fire({
+          title: "Error!",
+          text: `Sale Price for ${combination.join(' / ')} must be lower than original price`,
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         variantsValid = false;
         break;
       }
@@ -807,12 +904,22 @@ form.addEventListener("submit", async (e) => {
     if (data.success) {
       window.location.href = "/admin/products";
     } else {
-      alert(data.message || "Error creating product");
+      Swal.fire({
+        title: "Error!",
+        text: data.message || "Error creating product",
+        icon: "error",
+        confirmButtonText: "OK"
+      });
     }
   } catch (error) {
     document.getElementById("loadingOverlay").classList.add("hidden");
     console.error("Submission error:", error);
-    alert("An error occurred during submission. Please try again.");
+    Swal.fire({
+      title: "Error!",
+      text: "An error occurred during submission. Please try again.",
+      icon: "error",
+      confirmButtonText: "OK"
+    });
   }
 });
 </script>

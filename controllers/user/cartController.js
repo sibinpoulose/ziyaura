@@ -161,7 +161,7 @@ export const loadCartPage = async (req, res) => {
       }
     }
 
-    const shippingCharge = cartSubtotal > 50000 || cartSubtotal === 0 ? 0 : 500; // Free shipping over 50k
+    const shippingCharge = cartSubtotal > 50000 || cartSubtotal === 0 ? 0 : 50; // Free shipping over 50k
     const grandTotal = cartSubtotal + shippingCharge;
 
     res.render("user/cart", {
@@ -191,7 +191,7 @@ export const addToCart = async (req, res) => {
 
     // Fetch product with category populated
     const product = await Product.findOne({ _id: productId, isDeleted: false }).populate("category");
-    if (!product || !product.isListed || !product.category || !product.category.isListed) {
+    if (!product || !product.isListed || (product.category && product.category.isListed === false)) {
       return res.status(400).json({ success: false, message: "This product is blocked or unavailable." });
     }
 
@@ -352,7 +352,7 @@ export const updateCartQuantity = async (req, res) => {
     }
 
     const itemTotal = details.price * newQty;
-    const shippingCharge = cartSubtotal > 50000 || cartSubtotal === 0 ? 0 : 500;
+    const shippingCharge = cartSubtotal > 50000 || cartSubtotal === 0 ? 0 : 50;
     const grandTotal = cartSubtotal + shippingCharge;
 
     const cartCount = cart.items.reduce((total, item) => total + item.quantity, 0);
@@ -379,8 +379,15 @@ export const removeFromCart = async (req, res) => {
   try {
     const { id } = req.params; // cart item id
 
-    const cart = await Cart.findOne({ userId: req.user._id });
+    const cart = await Cart.findOne({ userId: req.user._id }).populate({
+      path: "items.productId",
+      populate: { path: "category" }
+    });
+
     if (!cart) {
+      if (req.xhr || req.headers.accept?.includes("application/json")) {
+        return res.status(404).json({ success: false, message: "Shopping bag not found." });
+      }
       req.session.error = "Shopping bag not found.";
       return res.redirect("/cart");
     }
@@ -389,10 +396,47 @@ export const removeFromCart = async (req, res) => {
     cart.items = cart.items.filter(item => item._id.toString() !== id);
     await cart.save();
 
+    // Recalculate cart figures for JSON response
+    let cartSubtotal = 0;
+    let hasOutOfStockOrInvalid = false;
+
+    for (const tempItem of cart.items) {
+      const details = getCartItemDetails(tempItem);
+      const isOutOfStock = details.isValid && details.stock === 0;
+      const isInsufficientStock = details.isValid && tempItem.quantity > details.stock;
+
+      if (!details.isValid || isOutOfStock || isInsufficientStock) {
+        hasOutOfStockOrInvalid = true;
+      }
+      if (details.isValid) {
+        cartSubtotal += details.price * tempItem.quantity;
+      }
+    }
+
+    const shippingCharge = cartSubtotal > 50000 || cartSubtotal === 0 ? 0 : 50;
+    const grandTotal = cartSubtotal + shippingCharge;
+    const cartCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+
+    if (req.xhr || req.headers.accept?.includes("application/json")) {
+      return res.status(200).json({
+        success: true,
+        message: "Product removed from shopping bag.",
+        cartItemsLength: cart.items.length,
+        cartSubtotal,
+        shippingCharge,
+        grandTotal,
+        hasOutOfStockOrInvalid,
+        cartCount
+      });
+    }
+
     req.session.success = "Product removed from shopping bag.";
     res.redirect("/cart");
   } catch (error) {
     console.error("Remove from Cart Error:", error);
+    if (req.xhr || req.headers.accept?.includes("application/json")) {
+      return res.status(500).json({ success: false, message: "Failed to remove product from shopping bag." });
+    }
     req.session.error = "Failed to remove product from shopping bag.";
     res.redirect("/cart");
   }

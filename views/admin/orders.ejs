@@ -223,22 +223,32 @@
   <%- include("../partials/toast") %>
 
   <!-- Change Status AJAX Logic -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     async function changeOrderStatus(orderId, selectElem) {
       const originalValue = selectElem.getAttribute('data-original') || selectElem.value;
       const newStatus = selectElem.value;
       
-      // If setting to Cancelled or Delivered, ask for confirmation
+      let confirmMsg = `Are you sure you want to change order status to "${newStatus}"?`;
       if (newStatus === 'Cancelled') {
-        if (!confirm('Are you sure you want to Cancel this order? This will restore stock levels and cannot be undone.')) {
-          selectElem.value = originalValue;
-          return;
-        }
+        confirmMsg = 'Are you sure you want to Cancel this order? Stock will be restored.';
       } else if (newStatus === 'Delivered') {
-        if (!confirm('Mark order as Delivered? This will mark COD payment as Paid and cannot be undone.')) {
-          selectElem.value = originalValue;
-          return;
-        }
+        confirmMsg = 'Mark order as Delivered? Payment status will be updated to Paid.';
+      }
+
+      const result = await Swal.fire({
+        title: 'Update Order Status?',
+        text: confirmMsg,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, update status'
+      });
+
+      if (!result.isConfirmed) {
+        selectElem.value = originalValue;
+        return;
       }
 
       try {
@@ -253,9 +263,7 @@
 
         if (data.success) {
           showToast(data.message, 'success');
-          // Save the value as original
           selectElem.setAttribute('data-original', newStatus);
-          // If status is terminal (Cancelled/Delivered), reload to update the UI correctly
           if (['Cancelled', 'Delivered'].includes(newStatus)) {
             setTimeout(() => window.location.reload(), 1200);
           }

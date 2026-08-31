@@ -81,22 +81,19 @@
           </div>
 
           <a
-            href="#"
+            href="/products?sort=newest"
             class="text-[10px] lg:text-[12px] font-bold text-gray-800 hover:text-gray-500 tracking-widest whitespace-nowrap"
           >
-
             LIMITED EDITION
-
           </a>
 
-          <a
-            href="#"
-            class="text-[10px] lg:text-[12px] font-bold text-gray-800 hover:text-gray-500 tracking-widest whitespace-nowrap"
+          <button
+            type="button"
+            onclick="openNeedHelpModal()"
+            class="text-[10px] lg:text-[12px] font-bold text-gray-800 hover:text-gray-500 tracking-widest whitespace-nowrap focus:outline-none"
           >
-
             NEED HELP
-
-          </a>
+          </button>
 
         </div>
 
@@ -227,9 +224,9 @@
           </div>
         </div>
 
-        <a href="#">LIMITED</a>
+        <a href="/products?sort=newest">LIMITED</a>
 
-        <a href="#">HELP</a>
+        <button type="button" onclick="openNeedHelpModal()">HELP</button>
 
       </div>
 
@@ -237,6 +234,7 @@
 
   </header>
 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     function toggleMobileCategories(event) {
       event.stopPropagation();
@@ -252,4 +250,36 @@
         dropdown.classList.add('hidden');
       }
     });
+
+    function openNeedHelpModal() {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: "<strong>ZIYAURA Concierge Support</strong>",
+          html: `
+            <div class="text-left space-y-3 p-2 text-xs text-gray-700">
+              <p class="font-medium text-gray-500">We are here to assist you with order tracking, sizing guidance, and product inquiries.</p>
+              <div class="p-4 bg-gray-50 rounded-xl space-y-2.5 border border-gray-100">
+                <div class="flex items-center gap-3">
+                  <i class="fa-solid fa-phone text-black text-sm"></i>
+                  <span class="font-bold text-gray-900">+91 98765 43210</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <i class="fa-solid fa-envelope text-black text-sm"></i>
+                  <span class="font-bold text-gray-900">support@ziyaura.com</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <i class="fa-solid fa-clock text-black text-sm"></i>
+                  <span class="text-gray-600">Mon - Sat: 9:00 AM - 8:00 PM IST</span>
+                </div>
+              </div>
+            </div>
+          `,
+          icon: "info",
+          confirmButtonText: "Close",
+          confirmButtonColor: "#000"
+        });
+      } else {
+        alert("ZIYAURA Support Desk\n\nPhone: +91 98765 43210\nEmail: support@ziyaura.com\nHours: Mon-Sat 9AM-8PM IST");
+      }
+    }
   </script>

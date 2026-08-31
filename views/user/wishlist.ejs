@@ -173,9 +173,21 @@
       try {
         const response = await fetch('/cart/add', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
           body: JSON.stringify({ productId, quantity: 1 })
         });
+
+        if (response.status === 401 || response.redirected) {
+          const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : {};
+          showToast(data.message || "Please login to add items to bag.", "error");
+          setTimeout(() => {
+            window.location.href = data.redirect || "/login";
+          }, 1000);
+          return;
+        }
 
         const data = await response.json();
 

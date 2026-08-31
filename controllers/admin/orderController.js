@@ -2,6 +2,7 @@ import Order from "../../models/order.js";
 import User from "../../models/User.js";
 import Product from "../../models/product.js";
 import WalletTransaction from "../../models/walletTransaction.js";
+import { recalculateOrderFinancials } from "../../utils/orderUtils.js";
 
 // 1. LOAD ORDERS LIST PAGE (WITH SEARCH, SORT, FILTER, PAGINATION)
 export const loadOrdersPage = async (req, res) => {
@@ -138,6 +139,8 @@ export const updateOrderStatus = async (req, res) => {
           await product.save();
         }
       }
+
+      await recalculateOrderFinancials(order);
     }
 
     // Auto mark paid if delivered
@@ -206,11 +209,6 @@ export const processReturnRequest = async (req, res) => {
           }
           await product.save();
         }
-
-        // Proportional refund formula
-        const priceRatio = item.total / order.subtotal;
-        const discountReduction = order.discount * priceRatio;
-        refundAmount = item.total - discountReduction;
       } else {
         item.orderStatus = "Return Rejected";
       }
@@ -224,7 +222,6 @@ export const processReturnRequest = async (req, res) => {
       // Entire Order Return Request Process
       if (action === "accept") {
         order.orderStatus = "Returned";
-        refundAmount = order.grandTotal;
 
         for (const item of order.products) {
           if (item.orderStatus === "Return Requested") {
@@ -249,6 +246,10 @@ export const processReturnRequest = async (req, res) => {
           if (p.orderStatus === "Return Requested") p.orderStatus = "Return Rejected";
         });
       }
+    }
+
+    if (action === "accept") {
+      refundAmount = await recalculateOrderFinancials(order);
     }
 
     // Process Wallet Refund upon accept confirmation

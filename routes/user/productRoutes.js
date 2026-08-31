@@ -6,14 +6,14 @@ import {
   loadProductsPage,
   loadProductDetailsPage
 } from "../../controllers/user/productController.js";
-
+import { protect } from "../../middlewares/authMiddleware.js";
 router.get(
   "/products",
   loadProductsPage
 );
 
 router.get(
-  "/product/:slug",
+  "/product/:slug",protect,
   loadProductDetailsPage
 );
 

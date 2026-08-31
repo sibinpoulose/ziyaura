@@ -196,15 +196,18 @@ export const loadProductDetailsPage = async (req, res) => {
     const { slug } = req.params;
     const product = await Product.findOne({ slug }).populate("category");
 
-    // Redirect to listings if product is deleted, blocked/unlisted, or category is unlisted
-    if (!product || product.isDeleted || !product.isListed || !product.category.isListed) {
-      req.session.error = "Product is currently unavailable";
+    // If product does not exist or is soft deleted, redirect to products listing
+    if (!product || product.isDeleted) {
+      req.session.error = "Product not found";
       return res.redirect("/products");
     }
 
+    // Determine if product or its category is unlisted/blocked
+    const isBlocked = !product.isListed || (product.category && !product.category.isListed);
+
     // Fetch related products of the same category (listed, non-deleted, excluding current product)
     const relatedProducts = await Product.find({
-      category: product.category._id,
+      category: product.category ? product.category._id : null,
       _id: { $ne: product._id },
       isListed: true,
       isDeleted: false
@@ -225,8 +228,9 @@ export const loadProductDetailsPage = async (req, res) => {
     res.render("user/product-details", {
       product,
       relatedProducts,
-      category: product.category,
-      isProductInWishlist
+      category: product.category || { name: "Uncategorized", slug: "" },
+      isProductInWishlist,
+      isBlocked
     });
 
   } catch (error) {

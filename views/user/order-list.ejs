@@ -128,6 +128,15 @@
                     </div>
 
                     <div class="flex items-center gap-4">
+                      <% if (order.paymentStatus === 'Failed') { %>
+                        <a 
+                          href="/payment-failure/<%= order._id %>" 
+                          class="bg-amber-600 hover:bg-amber-700 text-white transition-colors text-[10px] tracking-widest font-bold uppercase px-3 py-2 rounded-sm flex items-center gap-1"
+                        >
+                          <i class="fa-solid fa-rotate-right"></i> Retry Payment
+                        </a>
+                      <% } %>
+
                       <!-- Invoice Download Button -->
                       <a 
                         href="/profile/orders/<%= order._id %>/invoice" 

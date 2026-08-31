@@ -30,6 +30,23 @@ export const loadCheckoutPage = async (req, res) => {
       return res.redirect("/cart");
     }
 
+    // SERVER GUARD: Block checkout if any cart item is unlisted or invalid
+    for (let item of cart.items) {
+      const product = item.productId;
+      if (!product || product.isDeleted || !product.isListed || !product.category || !product.category.isListed) {
+        req.session.error = "Some items in your shopping bag are unlisted or no longer available. Please resolve them before checkout.";
+        return res.redirect("/cart");
+      }
+
+      if (item.variantId) {
+        const variant = product.variants.id(item.variantId);
+        if (!variant || !variant.isListed) {
+          req.session.error = "Selected option for an item in your shopping bag is unlisted. Please resolve them before checkout.";
+          return res.redirect("/cart");
+        }
+      }
+    }
+
     const addresses = await Address.find({
       userId: req.user._id
     });
@@ -43,24 +60,14 @@ export const loadCheckoutPage = async (req, res) => {
 
     for (let item of cart.items) {
       const product = item.productId;
-      if (!product || product.isDeleted || !product.isListed || !product.category || !product.category.isListed) {
-        continue;
-      }
-      
-      // Calculate price (utilizing salePrice if available from offers/discounts)
       let price = product.salePrice ?? product.price;
-      let image = product.images[0];
+      let image = product.images && product.images[0] ? product.images[0] : "/images/placeholder.jpg";
       let variantDetails = "";
 
       if (item.variantId) {
         let variant = product.variants.id(item.variantId);
-        if (!variant || !variant.isListed) {
-          continue;
-        }
         price = variant.salePrice ?? variant.price;
-        variantDetails = variant.combination.map((n) => {
-          return `${n.name}:${n.value}`;
-        }).join("|");
+        variantDetails = variant.combination.map((n) => `${n.name}:${n.value}`).join("|");
       }
 
       const itemTotal = price * item.quantity;
@@ -80,7 +87,7 @@ export const loadCheckoutPage = async (req, res) => {
       });
     }
 
-    const shippingCharge = subtotal > 50000 || subtotal === 0 ? 0 : 500;
+    const shippingCharge = subtotal > 50000 || subtotal === 0 ? 0 : 50;
     
     // Check coupon in session
     let couponDiscount = 0;
@@ -131,7 +138,11 @@ export const placeOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please select a shipping address." });
     }
 
-    const cart = await Cart.findOne({ userId: req.user._id }).populate("items.productId");
+    const cart = await Cart.findOne({ userId: req.user._id }).populate({
+      path: "items.productId",
+      populate: { path: "category" }
+    });
+
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ success: false, message: "Your shopping bag is empty." });
     }
@@ -146,8 +157,8 @@ export const placeOrder = async (req, res) => {
 
     for (const item of cart.items) {
       const prod = item.productId;
-      if (!prod || prod.isDeleted || !prod.isListed) {
-        return res.status(400).json({ success: false, message: `Product "${prod?.name || 'Unknown'}" is no longer available.` });
+      if (!prod || prod.isDeleted || !prod.isListed || !prod.category || !prod.category.isListed) {
+        return res.status(400).json({ success: false, message: `Product "${prod?.name || 'Unknown'}" is unlisted or no longer available.` });
       }
 
       let price = prod.salePrice ?? prod.price;
@@ -155,11 +166,11 @@ export const placeOrder = async (req, res) => {
       let variantDetails = "";
       let targetStock = prod.stock;
 
-      // Handle Variant stock validation
+      // Handle Variant stock & listing validation
       if (item.variantId) {
         const variant = prod.variants.id(item.variantId);
         if (!variant || !variant.isListed) {
-          return res.status(400).json({ success: false, message: `Selected option for "${prod.name}" is no longer available.` });
+          return res.status(400).json({ success: false, message: `Selected option for "${prod.name}" is unlisted or unavailable.` });
         }
         price = variant.salePrice ?? variant.price;
         sku = variant.sku;
@@ -188,7 +199,7 @@ export const placeOrder = async (req, res) => {
       });
     }
 
-    const shippingCharge = subtotal > 50000 ? 0 : 500;
+    const shippingCharge = subtotal > 50000 ? 0 : 50;
     
     // Coupon Application
     let couponDiscount = 0;
@@ -222,7 +233,7 @@ export const placeOrder = async (req, res) => {
         return res.status(400).json({ success: false, message: "Insufficient wallet balance." });
       }
 
-      // Deduct
+      // Deduct wallet
       user.walletBalance -= grandTotal;
       await user.save();
 
@@ -236,16 +247,21 @@ export const placeOrder = async (req, res) => {
       });
     }
 
-    // Decrement stock
-    for (const item of cart.items) {
-      const prod = await Product.findById(item.productId._id);
-      if (item.variantId) {
-        const v = prod.variants.id(item.variantId);
-        v.stock -= item.quantity;
-      } else {
-        prod.stock -= item.quantity;
+    // STOCK DEDUCTION RULE: Deduct stock ONLY for COD & WALLET.
+    // For ONLINE payments, defer stock deduction to verifyRazorpayPayment when payment passes!
+    if (paymentMethod !== "ONLINE") {
+      for (const item of cart.items) {
+        const prod = await Product.findById(item.productId._id);
+        if (prod) {
+          if (item.variantId) {
+            const v = prod.variants.id(item.variantId);
+            if (v) v.stock -= item.quantity;
+          } else {
+            prod.stock -= item.quantity;
+          }
+          await prod.save();
+        }
       }
-      await prod.save();
     }
 
     const newOrder = await Order.create({
@@ -293,7 +309,7 @@ export const placeOrder = async (req, res) => {
       newOrder.razorpayOrderId = rzpOrder.id;
       await newOrder.save();
 
-      // Clear cart ONLY AFTER successful Razorpay order creation!
+      // Clear cart
       cart.items = [];
       await cart.save();
 
@@ -340,6 +356,21 @@ export const verifyRazorpayPayment = async (req, res) => {
       orderDoc.paymentStatus = "Paid";
       orderDoc.razorpayPaymentId = razorpay_payment_id;
       await orderDoc.save();
+
+      // DEDUCT STOCK NOW since online payment succeeded!
+      for (const item of orderDoc.products) {
+        const prod = await Product.findById(item.productId);
+        if (prod) {
+          if (item.variantId) {
+            const v = prod.variants.id(item.variantId);
+            if (v) v.stock -= item.quantity;
+          } else {
+            prod.stock -= item.quantity;
+          }
+          await prod.save();
+        }
+      }
+
       return res.status(200).json({ success: true, message: "Payment verified successfully." });
     } else {
       orderDoc.paymentStatus = "Failed";

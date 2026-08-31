@@ -22,6 +22,10 @@ const productVariantSchema = new mongoose.Schema({
     min: 0,
     default: 0
   },
+  image: {
+    type: String,
+    default: ""
+  },
   // combination maps variant type name to its specific value
   // e.g. [{ name: "Size", value: "16" }, { name: "Material", value: "Gold" }]
   combination: [

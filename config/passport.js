@@ -11,9 +11,9 @@ passport.use(
 
     {
 
-      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientID: process.env.GOOGLE_CLIENT_ID || "google_client_id_placeholder",
 
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "google_client_secret_placeholder",
 
       callbackURL: "/auth/google/callback"
 

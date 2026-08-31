@@ -1,188 +1,124 @@
-<aside class="w-64 bg-[#F8F9FB] border-r border-gray-100 flex flex-col py-8 px-6 fixed h-full">
+<aside class="w-64 bg-[#F8F9FB] border-r border-gray-100 flex flex-col py-6 px-5 fixed top-0 left-0 bottom-0 h-screen overflow-y-auto z-40">
 
     <!-- Branding -->
-
-    <div class="flex items-center gap-2 mb-12">
-
-        <h1 class="text-xl font-black tracking-tighter flex items-center">
-
+    <div class="flex items-center gap-2 mb-6 px-2">
+        <h1 class="text-xl font-black tracking-tighter flex items-center text-gray-900">
             ZIYAURA
-
         </h1>
-
     </div>
 
-
     <!-- Navigation -->
-
-    <nav class="flex flex-col flex-grow space-y-8">
+    <nav class="flex flex-col flex-grow justify-between space-y-4">
 
         <!-- Menu -->
-
-        <div class="space-y-2">
-
-            <p class="text-[10px] font-bold text-blue-400 tracking-widest uppercase mb-4">
-
+        <div class="space-y-1">
+            <p class="text-[10px] font-bold text-blue-500 tracking-widest uppercase mb-2 px-2">
                 Menu
-
             </p>
-
 
             <a
                 href="/admin/dashboard"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath === '/admin/dashboard' ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+                class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath === '/admin/dashboard' ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
             >
-
-                <i class="fa-solid fa-table-cells-large"></i>
-
+                <i class="fa-solid fa-table-cells-large w-4 text-center"></i>
                 Dashboard
-
             </a>
-
 
             <a
                 href="/admin/products"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/products') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+                class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath.startsWith('/admin/products') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
             >
-
-                <i class="fa-solid fa-box"></i>
-
+                <i class="fa-solid fa-box w-4 text-center"></i>
                 Products
-
             </a>
-
 
             <a
                 href="/admin/categories"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/categories') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+                class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath.startsWith('/admin/categories') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
             >
-
-                <i class="fa-solid fa-layer-group"></i>
-
+                <i class="fa-solid fa-layer-group w-4 text-center"></i>
                 Category
-
             </a>
-
 
             <a
                 href="/admin/orders"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/orders') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+                class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath.startsWith('/admin/orders') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
             >
-
-                <i class="fa-solid fa-receipt"></i>
-
+                <i class="fa-solid fa-receipt w-4 text-center"></i>
                 Orders
-
             </a>
-
 
             <a
                 href="/admin/inventory"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/inventory') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+                class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath.startsWith('/admin/inventory') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
             >
-
-                <i class="fa-solid fa-warehouse"></i>
-
+                <i class="fa-solid fa-warehouse w-4 text-center"></i>
                 Inventory
-
             </a>
+
             <a
                 href="/admin/return"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/return') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+                class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath.startsWith('/admin/return') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
             >
-
-                <i class="fa-solid fa-rotate-left"></i>
-
+                <i class="fa-solid fa-rotate-left w-4 text-center"></i>
                 Returned orders
-
             </a>
-
 
             <a
                 href="/admin/coupons"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/coupons') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+                class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath.startsWith('/admin/coupons') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
             >
-
-                <i class="fa-solid fa-ticket"></i>
-
+                <i class="fa-solid fa-ticket w-4 text-center"></i>
                 Coupons
-
             </a>
-
 
             <a
                 href="/admin/offers"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/offers') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+                class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath.startsWith('/admin/offers') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
             >
-
-                <i class="fa-solid fa-percent"></i>
-
+                <i class="fa-solid fa-percent w-4 text-center"></i>
                 Offers
-
             </a>
-
 
             <a
                 href="/admin/sales-report"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/sales-report') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
+                class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath.startsWith('/admin/sales-report') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
             >
-
-                <i class="fa-solid fa-chart-line"></i>
-
+                <i class="fa-solid fa-chart-line w-4 text-center"></i>
                 Sales Report
-
             </a>
-
         </div>
 
+        <div class="space-y-4 pt-4 border-t border-gray-100">
+            <!-- USER MANAGEMENT -->
+            <div class="space-y-1">
+                <p class="text-[10px] font-bold text-blue-500 tracking-widest uppercase mb-2 px-2">
+                    User Management
+                </p>
 
-        <!-- USER MANAGEMENT -->
+                <a
+                    href="/admin/customers"
+                    class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-lg transition-colors <%= requestPath.startsWith('/admin/customers') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50' %>"
+                >
+                    <i class="fa-solid fa-user-group w-4 text-center"></i>
+                    Customers / Users
+                </a>
+            </div>
 
-        <div class="space-y-2">
+            <!-- OTHERS -->
+            <div class="space-y-1 pt-2">
+                <p class="text-[10px] font-bold text-blue-500 tracking-widest uppercase mb-2 px-2">
+                    Others
+                </p>
 
-            <p class="text-[10px] font-bold text-blue-400 tracking-widest uppercase mb-4">
-
-                User Management
-
-            </p>
-
-
-            <a
-                href="/admin/customers"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors <%= requestPath.startsWith('/admin/customers') ? 'text-blue-600 font-semibold bg-blue-50/50 rounded-lg' : 'text-gray-400 hover:text-gray-600' %>"
-            >
-
-                <i class="fa-solid fa-user-group"></i>
-
-                Customers
-
-            </a>
-
-        </div>
-
-
-        <!-- OTHERS -->
-
-        <div class="mt-auto space-y-2 pt-10">
-
-            <p class="text-[10px] font-bold text-blue-400 tracking-widest uppercase mb-4">
-
-                Others
-
-            </p>
-
-
-            <a
-                href="/admin/logout"
-                class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-400 hover:text-red-600 transition-colors"
-            >
-
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-
-                Logout
-
-            </a>
-
+                <a
+                    href="/admin/logout"
+                    class="flex items-center gap-3 px-3 py-2 text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                    <i class="fa-solid fa-arrow-right-from-bracket w-4 text-center"></i>
+                    Logout
+                </a>
+            </div>
         </div>
 
     </nav>

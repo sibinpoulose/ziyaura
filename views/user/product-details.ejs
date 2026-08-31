@@ -47,26 +47,41 @@
           >
         </div>
 
-        <!-- Thumbnails Grid -->
-        <% if (product.images && product.images.length > 1) { %>
-          <div class="grid grid-cols-4 gap-3">
-            <% product.images.forEach((imgSrc, index) => { %>
-              <button
-                type="button"
-                onclick="changeMainImage(this, '<%= imgSrc %>')"
-                class="thumbnail-btn aspect-square bg-gray-50 border rounded-sm overflow-hidden transition-all duration-200 <%= index === 0 ? 'border-black' : 'border-gray-200 hover:border-black' %>"
-              >
-                <img src="<%= imgSrc %>" alt="Thumbnail" class="w-full h-full object-cover">
-              </button>
-            <% }); %>
-          </div>
-        <% } %>
+        <!-- 3-Image Thumbnails Gallery Grid -->
+        <div class="grid grid-cols-3 gap-3">
+          <% 
+            const displayImages = (product.images && product.images.length > 0) ? product.images.slice(0, 3) : [];
+            while (displayImages.length < 3) {
+              displayImages.push(displayImages[0] || '/images/placeholder.jpg');
+            }
+          %>
+          <% displayImages.forEach((imgSrc, index) => { %>
+            <button
+              type="button"
+              onclick="changeMainImage(this, '<%= imgSrc %>')"
+              class="thumbnail-btn aspect-square bg-gray-50 border rounded-sm overflow-hidden transition-all duration-200 <%= index === 0 ? 'border-black' : 'border-gray-200 hover:border-black' %>"
+            >
+              <img src="<%= imgSrc %>" alt="Thumbnail <%= index + 1 %>" class="w-full h-full object-cover">
+            </button>
+          <% }); %>
+        </div>
       </div>
 
       <!-- Right Column: Product Information -->
       <div class="flex flex-col justify-between">
         
         <div>
+          <% if (locals.isBlocked) { %>
+            <!-- Blocked / Unavailable Product Banner -->
+            <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3.5 rounded-sm mb-6 flex items-start gap-3 text-xs font-medium">
+              <i class="fa-solid fa-circle-exclamation text-rose-500 text-base mt-0.5 shrink-0"></i>
+              <div>
+                <span class="font-bold block uppercase tracking-wider text-rose-900 mb-0.5">Product Currently Unavailable</span>
+                <span>This product is disabled or currently unavailable for purchase. You may view details, but adding to bag or ordering is disabled.</span>
+              </div>
+            </div>
+          <% } %>
+
           <!-- Brand -->
           <span class="text-[10px] font-bold tracking-widest text-gray-400 uppercase block mb-2">
             <%= product.brand || 'ZIYAURA LUXURY' %>
@@ -459,34 +474,19 @@
 
   <!-- Interactive JavaScript: Gallery, Zoom & Variant combinator -->
   <script>
-    // 1. Gallery switcher and Zoom effect
-    const container = document.getElementById('zoom-container');
-    const mainImg = document.getElementById('main-image');
-
-    container.addEventListener('mousemove', (e) => {
-      const rect = container.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      mainImg.style.transformOrigin = `${x}px ${y}px`;
-      mainImg.style.transform = 'scale(2.2)';
-    });
-
-    container.addEventListener('mouseleave', () => {
-      mainImg.style.transformOrigin = 'center';
-      mainImg.style.transform = 'scale(1)';
-    });
-
     function changeMainImage(thumbButton, imageSrc) {
-      mainImg.src = imageSrc;
+      const mainImg = document.getElementById('main-image');
+      if (mainImg) mainImg.src = imageSrc;
       
       // Update highlighted thumbnail border
       document.querySelectorAll('.thumbnail-btn').forEach(btn => {
         btn.classList.remove('border-black');
         btn.classList.add('border-gray-200');
       });
-      thumbButton.classList.remove('border-gray-200');
-      thumbButton.classList.add('border-black');
+      if (thumbButton) {
+        thumbButton.classList.remove('border-gray-200');
+        thumbButton.classList.add('border-black');
+      }
     }
 
     // 2. Variant selection combinator
@@ -495,10 +495,12 @@
     function selectOption(btnElement, dimension, value) {
       // Find all buttons in the current option group
       const optionGroup = btnElement.closest('.option-group');
-      optionGroup.querySelectorAll('.option-btn').forEach(btn => {
-        btn.classList.remove('bg-black', 'text-white', 'border-black');
-        btn.classList.add('border-gray-200', 'text-gray-800', 'bg-white');
-      });
+      if (optionGroup) {
+        optionGroup.querySelectorAll('.option-btn').forEach(btn => {
+          btn.classList.remove('bg-black', 'text-white', 'border-black');
+          btn.classList.add('border-gray-200', 'text-gray-800', 'bg-white');
+        });
+      }
 
       // Mark the clicked one as active
       btnElement.classList.remove('border-gray-200', 'text-gray-800', 'bg-white');
@@ -509,6 +511,23 @@
     }
 
     function updateVariantDetails() {
+      const isProductBlocked = <%= locals.isBlocked ? 'true' : 'false' %>;
+      const actionButton = document.getElementById('action-button');
+      const stockLabel = document.getElementById('display-stock');
+
+      if (isProductBlocked) {
+        if (stockLabel) {
+          stockLabel.className = "text-[10px] font-bold tracking-widest text-rose-500 bg-rose-50 px-3 py-1 rounded-sm uppercase";
+          stockLabel.innerText = "PRODUCT UNAVAILABLE";
+        }
+        if (actionButton) {
+          actionButton.disabled = true;
+          actionButton.innerText = "PRODUCT UNAVAILABLE";
+          actionButton.className = "w-full bg-gray-200 text-gray-400 py-3 text-xs font-bold tracking-widest uppercase cursor-not-allowed rounded-sm";
+        }
+        return;
+      }
+
       // Safely grab the product variants array passed from Express EJS
       const variants = <%- JSON.stringify(product.variants) %>;
       if (!variants || variants.length === 0) return;
@@ -521,68 +540,117 @@
       const priceLabel = document.getElementById('display-price');
       const oldPriceLabel = document.getElementById('display-old-price');
       const discountLabel = document.getElementById('display-discount');
-      const stockLabel = document.getElementById('display-stock');
       const skuLabel = document.getElementById('display-sku');
-      const actionButton = document.getElementById('action-button');
 
       if (matchedVariant && matchedVariant.isListed) {
-        skuLabel.innerText = matchedVariant.sku;
+        if (skuLabel) skuLabel.innerText = matchedVariant.sku;
         
         // Compute active price
         const activePrice = matchedVariant.salePrice !== null ? matchedVariant.salePrice : matchedVariant.price;
-        priceLabel.innerText = '₹' + activePrice.toLocaleString();
+        if (priceLabel) priceLabel.innerText = '₹' + activePrice.toLocaleString();
         
         if (matchedVariant.salePrice !== null) {
-          oldPriceLabel.innerText = '₹' + matchedVariant.price.toLocaleString();
-          oldPriceLabel.classList.remove('hidden');
+          if (oldPriceLabel) {
+            oldPriceLabel.innerText = '₹' + matchedVariant.price.toLocaleString();
+            oldPriceLabel.classList.remove('hidden');
+          }
           
-          const pct = Math.round(((matchedVariant.price - matchedVariant.salePrice) / matchedVariant.price) * 100);
-          discountLabel.innerText = 'SAVE ' + pct + '%';
-          discountLabel.classList.remove('hidden');
+          if (discountLabel) {
+            const pct = Math.round(((matchedVariant.price - matchedVariant.salePrice) / matchedVariant.price) * 100);
+            discountLabel.innerText = 'SAVE ' + pct + '%';
+            discountLabel.classList.remove('hidden');
+          }
         } else {
-          oldPriceLabel.classList.add('hidden');
-          discountLabel.classList.add('hidden');
+          if (oldPriceLabel) oldPriceLabel.classList.add('hidden');
+          if (discountLabel) discountLabel.classList.add('hidden');
         }
 
         // Stock and purchasing button state
         if (matchedVariant.stock === 0) {
-          stockLabel.className = "text-[10px] font-bold tracking-widest text-rose-500 bg-rose-50 px-3 py-1 rounded-sm uppercase";
-          stockLabel.innerText = "SOLD OUT";
-          
-          actionButton.disabled = true;
-          actionButton.innerText = "SOLD OUT";
-          actionButton.className = "w-full bg-gray-250 text-gray-400 py-3 text-xs font-bold tracking-widest uppercase cursor-not-allowed rounded-sm";
+          if (stockLabel) {
+            stockLabel.className = "text-[10px] font-bold tracking-widest text-rose-500 bg-rose-50 px-3 py-1 rounded-sm uppercase";
+            stockLabel.innerText = "SOLD OUT";
+          }
+          if (actionButton) {
+            actionButton.disabled = true;
+            actionButton.innerText = "SOLD OUT";
+            actionButton.className = "w-full bg-gray-250 text-gray-400 py-3 text-xs font-bold tracking-widest uppercase cursor-not-allowed rounded-sm";
+          }
         } else {
-          actionButton.disabled = false;
-          actionButton.innerText = "ADD TO BAG";
-          actionButton.className = "w-full bg-black text-white hover:bg-gray-800 py-3 text-xs font-bold tracking-widest uppercase transition-colors rounded-sm";
+          if (actionButton) {
+            actionButton.disabled = false;
+            actionButton.innerText = "ADD TO BAG";
+            actionButton.className = "w-full bg-black text-white hover:bg-gray-800 py-3 text-xs font-bold tracking-widest uppercase transition-colors rounded-sm";
+          }
           
-          if (matchedVariant.stock < 5) {
-            stockLabel.className = "text-[10px] font-bold tracking-widest text-amber-600 bg-amber-50 px-3 py-1 rounded-sm uppercase";
-            stockLabel.innerText = "ONLY " + matchedVariant.stock + " LEFT IN STOCK";
-          } else {
-            stockLabel.className = "text-[10px] font-bold tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-sm uppercase";
-            stockLabel.innerText = "IN STOCK";
+          if (matchedVariant.image) {
+            const mainImg = document.getElementById("main-image");
+            if (mainImg) mainImg.src = matchedVariant.image;
+          }
+
+          if (stockLabel) {
+            if (matchedVariant.stock < 5) {
+              stockLabel.className = "text-[10px] font-bold tracking-widest text-amber-600 bg-amber-50 px-3 py-1 rounded-sm uppercase";
+              stockLabel.innerText = "ONLY " + matchedVariant.stock + " LEFT IN STOCK";
+            } else {
+              stockLabel.className = "text-[10px] font-bold tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-sm uppercase";
+              stockLabel.innerText = "IN STOCK";
+            }
           }
         }
       } else {
         // Combination does not match any listed options
-        priceLabel.innerText = 'N/A';
-        oldPriceLabel.classList.add('hidden');
-        discountLabel.classList.add('hidden');
-        skuLabel.innerText = 'N/A';
+        if (priceLabel) priceLabel.innerText = 'N/A';
+        if (oldPriceLabel) oldPriceLabel.classList.add('hidden');
+        if (discountLabel) discountLabel.classList.add('hidden');
+        if (skuLabel) skuLabel.innerText = 'N/A';
         
-        stockLabel.className = "text-[10px] font-bold tracking-widest text-rose-500 bg-rose-50 px-3 py-1 rounded-sm uppercase";
-        stockLabel.innerText = "COMBINATION UNAVAILABLE";
+        if (stockLabel) {
+          stockLabel.className = "text-[10px] font-bold tracking-widest text-rose-500 bg-rose-50 px-3 py-1 rounded-sm uppercase";
+          stockLabel.innerText = "COMBINATION UNAVAILABLE";
+        }
         
-        actionButton.disabled = true;
-        actionButton.innerText = "UNAVAILABLE";
-        actionButton.className = "w-full bg-gray-200 text-gray-400 py-3 text-xs font-bold tracking-widest uppercase cursor-not-allowed rounded-sm";
+        if (actionButton) {
+          actionButton.disabled = true;
+          actionButton.innerText = "UNAVAILABLE";
+          actionButton.className = "w-full bg-gray-200 text-gray-400 py-3 text-xs font-bold tracking-widest uppercase cursor-not-allowed rounded-sm";
+        }
       }
     }
 
     // Initialize defaults on page load
     document.addEventListener('DOMContentLoaded', () => {
+      // 1. Zoom effect setup
+      const container = document.getElementById('zoom-container');
+      const mainImg = document.getElementById('main-image');
+
+      if (container && mainImg) {
+        container.addEventListener('mousemove', (e) => {
+          const rect = container.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          mainImg.style.transformOrigin = `${x}px ${y}px`;
+          mainImg.style.transform = 'scale(2.2)';
+        });
+
+        container.addEventListener('mouseleave', () => {
+          mainImg.style.transformOrigin = 'center';
+          mainImg.style.transform = 'scale(1)';
+        });
+      }
+
+      // 2. Pre-select options for default variant if present
+      const variants = <%- JSON.stringify(product.variants || []) %>;
+      if (variants && variants.length > 0) {
+        const defaultVariant = variants.find(v => v.isListed) || variants[0];
+        if (defaultVariant && defaultVariant.combination) {
+          defaultVariant.combination.forEach(c => {
+            selectedOptions[c.name] = c.value;
+          });
+        }
+      }
+
       document.querySelectorAll('.option-group').forEach(group => {
         // Find the selected/active option button
         const selectedBtn = group.querySelector('.option-btn.bg-black');
@@ -636,13 +704,25 @@
           try {
             const response = await fetch('/cart/add', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
               body: JSON.stringify({
                 productId: '<%= product._id %>',
                 variantId,
                 quantity: 1
               })
             });
+
+            if (response.status === 401 || response.redirected) {
+              const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : {};
+              showToast(data.message || "Please login to add items to shopping bag.", "error");
+              setTimeout(() => {
+                window.location.href = data.redirect || "/login";
+              }, 1000);
+              return;
+            }
 
             const data = await response.json();
             if (data.success) {

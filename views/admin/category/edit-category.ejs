@@ -15,6 +15,7 @@
   </title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </head>
 
@@ -67,6 +68,8 @@
       enctype="multipart/form-data"
 
       class="space-y-6"
+
+      novalidate
 
     >
 
@@ -585,13 +588,13 @@ function removeVariant(button){
     );
 
   if(rows.length === 1){
-
-    alert(
-      "At least one variant type is required"
-    );
-
+    Swal.fire({
+      title: "Warning!",
+      text: "At least one variant type is required",
+      icon: "warning",
+      confirmButtonText: "OK"
+    });
     return;
-
   }
 
   button.closest(".variant-row").remove();
@@ -599,271 +602,168 @@ function removeVariant(button){
 }
 
 
-// CATEGORY NAME
-
-nameInput.addEventListener(
-  "input",
-  () => {
-
-    const value =
-      nameInput.value.trim();
-
-    const error =
-      document.getElementById(
-        "nameError"
-      );
-
-    const regex =
-      /^[A-Za-z0-9\s'-]+$/;
-
-    if (!value) {
-
-      error.textContent =
-        "Category name is required";
-
-      return;
-
-    }
-
-    if (value.length < 3) {
-
-      error.textContent =
-        "Minimum 3 characters required";
-
-      return;
-
-    }
-
-    if (value.length > 50) {
-
-      error.textContent =
-        "Maximum 50 characters allowed";
-
-      return;
-
-    }
-
-    if (!regex.test(value)) {
-
-      error.textContent =
-        "Only letters, numbers, spaces, apostrophes and hyphens allowed";
-
-      return;
-
-    }
-
-    error.textContent = "";
-
+function setCatError(inputEl, errorId, msg) {
+  const errEl = document.getElementById(errorId);
+  if (errEl) {
+    errEl.textContent = msg;
   }
-);
+  if (inputEl) {
+    inputEl.classList.add("border-red-500");
+  }
+}
 
+function clearCatError(inputEl, errorId) {
+  const errEl = document.getElementById(errorId);
+  if (errEl) {
+    errEl.textContent = "";
+  }
+  if (inputEl) {
+    inputEl.classList.remove("border-red-500");
+  }
+}
+
+// CATEGORY NAME
+nameInput.addEventListener("input", () => {
+  const value = nameInput.value.trim();
+  const regex = /^[A-Za-z0-9\s'-]+$/;
+
+  if (!value) {
+    setCatError(nameInput, "nameError", "Category name is required");
+    return;
+  }
+  if (value.length < 3) {
+    setCatError(nameInput, "nameError", "Minimum 3 characters required");
+    return;
+  }
+  if (value.length > 50) {
+    setCatError(nameInput, "nameError", "Maximum 50 characters allowed");
+    return;
+  }
+  if (!regex.test(value)) {
+    setCatError(nameInput, "nameError", "Only letters, numbers, spaces, apostrophes and hyphens allowed");
+    return;
+  }
+
+  clearCatError(nameInput, "nameError");
+});
 
 // SEO TITLE
-
-seoTitleInput.addEventListener(
-  "input",
-  () => {
-
-    const error =
-      document.getElementById(
-        "seoTitleError"
-      );
-
-    if (
-      seoTitleInput.value.length > 60
-    ) {
-
-      error.textContent =
-        "Maximum 60 characters";
-
-      return;
-
-    }
-
-    error.textContent = "";
-
+seoTitleInput.addEventListener("input", () => {
+  if (seoTitleInput.value.length > 60) {
+    setCatError(seoTitleInput, "seoTitleError", "Maximum 60 characters allowed");
+  } else {
+    clearCatError(seoTitleInput, "seoTitleError");
   }
-);
-
+});
 
 // SEO DESCRIPTION
-
-seoDescriptionInput.addEventListener(
-  "input",
-  () => {
-
-    const error =
-      document.getElementById(
-        "seoDescriptionError"
-      );
-
-    if (
-      seoDescriptionInput.value.length > 160
-    ) {
-
-      error.textContent =
-        "Maximum 160 characters";
-
-      return;
-
-    }
-
-    error.textContent = "";
-
+seoDescriptionInput.addEventListener("input", () => {
+  if (seoDescriptionInput.value.length > 160) {
+    setCatError(seoDescriptionInput, "seoDescriptionError", "Maximum 160 characters allowed");
+  } else {
+    clearCatError(seoDescriptionInput, "seoDescriptionError");
   }
-);
-
+});
 
 // IMAGE
-
-imageInput.addEventListener(
-  "change",
-  () => {
-
-    const error =
-      document.getElementById(
-        "imageError"
-      );
-
-    const file =
-      imageInput.files[0];
-
-    if (!file) {
-
-      error.textContent = "";
-
-      return;
-
-    }
-
-    const allowed = [
-
-      "image/jpeg",
-
-      "image/png",
-
-      "image/webp"
-
-    ];
-
-    if (
-      !allowed.includes(
-        file.type
-      )
-    ) {
-
-      error.textContent =
-        "Only JPG, PNG and WEBP allowed";
-
-      imageInput.value = "";
-
-      return;
-
-    }
-
-    if (
-      file.size >
-      5 * 1024 * 1024
-    ) {
-
-      error.textContent =
-        "Image must be under 5MB";
-
-      imageInput.value = "";
-
-      return;
-
-    }
-
-    error.textContent = "";
-
+imageInput.addEventListener("change", () => {
+  const file = imageInput.files[0];
+  if (!file) {
+    clearCatError(imageInput, "imageError");
+    return;
   }
-);
+
+  const allowed = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowed.includes(file.type)) {
+    setCatError(imageInput, "imageError", "Only JPG, PNG and WEBP allowed");
+    imageInput.value = "";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    setCatError(imageInput, "imageError", "Image must be under 5MB");
+    imageInput.value = "";
+    return;
+  }
+
+  clearCatError(imageInput, "imageError");
+});
 
 
 // FINAL SUBMIT
+form.addEventListener("submit", (e) => {
+  let isValid = true;
+  const val = nameInput.value.trim();
+  const regex = /^[A-Za-z0-9\s'-]+$/;
 
-form.addEventListener(
-  "submit",
-  (e) => {
-    const variantNames =
-  document.querySelectorAll(
-    '[name="variantNames[]"]'
-  );
-    const variantValues =
-  document.querySelectorAll(
-    '[name="variantValues[]"]'
-  );
-
-    let hasVariant = false;
-    let missingInfo = false;
-
-    for (let i = 0; i < variantNames.length; i++) {
-      const name = variantNames[i].value.trim();
-      const valInput = variantValues[i];
-      const values = valInput ? valInput.value.trim() : '';
-
-      if (name && values) {
-        hasVariant = true;
-      } else if (name || values) {
-        missingInfo = true;
-      }
-    }
-
-    if (!hasVariant) {
-      alert("At least one variant type with at least one value is required");
-      e.preventDefault();
-      return;
-    }
-
-    if (missingInfo) {
-      alert("Please ensure all added variant rows have both a name and values.");
-      e.preventDefault();
-      return;
-    }
-
-    const variantTypeSet = new Set();
-    for (let i = 0; i < variantNames.length; i++) {
-      const name = variantNames[i].value.trim().toLowerCase();
-      if (name) {
-        if (variantTypeSet.has(name)) {
-          alert(`Duplicate variant type name "${variantNames[i].value.trim()}" is not allowed.`);
-          e.preventDefault();
-          return;
-        }
-        variantTypeSet.add(name);
-      }
-    }
-
-    const errors = [
-
-      "nameError",
-
-      "seoTitleError",
-
-      "seoDescriptionError",
-
-      "imageError"
-
-    ];
-
-    const hasError =
-      errors.some(
-        id =>
-          document
-            .getElementById(id)
-            .textContent
-            .trim() !== ""
-      );
-
-    if (hasError) {
-
-      e.preventDefault();
-
-    }
-
+  if (!val) {
+    setCatError(nameInput, "nameError", "Category name is required");
+    isValid = false;
+  } else if (val.length < 3) {
+    setCatError(nameInput, "nameError", "Minimum 3 characters required");
+    isValid = false;
+  } else if (val.length > 50) {
+    setCatError(nameInput, "nameError", "Maximum 50 characters allowed");
+    isValid = false;
+  } else if (!regex.test(val)) {
+    setCatError(nameInput, "nameError", "Only letters, numbers, spaces, apostrophes and hyphens allowed");
+    isValid = false;
   }
-);
+
+  const variantNames = document.querySelectorAll('[name="variantNames[]"]');
+  const variantValues = document.querySelectorAll('[name="variantValues[]"]');
+  let hasVariant = false;
+  let missingInfo = false;
+
+  for (let i = 0; i < variantNames.length; i++) {
+    const name = variantNames[i].value.trim();
+    const valInput = variantValues[i];
+    const values = valInput ? valInput.value.trim() : '';
+
+    if (name && values) {
+      hasVariant = true;
+    } else if (name || values) {
+      missingInfo = true;
+    }
+  }
+
+  if (!hasVariant) {
+    Swal.fire({
+      title: "Validation Error",
+      text: "At least one variant type with at least one value is required",
+      icon: "error"
+    });
+    isValid = false;
+  } else if (missingInfo) {
+    Swal.fire({
+      title: "Validation Error",
+      text: "Please ensure all added variant rows have both a name and values.",
+      icon: "error"
+    });
+    isValid = false;
+  }
+
+  const variantTypeSet = new Set();
+  for (let i = 0; i < variantNames.length; i++) {
+    const name = variantNames[i].value.trim().toLowerCase();
+    if (name) {
+      if (variantTypeSet.has(name)) {
+        Swal.fire({
+          title: "Validation Error",
+          text: `Duplicate variant type name "${variantNames[i].value.trim()}" is not allowed.`,
+          icon: "error"
+        });
+        isValid = false;
+        break;
+      }
+      variantTypeSet.add(name);
+    }
+  }
+
+  if (!isValid) {
+    e.preventDefault();
+  }
+});
 
 </script>
 

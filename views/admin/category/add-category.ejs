@@ -2,771 +2,290 @@
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>
-    Add Category
-  </title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Category</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-[#F3F6F9]">
 
-<div
-  class="
-    max-w-3xl
-    mx-auto
-    mt-10
-    bg-white
-    p-8
-    rounded-xl
-  "
->
+<%- include("../../partials/admin/navbar") %>
 
-  <h1
-    class="
-      text-3xl
-      font-bold
-      mb-8
-    "
-  >
+<main class="ml-64 p-10">
+  <div class="max-w-4xl bg-white rounded-2xl p-10 shadow-sm border border-gray-100">
 
-    Add Category
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Add Category</h1>
+      <p class="text-xs text-gray-400 font-medium mt-1">Create a new product category and define its variant rules</p>
+    </div>
 
-  </h1>
-
-  <form
-
-    id="categoryForm"
-
-    action="/admin/categories/add"
-
-    method="POST"
-
-    enctype="multipart/form-data"
-
-  >
-
-    <div class="grid gap-5">
+    <form id="categoryForm" action="/admin/categories/add" method="POST" enctype="multipart/form-data" novalidate class="space-y-6">
 
       <!-- CATEGORY NAME -->
-
       <div>
-
-        <label
-          class="
-            block
-            mb-2
-            font-medium
-          "
-        >
-
-          Category Name
-
-        </label>
-
-        <input
-
-          id="name"
-
-          type="text"
-
-          name="name"
-
-          placeholder="Category Name"
-
-          required
-
-          class="
-            border
-            p-3
-            rounded-lg
-            w-full
-          "
-
-        >
-
-        <p
-          id="nameError"
-          class="
-            text-red-500
-            text-sm
-            mt-1
-          "
-        ></p>
-
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Category Name</label>
+        <input id="name" type="text" name="name" placeholder="Enter category name (e.g. Ring, Necklace)"
+          class="w-full border border-gray-200 p-3.5 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition-colors">
+        <span id="nameError" class="text-red-500 text-xs mt-1 font-semibold hidden block"></span>
       </div>
 
       <!-- DESCRIPTION -->
-
       <div>
-
-        <label
-          class="
-            block
-            mb-2
-            font-medium
-          "
-        >
-
-          Description
-
-        </label>
-
-        <textarea
-
-          id="description"
-
-          name="description"
-
-          rows="4"
-
-          placeholder="Description"
-
-          class="
-            border
-            p-3
-            rounded-lg
-            w-full
-          "
-
-        ></textarea>
-
-        <p
-          id="descriptionError"
-          class="
-            text-red-500
-            text-sm
-            mt-1
-          "
-        ></p>
-
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Description</label>
+        <textarea id="description" name="description" rows="3" placeholder="Category description..."
+          class="w-full border border-gray-200 p-3.5 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition-colors"></textarea>
+        <span id="descriptionError" class="text-red-500 text-xs mt-1 font-semibold hidden block"></span>
       </div>
 
       <!-- SEO TITLE -->
-
       <div>
-
-        <label
-          class="
-            block
-            mb-2
-            font-medium
-          "
-        >
-
-          SEO Title
-
-        </label>
-
-        <input
-
-          id="seoTitle"
-
-          type="text"
-
-          name="seoTitle"
-
-          placeholder="SEO Title"
-
-          class="
-            border
-            p-3
-            rounded-lg
-            w-full
-          "
-
-        >
-
-        <p
-          id="seoTitleError"
-          class="
-            text-red-500
-            text-sm
-            mt-1
-          "
-        ></p>
-
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">SEO Title</label>
+        <input id="seoTitle" type="text" name="seoTitle" placeholder="SEO page title (Max 60 chars)"
+          class="w-full border border-gray-200 p-3.5 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition-colors">
+        <span id="seoTitleError" class="text-red-500 text-xs mt-1 font-semibold hidden block"></span>
       </div>
 
       <!-- SEO DESCRIPTION -->
-
       <div>
-
-        <label
-          class="
-            block
-            mb-2
-            font-medium
-          "
-        >
-
-          SEO Description
-
-        </label>
-
-        <textarea
-
-          id="seoDescription"
-
-          name="seoDescription"
-
-          rows="4"
-
-          placeholder="SEO Description"
-
-          class="
-            border
-            p-3
-            rounded-lg
-            w-full
-          "
-
-        ></textarea>
-
-        <p
-          id="seoDescriptionError"
-          class="
-            text-red-500
-            text-sm
-            mt-1
-          "
-        ></p>
-
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">SEO Description</label>
+        <textarea id="seoDescription" name="seoDescription" rows="3" placeholder="SEO meta description (Max 160 chars)"
+          class="w-full border border-gray-200 p-3.5 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition-colors"></textarea>
+        <span id="seoDescriptionError" class="text-red-500 text-xs mt-1 font-semibold hidden block"></span>
       </div>
+
+      <!-- VARIANT TYPES -->
       <div>
-
-  <label
-    class="
-      block
-      mb-3
-      font-medium
-    "
-  >
-
-    Variant Types
-
-  </label>
-
-  <div
-    id="variantContainer"
-    class="space-y-4"
-  >
-
-  </div>
-
-  <button
-
-    type="button"
-
-    onclick="addVariantField()"
-
-    class="
-      bg-gray-200
-      px-4
-      py-2
-      rounded-lg
-    "
-
-  >
-
-    + Add Variant Type
-
-  </button>
-
-</div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Variant Attributes</label>
+        <div id="variantContainer" class="space-y-4 mb-4"></div>
+        <span id="variantGlobalError" class="text-red-500 text-xs mb-3 font-semibold hidden block"></span>
+        <button type="button" onclick="addVariantField()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-2">
+          <i class="fa-solid fa-plus text-xs"></i> Add Variant Attribute
+        </button>
+      </div>
 
       <!-- IMAGE -->
-
       <div>
-
-        <label
-          class="
-            block
-            mb-2
-            font-medium
-          "
-        >
-
-          Category Image
-
-        </label>
-
-        <input
-
-          id="image"
-
-          type="file"
-
-          name="image"
-         
-
-          accept="image/*"
-
-          class="
-            border
-            p-3
-            rounded-lg
-            w-full
-          "
-
-        >
-
-        <p
-          id="imageError"
-          class="
-            text-red-500
-            text-sm
-            mt-1
-          "
-        ></p>
-
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Category Banner Image</label>
+        <input id="image" type="file" name="image" accept="image/*"
+          class="w-full border border-gray-200 p-3.5 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition-colors">
+        <span id="imageError" class="text-red-500 text-xs mt-1 font-semibold hidden block"></span>
       </div>
 
-      <button
+      <div class="flex gap-4 pt-4 border-t border-gray-100">
+        <a href="/admin/categories" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">
+          Cancel
+        </a>
+        <button type="submit" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">
+          Create Category
+        </button>
+      </div>
 
-        type="submit"
-
-        class="
-          bg-black
-          text-white
-          py-3
-          rounded-lg
-        "
-
-      >
-
-        Add Category
-
-      </button>
-
-    </div>
-
-  </form>
-
-</div>
+    </form>
+  </div>
+</main>
 
 <%- include("../../partials/toast") %>
 
 <script>
-
 function addVariantField(){
-
-  const container =
-    document.getElementById(
-      "variantContainer"
-    );
-
+  const container = document.getElementById("variantContainer");
   const html = `
-
-    <div
-      class="
-        border
-        p-4
-        rounded-lg
-        grid
-        grid-cols-1
-        md:grid-cols-2
-        gap-3
-        relative
-        variant-row
-      "
-    >
+    <div class="border border-gray-200 p-4 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-4 relative bg-gray-50/50 variant-row">
       <div>
-        <label class="block text-xs font-semibold text-gray-500 mb-1">Variant Name</label>
-        <input
-          type="text"
-          name="variantNames[]"
-          placeholder="Size, Material, Color..."
-          required
-          class="
-            w-full
-            border
-            p-3
-            rounded-lg
-          "
-        >
+        <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Attribute Name</label>
+        <input type="text" name="variantNames[]" placeholder="e.g. Size, Material, Color"
+          class="variant-name-input w-full border border-gray-200 p-3 rounded-lg text-sm bg-white focus:outline-none focus:border-blue-500 transition-colors">
+        <span class="variant-name-error text-red-500 text-xs mt-1 font-semibold hidden block"></span>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-gray-500 mb-1">Allowed Values (Comma-separated)</label>
+        <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Allowed Values (Comma-separated)</label>
         <div class="flex gap-2">
-          <input
-            type="text"
-            name="variantValues[]"
-            placeholder="e.g. 16,18,20 or Gold,Silver"
-            required
-            class="
-              flex-1
-              border
-              p-3
-              rounded-lg
-            "
-          >
-          <button
-            type="button"
-            class="
-              bg-red-500
-              text-white
-              px-4
-              rounded-lg
-              hover:bg-red-600
-              transition-colors
-            "
-            onclick="removeVariant(this)"
-          >
+          <input type="text" name="variantValues[]" placeholder="e.g. Small, Medium, Large"
+            class="variant-value-input flex-1 border border-gray-200 p-3 rounded-lg text-sm bg-white focus:outline-none focus:border-blue-500 transition-colors">
+          <button type="button" class="bg-rose-500 hover:bg-rose-600 text-white text-xs px-3 rounded-lg transition-colors font-bold" onclick="removeVariant(this)">
             Remove
           </button>
         </div>
+        <span class="variant-value-error text-red-500 text-xs mt-1 font-semibold hidden block"></span>
       </div>
     </div>
-
   `;
-
-  container.insertAdjacentHTML(
-    "beforeend",
-    html
-  );
-
+  container.insertAdjacentHTML("beforeend", html);
 }
 
 function removeVariant(button){
-
-  const rows =
-    document.querySelectorAll(
-      ".variant-row"
-    );
-
+  const rows = document.querySelectorAll(".variant-row");
   if(rows.length === 1){
-
-    alert(
-      "At least one variant type is required"
-    );
-
+    const globalErr = document.getElementById("variantGlobalError");
+    if(globalErr) {
+      globalErr.textContent = "At least one variant attribute row is required";
+      globalErr.classList.remove("hidden");
+    }
     return;
-
   }
-
   button.closest(".variant-row").remove();
-
 }
 
-const form =
-  document.getElementById(
-    "categoryForm"
-  );
+const form = document.getElementById("categoryForm");
+const nameInput = document.getElementById("name");
+const seoTitleInput = document.getElementById("seoTitle");
+const seoDescriptionInput = document.getElementById("seoDescription");
+const imageInput = document.getElementById("image");
 
-const nameInput =
-  document.getElementById(
-    "name"
-  );
-
-const seoTitleInput =
-  document.getElementById(
-    "seoTitle"
-  );
-
-const seoDescriptionInput =
-  document.getElementById(
-    "seoDescription"
-  );
-
-const imageInput =
-  document.getElementById(
-    "image"
-  );
-
-
-// CATEGORY NAME
-
-nameInput.addEventListener(
-  "input",
-  () => {
-
-    const value =
-      nameInput.value.trim();
-
-    const error =
-      document.getElementById(
-        "nameError"
-      );
-
-    const regex =
-  /^[A-Za-z0-9\s'-]+$/;
-
-    if (!value) {
-
-      error.textContent =
-        "Category name is required";
-
-      return;
-
-    }
-
-    if (value.length < 3) {
-
-      error.textContent =
-        "Minimum 3 characters required";
-
-      return;
-
-    }
-    if(value.length > 50){
-
-  error.textContent =
-    "Maximum 50 characters allowed";
-
-  return;
-
+function setCatError(inputEl, errorId, msg) {
+  const errEl = document.getElementById(errorId);
+  if (errEl) {
+    errEl.textContent = msg;
+    errEl.classList.remove("hidden");
+  }
+  if (inputEl) {
+    inputEl.classList.add("border-red-500");
+  }
 }
 
-    if (!regex.test(value)) {
-
-      error.textContent =
-        "Only letters, numbers, spaces, apostrophes and hyphens allowed";
-
-      return;
-
-    }
-
-    error.textContent = "";
-
+function clearCatError(inputEl, errorId) {
+  const errEl = document.getElementById(errorId);
+  if (errEl) {
+    errEl.textContent = "";
+    errEl.classList.add("hidden");
   }
-);
-
-
-// SEO TITLE
-
-seoTitleInput.addEventListener(
-  "input",
-  () => {
-
-    const error =
-      document.getElementById(
-        "seoTitleError"
-      );
-
-    if (
-      seoTitleInput.value.length > 60
-    ) {
-
-      error.textContent =
-        "Maximum 60 characters";
-
-      return;
-
-    }
-
-    error.textContent = "";
-
+  if (inputEl) {
+    inputEl.classList.remove("border-red-500");
   }
-);
-
-
-// SEO DESCRIPTION
-
-seoDescriptionInput.addEventListener(
-  "input",
-  () => {
-
-    const error =
-      document.getElementById(
-        "seoDescriptionError"
-      );
-
-    if (
-      seoDescriptionInput.value.length > 160
-    ) {
-
-      error.textContent =
-        "Maximum 160 characters";
-
-      return;
-
-    }
-
-    error.textContent = "";
-
-  }
-);
-
-
-// IMAGE
-
-imageInput.addEventListener(
-  "change",
-  () => {
-
-    const error =
-      document.getElementById(
-        "imageError"
-      );
-
-    const file =
-      imageInput.files[0];
-
-    if (!file) {
-
-      error.textContent = "";
-
-      return;
-
-    }
-
-    const allowed = [
-
-      "image/jpeg",
-
-      "image/png",
-
-      "image/webp"
-
-    ];
-
-    if (
-      !allowed.includes(
-        file.type
-      )
-    ) {
-
-      error.textContent =
-        "Only JPG, PNG and WEBP allowed";
-
-      imageInput.value = "";
-
-      return;
-
-    }
-
-    if (
-      file.size >
-      5 * 1024 * 1024
-    ) {
-
-      error.textContent =
-        "Image must be under 5MB";
-
-      imageInput.value = "";
-
-      return;
-
-    }
-
-    error.textContent = "";
-
-  }
-);
-
-
-// FINAL SUBMIT
-
-form.addEventListener(
-  "submit",
-  (e) => {
-    const file =
-  imageInput.files[0];
-
-if (!file) {
-
-  document.getElementById(
-    "imageError"
-  ).textContent =
-    "Category image is required";
-
-  e.preventDefault();
-
-  return;
-
 }
-    const variantNames =
-  document.querySelectorAll(
-    '[name="variantNames[]"]'
-  );
-    const variantValues =
-  document.querySelectorAll(
-    '[name="variantValues[]"]'
-  );
 
-    let hasVariant = false;
-    let missingInfo = false;
+nameInput.addEventListener("input", () => {
+  const value = nameInput.value.trim();
+  const regex = /^[A-Za-z0-9\s'-]+$/;
 
-    for (let i = 0; i < variantNames.length; i++) {
-      const name = variantNames[i].value.trim();
-      const valInput = variantValues[i];
-      const values = valInput ? valInput.value.trim() : '';
-
-      if (name && values) {
-        hasVariant = true;
-      } else if (name || values) {
-        missingInfo = true;
-      }
-    }
-
-    if (!hasVariant) {
-      alert("At least one variant type with at least one value is required");
-      e.preventDefault();
-      return;
-    }
-
-    if (missingInfo) {
-      alert("Please ensure all added variant rows have both a name and values.");
-      e.preventDefault();
-      return;
-    }
-
-    const variantTypeSet = new Set();
-    for (let i = 0; i < variantNames.length; i++) {
-      const name = variantNames[i].value.trim().toLowerCase();
-      if (name) {
-        if (variantTypeSet.has(name)) {
-          alert(`Duplicate variant type name "${variantNames[i].value.trim()}" is not allowed.`);
-          e.preventDefault();
-          return;
-        }
-        variantTypeSet.add(name);
-      }
-    }
-
-    const errors = [
-
-      "nameError",
-
-      "seoTitleError",
-
-      "seoDescriptionError",
-
-      "imageError"
-
-    ];
-
-    const hasError =
-      errors.some(
-        id =>
-          document
-            .getElementById(id)
-            .textContent
-            .trim() !== ""
-      );
-
-    if (hasError) {
-
-      e.preventDefault();
-
-    }
-
+  if (!value) {
+    setCatError(nameInput, "nameError", "Category name is required");
+  } else if (value.length < 3) {
+    setCatError(nameInput, "nameError", "Minimum 3 characters required");
+  } else if (value.length > 50) {
+    setCatError(nameInput, "nameError", "Maximum 50 characters allowed");
+  } else if (!regex.test(value)) {
+    setCatError(nameInput, "nameError", "Only letters, numbers, spaces, apostrophes and hyphens allowed");
+  } else {
+    clearCatError(nameInput, "nameError");
   }
-);
+});
+
+seoTitleInput.addEventListener("input", () => {
+  if (seoTitleInput.value.length > 60) {
+    setCatError(seoTitleInput, "seoTitleError", "Maximum 60 characters allowed");
+  } else {
+    clearCatError(seoTitleInput, "seoTitleError");
+  }
+});
+
+seoDescriptionInput.addEventListener("input", () => {
+  if (seoDescriptionInput.value.length > 160) {
+    setCatError(seoDescriptionInput, "seoDescriptionError", "Maximum 160 characters allowed");
+  } else {
+    clearCatError(seoDescriptionInput, "seoDescriptionError");
+  }
+});
+
+imageInput.addEventListener("change", () => {
+  const file = imageInput.files[0];
+  if (!file) {
+    clearCatError(imageInput, "imageError");
+    return;
+  }
+  const allowed = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowed.includes(file.type)) {
+    setCatError(imageInput, "imageError", "Only JPG, PNG and WEBP allowed");
+    imageInput.value = "";
+  } else if (file.size > 5 * 1024 * 1024) {
+    setCatError(imageInput, "imageError", "Image size must be under 5MB");
+    imageInput.value = "";
+  } else {
+    clearCatError(imageInput, "imageError");
+  }
+});
+
+form.addEventListener("submit", (e) => {
+  let isValid = true;
+  const val = nameInput.value.trim();
+  const regex = /^[A-Za-z0-9\s'-]+$/;
+
+  if (!val) {
+    setCatError(nameInput, "nameError", "Category name is required");
+    isValid = false;
+  } else if (val.length < 3) {
+    setCatError(nameInput, "nameError", "Minimum 3 characters required");
+    isValid = false;
+  } else if (val.length > 50) {
+    setCatError(nameInput, "nameError", "Maximum 50 characters allowed");
+    isValid = false;
+  } else if (!regex.test(val)) {
+    setCatError(nameInput, "nameError", "Only letters, numbers, spaces, apostrophes and hyphens allowed");
+    isValid = false;
+  }
+
+  const file = imageInput.files[0];
+  if (!file) {
+    setCatError(imageInput, "imageError", "Category banner image is required");
+    isValid = false;
+  }
+
+  const variantRows = document.querySelectorAll('.variant-row');
+  const globalErr = document.getElementById("variantGlobalError");
+  if(globalErr) {
+    globalErr.textContent = "";
+    globalErr.classList.add("hidden");
+  }
+
+  if (variantRows.length === 0) {
+    if(globalErr) {
+      globalErr.textContent = "At least one variant attribute row is required";
+      globalErr.classList.remove("hidden");
+    }
+    isValid = false;
+  }
+
+  const variantTypeSet = new Set();
+  variantRows.forEach(row => {
+    const nameInp = row.querySelector('.variant-name-input');
+    const valInp = row.querySelector('.variant-value-input');
+    const nameErr = row.querySelector('.variant-name-error');
+    const valErr = row.querySelector('.variant-value-error');
+
+    if(nameErr) { nameErr.textContent = ""; nameErr.classList.add("hidden"); }
+    if(valErr) { valErr.textContent = ""; valErr.classList.add("hidden"); }
+    if(nameInp) nameInp.classList.remove("border-red-500");
+    if(valInp) valInp.classList.remove("border-red-500");
+
+    const nameVal = nameInp ? nameInp.value.trim() : "";
+    const valueVal = valInp ? valInp.value.trim() : "";
+
+    if (!nameVal) {
+      if(nameErr) { nameErr.textContent = "Attribute name is required"; nameErr.classList.remove("hidden"); }
+      if(nameInp) nameInp.classList.add("border-red-500");
+      isValid = false;
+    } else if (variantTypeSet.has(nameVal.toLowerCase())) {
+      if(nameErr) { nameErr.textContent = "Duplicate attribute name"; nameErr.classList.remove("hidden"); }
+      if(nameInp) nameInp.classList.add("border-red-500");
+      isValid = false;
+    } else {
+      variantTypeSet.add(nameVal.toLowerCase());
+    }
+
+    if (!valueVal) {
+      if(valErr) { valErr.textContent = "Allowed values are required"; valErr.classList.remove("hidden"); }
+      if(valInp) valInp.classList.add("border-red-500");
+      isValid = false;
+    }
+  });
+
+  if (!isValid) {
+    e.preventDefault();
+  }
+});
+
 addVariantField();
-
 </script>
-
 </body>
-
 </html>

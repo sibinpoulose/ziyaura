@@ -156,6 +156,10 @@ export const addProduct = async (req, res) => {
         if (!variant.combination || variant.combination.length !== cat.variantTypes.length) {
           return res.status(400).json({ success: false, message: "Variants must include all category variant dimensions" });
         }
+
+        // Map variant image index to uploaded Cloudinary URL (or fallback to primary)
+        const imgIndex = Number(variant.imageIndex) || 0;
+        variant.image = images[imgIndex] || images[0] || "";
       }
     } else {
       // Direct base details
@@ -308,6 +312,12 @@ export const editProduct = async (req, res) => {
         }
         if (!variant.combination || variant.combination.length !== cat.variantTypes.length) {
           return res.status(400).json({ success: false, message: "Variants must include all category variant dimensions" });
+        }
+
+        // Map variant image index to uploaded Cloudinary URL (or fallback to primary)
+        const imgIndex = Number(variant.imageIndex) || 0;
+        if (!variant.image) {
+          variant.image = combinedImages[imgIndex] || combinedImages[0] || "";
         }
       }
       

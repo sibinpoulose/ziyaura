@@ -310,7 +310,7 @@
       </div>
 
       <!-- Form -->
-      <form action="/profile/add-address" method="POST" class="p-6 space-y-4" id="address-form">
+      <form action="/profile/add-address" method="POST" class="p-6 space-y-4" id="address-form" novalidate>
         
         <!-- Full Name -->
         <div class="space-y-1">
@@ -318,13 +318,15 @@
             Full Name
           </label>
           <input 
+            id="fullName"
             type="text" 
             name="fullName" 
             placeholder="Enter recipient's full name" 
             required 
             autofocus
-            class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black"
+            class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black transition-colors"
           >
+          <span id="nameError" class="text-red-500 text-xs hidden mt-1 block"></span>
         </div>
 
         <!-- Phone -->
@@ -337,15 +339,17 @@
               +91
             </div>
             <input 
+              id="phone"
               type="text" 
               name="phone" 
               maxlength="10" 
               placeholder="Enter 10-digit number" 
               required
               pattern="[0-9]{10}"
-              class="w-full border border-gray-200 rounded-r-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black"
+              class="w-full border border-gray-200 rounded-r-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black transition-colors"
             >
           </div>
+          <span id="phoneError" class="text-red-500 text-xs hidden mt-1 block"></span>
         </div>
 
         <!-- Address -->
@@ -354,12 +358,14 @@
             Address (House No, Street)
           </label>
           <input 
+            id="address"
             type="text" 
             name="address" 
             placeholder="Flat, House no., Building, Company, Apartment, Street" 
             required
-            class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black"
+            class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black transition-colors"
           >
+          <span id="addressError" class="text-red-500 text-xs hidden mt-1 block"></span>
         </div>
 
         <!-- Landmark -->
@@ -368,10 +374,11 @@
             Landmark (Optional)
           </label>
           <input 
+            id="landmark"
             type="text" 
             name="landmark" 
             placeholder="e.g. near Apollo hospital"
-            class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black"
+            class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black transition-colors"
           >
         </div>
 
@@ -388,8 +395,9 @@
             placeholder="6-digit Indian PIN code" 
             required
             pattern="[0-9]{6}"
-            class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black"
+            class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black transition-colors"
           >
+          <span id="pincodeError" class="text-red-500 text-xs hidden mt-1 block"></span>
           <p id="pincodeMessage" class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-1"></p>
         </div>
 
@@ -406,8 +414,9 @@
               name="city" 
               placeholder="City" 
               required
-              class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs bg-gray-50 focus:outline-none focus:border-black"
+              class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs bg-gray-50 focus:outline-none focus:border-black transition-colors"
             >
+            <span id="cityError" class="text-red-500 text-xs hidden mt-1 block"></span>
           </div>
 
           <!-- State -->
@@ -419,10 +428,11 @@
               id="state" 
               name="state" 
               required
-              class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black"
+              class="w-full border border-gray-200 rounded-sm px-4 py-2.5 text-xs focus:outline-none focus:border-black transition-colors"
             >
               <option value="">Select State</option>
             </select>
+            <span id="stateError" class="text-red-500 text-xs hidden mt-1 block"></span>
           </div>
         </div>
 
@@ -516,6 +526,151 @@
   function closeAddressModal() {
     document.getElementById('addressModal').classList.add('hidden');
     document.body.style.overflow = 'auto';
+  }
+
+  // Address Form Validation matching main address page (add-address.ejs)
+  const modalAddressForm = document.getElementById("address-form");
+  const modalFullNameInput = document.getElementById("fullName");
+  const modalPhoneInput = document.getElementById("phone");
+  const modalAddressInput = document.getElementById("address");
+  const modalCityInput = document.getElementById("city");
+  const modalStateInput = document.getElementById("state");
+  const modalPincodeInput = document.getElementById("pincode");
+
+  function setFieldError(inputEl, errorId, message) {
+    const errEl = document.getElementById(errorId);
+    if (errEl) {
+      errEl.innerText = message;
+      errEl.classList.remove("hidden");
+    }
+    if (inputEl) {
+      inputEl.classList.add("border-red-500");
+    }
+  }
+
+  function clearFieldError(inputEl, errorId) {
+    const errEl = document.getElementById(errorId);
+    if (errEl) {
+      errEl.innerText = "";
+      errEl.classList.add("hidden");
+    }
+    if (inputEl) {
+      inputEl.classList.remove("border-red-500");
+    }
+  }
+
+  function clearAllAddressErrors() {
+    clearFieldError(modalFullNameInput, "nameError");
+    clearFieldError(modalPhoneInput, "phoneError");
+    clearFieldError(modalAddressInput, "addressError");
+    clearFieldError(modalCityInput, "cityError");
+    clearFieldError(modalStateInput, "stateError");
+    clearFieldError(modalPincodeInput, "pincodeError");
+  }
+
+  if (modalFullNameInput) {
+    modalFullNameInput.addEventListener("input", () => {
+      const val = modalFullNameInput.value.trim();
+      if (val && (val.length < 3 || val.length > 50)) {
+        setFieldError(modalFullNameInput, "nameError", "Full Name must be between 3 and 50 characters");
+      } else {
+        clearFieldError(modalFullNameInput, "nameError");
+      }
+    });
+  }
+
+  if (modalPhoneInput) {
+    modalPhoneInput.addEventListener("input", () => {
+      const val = modalPhoneInput.value.trim();
+      if (val && !/^[0-9]{10}$/.test(val)) {
+        setFieldError(modalPhoneInput, "phoneError", "Phone number must be exactly 10 digits");
+      } else {
+        clearFieldError(modalPhoneInput, "phoneError");
+      }
+    });
+  }
+
+  if (modalAddressInput) {
+    modalAddressInput.addEventListener("input", () => {
+      if (modalAddressInput.value.trim()) {
+        clearFieldError(modalAddressInput, "addressError");
+      }
+    });
+  }
+
+  if (modalCityInput) {
+    modalCityInput.addEventListener("input", () => {
+      if (modalCityInput.value.trim()) {
+        clearFieldError(modalCityInput, "cityError");
+      }
+    });
+  }
+
+  if (modalStateInput) {
+    modalStateInput.addEventListener("change", () => {
+      if (modalStateInput.value.trim()) {
+        clearFieldError(modalStateInput, "stateError");
+      }
+    });
+  }
+
+  if (modalPincodeInput) {
+    modalPincodeInput.addEventListener("input", () => {
+      const val = modalPincodeInput.value.trim();
+      if (val && !/^[0-9]{6}$/.test(val)) {
+        setFieldError(modalPincodeInput, "pincodeError", "PIN code must be exactly 6 digits");
+      } else {
+        clearFieldError(modalPincodeInput, "pincodeError");
+      }
+    });
+  }
+
+  if (modalAddressForm) {
+    modalAddressForm.addEventListener("submit", (e) => {
+      clearAllAddressErrors();
+      let valid = true;
+
+      const nameVal = modalFullNameInput ? modalFullNameInput.value.trim() : "";
+      const phoneVal = modalPhoneInput ? modalPhoneInput.value.trim() : "";
+      const addressVal = modalAddressInput ? modalAddressInput.value.trim() : "";
+      const cityVal = modalCityInput ? modalCityInput.value.trim() : "";
+      const stateVal = modalStateInput ? modalStateInput.value.trim() : "";
+      const pincodeVal = modalPincodeInput ? modalPincodeInput.value.trim() : "";
+
+      if (!nameVal || nameVal.length < 3 || nameVal.length > 50) {
+        setFieldError(modalFullNameInput, "nameError", "Full Name must be between 3 and 50 characters");
+        valid = false;
+      }
+
+      if (!phoneVal || !/^[0-9]{10}$/.test(phoneVal)) {
+        setFieldError(modalPhoneInput, "phoneError", "Phone number must be exactly 10 digits");
+        valid = false;
+      }
+
+      if (!addressVal) {
+        setFieldError(modalAddressInput, "addressError", "Address is required");
+        valid = false;
+      }
+
+      if (!cityVal) {
+        setFieldError(modalCityInput, "cityError", "City is required");
+        valid = false;
+      }
+
+      if (!stateVal) {
+        setFieldError(modalStateInput, "stateError", "State is required");
+        valid = false;
+      }
+
+      if (!pincodeVal || !/^[0-9]{6}$/.test(pincodeVal)) {
+        setFieldError(modalPincodeInput, "pincodeError", "PIN code must be exactly 6 digits");
+        valid = false;
+      }
+
+      if (!valid) {
+        e.preventDefault();
+      }
+    });
   }
 
   // Indian States population

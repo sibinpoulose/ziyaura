@@ -22,6 +22,22 @@ export const createCoupon = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please fill all required fields." });
     }
 
+    const numericDiscount = parseFloat(discountValue);
+    const numericMinPurchase = parseFloat(minPurchase) || 0;
+
+    if (isNaN(numericDiscount) || numericDiscount <= 0) {
+      return res.status(400).json({ success: false, message: "Discount value must be greater than zero." });
+    }
+
+    if (discountType === "percentage" && numericDiscount > 100) {
+      return res.status(400).json({ success: false, message: "Percentage discount cannot exceed 100%." });
+    }
+
+    if (numericDiscount >= numericMinPurchase) {
+      return res.status(400).json({ success: false, message: "Discount value should be lower than min purchase price." });
+    }
+    
+
     const existing = await Coupon.findOne({ code: code.toUpperCase() });
     if (existing) {
       return res.status(400).json({ success: false, message: "Coupon code already exists." });
