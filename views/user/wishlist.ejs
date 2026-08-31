@@ -194,6 +194,17 @@
         if (data.success) {
           showToast(data.message, 'success');
           
+          // Update header cart badge dynamically
+          const badge = document.getElementById('cart-badge');
+          if (badge && typeof data.cartCount !== 'undefined') {
+            badge.innerText = data.cartCount;
+            if (data.cartCount > 0) {
+              badge.classList.remove('hidden');
+            } else {
+              badge.classList.add('hidden');
+            }
+          }
+
           // Remove the product card from the wishlist view dynamically
           const card = document.getElementById(`wishlist-card-${productId}`);
           if (card) {
