@@ -102,6 +102,18 @@ export const login = async (req, res) => {
     req.session.success = "Login successful";
     res.redirect("/home");
   } catch (err) {
+    if (err.message === "Please verify OTP first") {
+      try {
+        await sendOtp(req.body.email);
+        req.session.email = req.body.email;
+        req.session.success = "Please enter the OTP sent to your email to verify your account.";
+        return res.redirect("/otp");
+      } catch (otpErr) {
+        req.session.error = "Could not send verification OTP. Please try signing up again.";
+        return res.redirect("/login");
+      }
+    }
+
     req.session.error = err.message;
     res.redirect("/login");
   }

@@ -8,7 +8,24 @@ export const registerUser = async (data) => {
   const { name, email, password, phone } = data;
 
   const existing = await User.findOne({ email });
-  if (existing) throw new Error("User already exists");
+
+  if (existing) {
+    if (existing.isVerified) {
+      throw new Error("User already exists with this email address. Please login.");
+    }
+
+    // Account exists but is unverified: update user details and allow re-registration
+    const hashedPassword = await hashPassword(password);
+    existing.name = name;
+    existing.password = hashedPassword;
+    if (phone) existing.phone = phone;
+
+    await existing.save();
+
+    const userObj = existing.toObject();
+    delete userObj.password;
+    return userObj;
+  }
 
   const hashedPassword = await hashPassword(password);
 

@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 import User from "../models/User.js";
+import { hashPassword } from "../utils/hash.js";
 
 import jwt from "jsonwebtoken";
 
@@ -30,6 +31,7 @@ passport.use(
         // USER NOT EXISTS
 
         if (!user) {
+          const hashedPassword = await hashPassword("googlelogin_" + Date.now());
 
           user = await User.create({
 
@@ -37,7 +39,7 @@ passport.use(
 
             email,
 
-            password: "googlelogin",
+            password: hashedPassword,
 
             isVerified: true
 

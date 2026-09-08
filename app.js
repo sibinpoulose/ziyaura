@@ -33,6 +33,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// TRUST PROXY (REQUIRED FOR NGINX / PROXY HOSTING)
+app.set("trust proxy", 1);
+
 // BODY PARSER
 
 app.use(
@@ -55,14 +58,14 @@ app.use(noCache);
 
 app.use(
   session({
-    secret: "ziyauraSecret",
+    secret: process.env.SESSION_SECRET || "ziyauraSecret",
 
     resave: false,
 
     saveUninitialized: false,
 
     cookie: {
-      maxAge: 5 * 60 * 1000
+      maxAge: 24 * 60 * 60 * 1000
     }
   })
 );
