@@ -117,14 +117,17 @@
 
     if (priority === 'high') {
       toast.innerHTML = `
-        <div class="flex items-center justify-center w-14 h-14 rounded-full mb-4 ${iconBg} ${iconColor} shadow-sm">
+        <div class="flex items-center justify-center w-16 h-16 rounded-full mb-4 ${iconBg} ${iconColor} shadow-sm mx-auto">
           <i class="${iconClass} text-2xl"></i>
         </div>
-        <div class="mb-4">
-          <h3 class="text-sm font-bold text-gray-900 tracking-wider">${title}</h3>
-          <p class="text-xs text-gray-500 mt-2 leading-relaxed px-4 font-medium">${message}</p>
+        <div class="mb-5">
+          <h3 class="text-sm font-bold text-gray-900 tracking-widest uppercase">${title}</h3>
+          <p class="text-xs text-gray-600 mt-2 leading-relaxed px-4 font-medium">${message}</p>
         </div>
-        <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1 focus:outline-none" onclick="dismissToast(this.parentElement, 'high')">
+        <button type="button" class="w-full bg-black hover:bg-gray-800 text-white text-xs font-bold tracking-widest uppercase py-3 rounded-md transition-colors shadow-sm" onclick="dismissToast(this.parentElement, 'high')">
+          TRY AGAIN
+        </button>
+        <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1 focus:outline-none" onclick="dismissToast(this.parentElement, 'high')">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
         <div class="absolute bottom-0 left-0 h-1 w-full ${barColor} toast-progress"></div>
@@ -147,10 +150,11 @@
 
     container.appendChild(toast);
 
-    // Auto dismiss after 4 seconds
+    // Auto dismiss high-priority after 6 seconds, low-priority after 4 seconds
+    const duration = priority === 'high' ? 6000 : 4000;
     const timeoutId = setTimeout(() => {
       dismissToast(toast, priority);
-    }, 4000);
+    }, duration);
 
     toast.dataset.timeoutId = timeoutId;
   }
@@ -182,12 +186,13 @@
     const successMsg = "<%= (typeof success !== 'undefined' && success) ? success : '' %>";
     const errorMsg = "<%= (typeof error !== 'undefined' && error) ? error : '' %>";
 
-    // Flash messages are classified as 'low' priority top-right notifications
     if (successMsg) {
       showToast(successMsg, 'success', 'low');
     }
     if (errorMsg) {
-      showToast(errorMsg, 'error', 'low');
+      // Password, auth, or validation errors pop up in the center of the screen
+      const isHighPriority = /password|incorrect|verify|blocked|invalid|unauthorized|failed|error/i.test(errorMsg);
+      showToast(errorMsg, 'error', isHighPriority ? 'high' : 'low');
     }
   });
 </script>

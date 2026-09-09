@@ -1066,8 +1066,10 @@
 
           e.preventDefault();
 
-          passwordError.innerText =
-            "Current password is required";
+          const msg = "Current password is required";
+
+          passwordError.innerText = msg;
+          showToast(msg, "error", "high");
 
           return;
 
@@ -1078,8 +1080,10 @@
 
           e.preventDefault();
 
-          passwordError.innerText =
-            "Password must be at least 8 characters";
+          const msg = "Password must be at least 8 characters";
+
+          passwordError.innerText = msg;
+          showToast(msg, "error", "high");
 
           return;
 
@@ -1090,8 +1094,10 @@
 
           e.preventDefault();
 
-          passwordError.innerText =
-            "Password needs one uppercase letter";
+          const msg = "Password needs one uppercase letter";
+
+          passwordError.innerText = msg;
+          showToast(msg, "error", "high");
 
           return;
 
@@ -1102,8 +1108,10 @@
 
           e.preventDefault();
 
-          passwordError.innerText =
-            "Password needs one lowercase letter";
+          const msg = "Password needs one lowercase letter";
+
+          passwordError.innerText = msg;
+          showToast(msg, "error", "high");
 
           return;
 
@@ -1114,8 +1122,10 @@
 
           e.preventDefault();
 
-          passwordError.innerText =
-            "Password needs one number";
+          const msg = "Password needs one number";
+
+          passwordError.innerText = msg;
+          showToast(msg, "error", "high");
 
           return;
 
@@ -1126,8 +1136,10 @@
 
           e.preventDefault();
 
-          passwordError.innerText =
-            "Password needs one special character";
+          const msg = "Password needs one special character";
+
+          passwordError.innerText = msg;
+          showToast(msg, "error", "high");
 
           return;
 
@@ -1143,8 +1155,10 @@
 
           e.preventDefault();
 
-          passwordError.innerText =
-            "Passwords do not match";
+          const msg = "Passwords do not match";
+
+          passwordError.innerText = msg;
+          showToast(msg, "error", "high");
 
           return;
 
