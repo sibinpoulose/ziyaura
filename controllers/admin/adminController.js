@@ -360,6 +360,7 @@ export const loadAdminDashboard = async (req, res) => {
       bestSellingCategories,
       bestSellingBrands,
       filterType: selectedFilter,
+      selectedFilter,
       startDate: startDate || "",
       endDate: endDate || ""
     });
@@ -376,6 +377,7 @@ export const loadAdminDashboard = async (req, res) => {
       bestSellingCategories: [],
       bestSellingBrands: [],
       filterType: "",
+      selectedFilter: "",
       startDate: "",
       endDate: ""
     });

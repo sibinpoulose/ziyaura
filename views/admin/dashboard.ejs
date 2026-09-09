@@ -57,11 +57,11 @@
                 <div class="space-y-1.5">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Filter Presets</label>
                     <select name="filterType" onchange="this.form.submit()" class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg bg-white font-medium">
-                        <option value="" <%= !selectedFilter ? 'selected' : '' %>>Custom Date Range</option>
-                        <option value="daily" <%= selectedFilter === 'daily' ? 'selected' : '' %>>Daily (Today)</option>
-                        <option value="weekly" <%= selectedFilter === 'weekly' ? 'selected' : '' %>>Weekly (Last 7 Days)</option>
-                        <option value="monthly" <%= selectedFilter === 'monthly' ? 'selected' : '' %>>Monthly (Current Month)</option>
-                        <option value="yearly" <%= selectedFilter === 'yearly' ? 'selected' : '' %>>Yearly (Current Year)</option>
+                        <option value="" <%= !locals.filterType ? 'selected' : '' %>>Custom Date Range</option>
+                        <option value="daily" <%= locals.filterType === 'daily' ? 'selected' : '' %>>Daily (Today)</option>
+                        <option value="weekly" <%= locals.filterType === 'weekly' ? 'selected' : '' %>>Weekly (Last 7 Days)</option>
+                        <option value="monthly" <%= locals.filterType === 'monthly' ? 'selected' : '' %>>Monthly (Current Month)</option>
+                        <option value="yearly" <%= locals.filterType === 'yearly' ? 'selected' : '' %>>Yearly (Current Year)</option>
                     </select>
                 </div>
                 <div class="space-y-1.5">
