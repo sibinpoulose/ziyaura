@@ -36,24 +36,25 @@
             </button>
         </header>
 
-        <!-- Create Coupon Form Section (Collapsible) -->
+        <!-- Create/Edit Coupon Form Section (Collapsible) -->
         <section id="couponForm" class="bg-white p-8 rounded-2xl custom-shadow mb-8 hidden">
-            <h4 class="text-sm font-bold text-gray-800 mb-6">Create New Coupon</h4>
+            <h4 id="formTitle" class="text-sm font-bold text-gray-800 mb-6">Create New Coupon</h4>
             <form onsubmit="event.preventDefault(); submitCoupon();" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <input type="hidden" id="couponId">
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Coupon Code</label>
-                    <input type="text" id="code"  class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg uppercase">
+                    <input type="text" id="code" class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg uppercase">
                 </div>
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Discount Type</label>
-                    <select id="discountType"  class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg bg-white">
+                    <select id="discountType" class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg bg-white">
                         <option value="percentage">Percentage (%)</option>
                         <option value="fixed">Fixed Amount (₹)</option>
                     </select>
                 </div>
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Discount Value</label>
-                    <input type="number" id="discountValue" min="0"  class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
+                    <input type="number" id="discountValue" min="0" class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
                 </div>
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Min Purchase Limit (₹)</label>
@@ -65,15 +66,15 @@
                 </div>
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Expiry Date</label>
-                    <input type="date" id="expiryDate"  class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
+                    <input type="date" id="expiryDate" class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
                 </div>
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Total Usage Limit</label>
                     <input type="number" id="usageLimit" class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg" placeholder="Optional">
                 </div>
                 <div class="md:col-span-3 flex justify-end gap-3 pt-4 border-t border-gray-50 text-[10px] font-bold tracking-widest uppercase">
-                    <button type="button" onclick="toggleForm()" class="bg-gray-100 text-gray-600 px-6 py-3 rounded-lg hover:bg-gray-200">Cancel</button>
-                    <button type="submit" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600">Save Coupon</button>
+                    <button type="button" onclick="toggleForm(true)" class="bg-gray-100 text-gray-600 px-6 py-3 rounded-lg hover:bg-gray-200">Cancel</button>
+                    <button type="submit" id="submitBtn" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600">Save Coupon</button>
                 </div>
             </form>
         </section>
@@ -113,6 +114,7 @@
                                 </td>
                                 <td class="px-6 py-5 text-gray-500"><%= c.usedCount %> <%= c.usageLimit ? '/ ' + c.usageLimit : '' %></td>
                                 <td class="px-8 py-5 text-right">
+                                    <button onclick='editCoupon(<%- JSON.stringify(c) %>)' class="text-blue-500 hover:text-blue-700 transition-colors font-bold text-[10px] uppercase tracking-widest mr-3"><i class="fa-solid fa-pen-to-square text-sm mr-1"></i> Edit</button>
                                     <button onclick="deleteCoupon('<%= c._id %>')" class="text-rose-500 hover:text-rose-700 transition-colors font-bold text-[10px] uppercase tracking-widest"><i class="fa-solid fa-trash-can text-sm mr-1"></i> Delete</button>
                                 </td>
                             </tr>
@@ -120,17 +122,66 @@
                     <% } %>
                 </tbody>
             </table>
+
+            <!-- Pagination -->
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                <div class="flex justify-center items-center gap-3 py-6 border-t border-gray-50">
+                    <% for(let i = 1; i <= totalPages; i++){ %>
+                        <a
+                            href="/admin/coupons?page=<%= i %>"
+                            class="px-4 py-2 rounded-lg <%= currentPage === i ? 'bg-black text-white' : 'bg-gray-200 text-gray-700' %>"
+                        >
+                            <%= i %>
+                        </a>
+                    <% } %>
+                </div>
+            <% } %>
         </section>
 
     </main>
 
     <script>
-        function toggleForm() {
+        function toggleForm(reset = false) {
             const form = document.getElementById('couponForm');
+            if (reset) {
+                document.getElementById('couponId').value = '';
+                document.getElementById('code').value = '';
+                document.getElementById('discountType').value = 'percentage';
+                document.getElementById('discountValue').value = '';
+                document.getElementById('minPurchase').value = '0';
+                document.getElementById('maxDiscount').value = '';
+                document.getElementById('expiryDate').value = '';
+                document.getElementById('usageLimit').value = '';
+                document.getElementById('formTitle').innerText = 'Create New Coupon';
+                document.getElementById('submitBtn').innerText = 'Save Coupon';
+            }
             form.classList.toggle('hidden');
         }
 
+        function editCoupon(c) {
+            document.getElementById('couponId').value = c._id;
+            document.getElementById('code').value = c.code || '';
+            document.getElementById('discountType').value = c.discountType || 'percentage';
+            document.getElementById('discountValue').value = c.discountValue || '';
+            document.getElementById('minPurchase').value = c.minPurchase || 0;
+            document.getElementById('maxDiscount').value = c.maxDiscount || '';
+            if (c.expiryDate) {
+                document.getElementById('expiryDate').value = new Date(c.expiryDate).toISOString().split('T')[0];
+            } else {
+                document.getElementById('expiryDate').value = '';
+            }
+            document.getElementById('usageLimit').value = c.usageLimit || '';
+            
+            document.getElementById('formTitle').innerText = 'Edit Coupon';
+            document.getElementById('submitBtn').innerText = 'Update Coupon';
+
+            const form = document.getElementById('couponForm');
+            form.classList.remove('hidden');
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+
         function submitCoupon() {
+            const couponId = document.getElementById('couponId').value;
             const code = document.getElementById('code').value.trim();
             const discountType = document.getElementById('discountType').value;
             const discountValue = document.getElementById('discountValue').value;
@@ -170,10 +221,13 @@
                 return Swal.fire({ title: 'Validation Error', text: 'Discount value should be lower than min purchase price.', icon: 'warning' });
             }
 
-            fetch('/admin/coupons/create', {
+            const endpoint = couponId ? '/admin/coupons/update' : '/admin/coupons/create';
+            const payload = { couponId, code, discountType, discountValue, minPurchase, maxDiscount, expiryDate, usageLimit };
+
+            fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code, discountType, discountValue, minPurchase, maxDiscount, expiryDate, usageLimit })
+                body: JSON.stringify(payload)
             })
             .then(res => res.json())
             .then(data => {

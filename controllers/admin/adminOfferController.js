@@ -5,14 +5,31 @@ import Category from "../../models/category.js";
 // Load offers management page
 export const loadOffersPage = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const totalOffers = await Offer.countDocuments();
+    const totalPages = Math.ceil(totalOffers / limit) || 1;
+
     const offers = await Offer.find()
       .populate("productTarget", "name")
-      .populate("categoryTarget", "name");
+      .populate("categoryTarget", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
       
     const products = await Product.find({ isDeleted: false });
     const categories = await Category.find({ isListed: true });
     
-    res.render("admin/offers", { offers, products, categories });
+    res.render("admin/offers", {
+      offers,
+      products,
+      categories,
+      currentPage: page,
+      totalPages,
+      totalOffers
+    });
   } catch (error) {
     console.error(error);
     req.session.error = "Unable to load offers management page.";
@@ -67,6 +84,8 @@ export const recalculatePrices = async () => {
 // Create a new offer
 export const createOffer = async (req, res) => {
   try {
+    const { name, discountType, discountValue, targetType, productTarget, categoryTarget, expiryDate } = req.body;
+
     if (!name || !discountType || !discountValue || !targetType || !expiryDate) {
       return res.status(400).json({ success: false, message: "Please fill all required fields." });
     }

@@ -125,6 +125,20 @@
                     <% } %>
                 </tbody>
             </table>
+
+            <!-- Pagination -->
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                <div class="flex justify-center items-center gap-3 py-6 border-t border-gray-50">
+                    <% for(let i = 1; i <= totalPages; i++){ %>
+                        <a
+                            href="/admin/sales-report?page=<%= i %>&startDate=<%= startDate %>&endDate=<%= endDate %>&filterType=<%= filterType %>"
+                            class="px-4 py-2 rounded-lg <%= currentPage === i ? 'bg-black text-white' : 'bg-gray-200 text-gray-700' %>"
+                        >
+                            <%= i %>
+                        </a>
+                    <% } %>
+                </div>
+            <% } %>
         </section>
 
     </main>

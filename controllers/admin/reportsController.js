@@ -3,7 +3,7 @@ import PDFDocument from "pdfkit";
 import XLSX from "xlsx";
 
 // Fetch sales report data helper
-const getSalesReportData = async (startDate, endDate) => {
+const getSalesReportData = async (startDate, endDate, page = null, limit = null) => {
   const query = {
     orderStatus: { $ne: "Cancelled" }
   };
@@ -27,22 +27,32 @@ const getSalesReportData = async (startDate, endDate) => {
     }
   }
 
-  const orders = await Order.find(query).populate("userId", "name email").sort({createdAt:-1});
-  
-  let overallSalesCount = orders.length;
+  const allMatchingOrders = await Order.find(query);
+  let overallSalesCount = allMatchingOrders.length;
   let overallOrderAmount = 0;
   let overallDiscount = 0;
   
-  orders.forEach(order => {
+  allMatchingOrders.forEach(order => {
     overallOrderAmount += order.grandTotal || 0;
     overallDiscount += order.discount || 0;
   });
+
+  let ordersQuery = Order.find(query).populate("userId", "name email").sort({ createdAt: -1 });
+  if (page && limit) {
+    const skip = (page - 1) * limit;
+    ordersQuery = ordersQuery.skip(skip).limit(limit);
+  }
+
+  const orders = await ordersQuery;
+  const totalPages = limit ? (Math.ceil(overallSalesCount / limit) || 1) : 1;
 
   return {
     orders,
     overallSalesCount,
     overallOrderAmount,
-    overallDiscount
+    overallDiscount,
+    totalPages,
+    currentPage: page || 1
   };
 };
 
@@ -50,6 +60,8 @@ const getSalesReportData = async (startDate, endDate) => {
 export const loadSalesReport = async (req, res) => {
   try {
     const { startDate, endDate, filterType } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
     
     let start = startDate;
     let end = endDate;
@@ -69,7 +81,7 @@ export const loadSalesReport = async (req, res) => {
       end = new Date(today.getFullYear(), 11, 31, 23, 59, 59).toISOString();
     }
 
-    const reportData = await getSalesReportData(start, end);
+    const reportData = await getSalesReportData(start, end, page, limit);
     res.render("admin/sales-report", {
       ...reportData,
       startDate: start ? start.substring(0, 10) : "",
