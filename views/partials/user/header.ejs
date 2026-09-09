@@ -52,33 +52,12 @@
 
           </a>
 
-          <div class="relative group">
-            <a
-              href="/products"
-              class="text-[10px] lg:text-[12px] font-bold text-gray-800 hover:text-gray-500 tracking-widest whitespace-nowrap flex items-center gap-1 focus:outline-none"
-            >
-              CATEGORIES
-              <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-200 group-hover:rotate-180"></i>
-            </a>
-            <div
-              class="absolute left-0 mt-2 w-48 bg-white border border-gray-100 rounded-sm shadow-lg py-2 hidden group-hover:block transition-all duration-200 z-50"
-            >
-              <% if (locals.categories && categories.length > 0) { %>
-                <% categories.forEach(cat => { %>
-                  <a
-                    href="/products?category=<%= cat.slug %>"
-                    class="block px-4 py-2 text-[10px] font-bold text-gray-800 hover:bg-gray-50 hover:text-gray-500 tracking-widest"
-                  >
-                    <%= cat.name.toUpperCase() %>
-                  </a>
-                <% }); %>
-              <% } else { %>
-                <span class="block px-4 py-2 text-[10px] text-gray-400 tracking-widest">
-                  NO CATEGORIES
-                </span>
-              <% } %>
-            </div>
-          </div>
+          <a
+           href="/products"
+          class="text-[10px] lg:text-[12px] font-bold text-gray-800 hover:text-gray-500 tracking-widest whitespace-nowrap"
+          >
+          CATEGORIES
+          </a>
 
           <a
             href="/products?sort=newest"
