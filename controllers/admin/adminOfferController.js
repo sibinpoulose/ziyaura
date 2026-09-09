@@ -67,14 +67,38 @@ export const recalculatePrices = async () => {
 // Create a new offer
 export const createOffer = async (req, res) => {
   try {
-    const { name, discountType, discountValue, targetType, productTarget, categoryTarget, expiryDate } = req.body;
+    if (!name || !discountType || !discountValue || !targetType || !expiryDate) {
+      return res.status(400).json({ success: false, message: "Please fill all required fields." });
+    }
+
+    const numericDiscount = parseFloat(discountValue);
+    if (isNaN(numericDiscount) || numericDiscount <= 0) {
+      return res.status(400).json({ success: false, message: "Discount value must be greater than zero." });
+    }
+
+    if (discountType === "percentage" && numericDiscount > 100) {
+      return res.status(400).json({ success: false, message: "Percentage discount cannot exceed 100%." });
+    }
+
+    // Date Validation
+    const parsedExpDate = new Date(expiryDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (isNaN(parsedExpDate.getTime())) {
+      return res.status(400).json({ success: false, message: "Please enter a valid expiry date." });
+    }
+
+    if (parsedExpDate < today) {
+      return res.status(400).json({ success: false, message: "Offer campaign expiry date cannot be in the past." });
+    }
 
     const offerData = {
       name,
       discountType,
-      discountValue: parseFloat(discountValue),
+      discountValue: numericDiscount,
       targetType,
-      expiryDate: new Date(expiryDate)
+      expiryDate: parsedExpDate
     };
 
     if (targetType === "product") offerData.productTarget = productTarget;

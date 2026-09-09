@@ -44,9 +44,9 @@
 
         <!-- Filters Form -->
         <section class="bg-white p-8 rounded-2xl custom-shadow mb-8">
-            <form action="/admin/sales-report" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            <form id="reportFilterForm" action="/admin/sales-report" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Quick Presets</label>
+                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Filter Presets</label>
                     <select name="filterType" onchange="this.form.submit()" class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg bg-white">
                         <option value="" <%= !filterType ? 'selected' : '' %>>Custom Date Range</option>
                         <option value="daily" <%= filterType === 'daily' ? 'selected' : '' %>>Daily (Today)</option>
@@ -56,11 +56,11 @@
                 </div>
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Start Date</label>
-                    <input type="date" name="startDate" value="<%= startDate %>" class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
+                    <input type="date" id="startDateInput" name="startDate" value="<%= startDate %>" class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
                 </div>
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">End Date</label>
-                    <input type="date" name="endDate" value="<%= endDate %>" class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
+                    <input type="date" id="endDateInput" name="endDate" value="<%= endDate %>" class="w-full border border-gray-200 text-xs px-3 py-2 focus:outline-none focus:border-blue-500 rounded-lg">
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold tracking-widest uppercase px-5 py-3 rounded-lg transition-colors w-full">
@@ -129,5 +129,45 @@
 
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const startInput = document.getElementById('startDateInput');
+            const endInput = document.getElementById('endDateInput');
+            const form = document.getElementById('reportFilterForm');
+
+            if (startInput) startInput.setAttribute('max', todayStr);
+            if (endInput) endInput.setAttribute('max', todayStr);
+
+            if (startInput && endInput) {
+                startInput.addEventListener('change', () => {
+                    if (startInput.value) {
+                        endInput.setAttribute('min', startInput.value);
+                    }
+                });
+
+                if (startInput.value) {
+                    endInput.setAttribute('min', startInput.value);
+                }
+            }
+
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    if (startInput && endInput && startInput.value && endInput.value) {
+                        if (new Date(startInput.value) > new Date(endInput.value)) {
+                            e.preventDefault();
+                            Swal.fire({
+                                title: 'Date Range Error',
+                                text: 'Start date cannot be after End date.',
+                                icon: 'warning',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

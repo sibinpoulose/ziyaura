@@ -177,6 +177,31 @@
             const categoryTarget = document.getElementById('categoryTarget').value;
             const expiryDate = document.getElementById('expiryDate').value;
 
+            if (!name || !discountType || !discountValue || !targetType || !expiryDate) {
+                return Swal.fire({ title: 'Validation Error', text: 'Please fill all required fields.', icon: 'warning' });
+            }
+
+            const val = parseFloat(discountValue);
+            if (isNaN(val) || val <= 0) {
+                return Swal.fire({ title: 'Validation Error', text: 'Discount value must be greater than zero.', icon: 'warning' });
+            }
+
+            if (discountType === 'percentage' && val > 100) {
+                return Swal.fire({ title: 'Validation Error', text: 'Percentage discount cannot exceed 100%.', icon: 'warning' });
+            }
+
+            const selectedExpDate = new Date(expiryDate);
+            const todayZero = new Date();
+            todayZero.setHours(0, 0, 0, 0);
+
+            if (isNaN(selectedExpDate.getTime())) {
+                return Swal.fire({ title: 'Validation Error', text: 'Please select a valid expiry date.', icon: 'warning' });
+            }
+
+            if (selectedExpDate < todayZero) {
+                return Swal.fire({ title: 'Validation Error', text: 'Offer campaign expiry date cannot be in the past.', icon: 'warning' });
+            }
+
             fetch('/admin/offers/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -259,6 +284,15 @@
                 }
             });
         }
+
+        // Set minimum date picker threshold to Today
+        document.addEventListener('DOMContentLoaded', () => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('expiryDate');
+            if (dateInput) {
+                dateInput.setAttribute('min', todayStr);
+            }
+        });
     </script>
 </body>
 </html>

@@ -189,6 +189,14 @@ export const loadAdminDashboard = async (req, res) => {
     let start = startDate ? new Date(startDate) : null;
     let end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
 
+    if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      if (start > end) {
+        const temp = start;
+        start = new Date(endDate);
+        end = new Date(new Date(temp).setHours(23, 59, 59, 999));
+      }
+    }
+
     const today = new Date();
     let selectedFilter = filterType || "";
 

@@ -9,10 +9,22 @@ const getSalesReportData = async (startDate, endDate) => {
   };
 
   if (startDate && endDate) {
-    query.createdAt = {
-      $gte: new Date(startDate),
-      $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
-    };
+    let startObj = new Date(startDate);
+    let endObj = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+
+    if (!isNaN(startObj.getTime()) && !isNaN(endObj.getTime())) {
+      if (startObj > endObj) {
+        // Swap if start is after end
+        const temp = startObj;
+        startObj = new Date(endDate);
+        endObj = new Date(new Date(temp).setHours(23, 59, 59, 999));
+      }
+
+      query.createdAt = {
+        $gte: startObj,
+        $lte: endObj
+      };
+    }
   }
 
   const orders = await Order.find(query).populate("userId", "name email").sort({createdAt:-1});

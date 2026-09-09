@@ -38,6 +38,19 @@ export const createCoupon = async (req, res) => {
     }
     
 
+    // Date Validation
+    const parsedExpDate = new Date(expiryDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (isNaN(parsedExpDate.getTime())) {
+      return res.status(400).json({ success: false, message: "Please enter a valid expiry date." });
+    }
+
+    if (parsedExpDate < today) {
+      return res.status(400).json({ success: false, message: "Coupon expiry date cannot be in the past." });
+    }
+
     const existing = await Coupon.findOne({ code: code.toUpperCase() });
     if (existing) {
       return res.status(400).json({ success: false, message: "Coupon code already exists." });
