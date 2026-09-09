@@ -115,14 +115,14 @@
                     <% } else { %>
                         <% orders.forEach(o => { %>
                             <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="px-6 py-4 text-blue-600 font-mono font-bold whitespace-nowrap"><%= o.orderId %></td>
-                                <td class="px-6 py-4 text-gray-400 whitespace-nowrap"><%= o.createdAt.toLocaleDateString() %></td>
-                                <td class="px-6 py-4 text-gray-800 whitespace-nowrap"><%= o.shippingAddress.fullName %></td>
-                                <td class="px-6 py-4 text-right text-gray-900 whitespace-nowrap">₹<%= o.subtotal.toLocaleString() %></td>
-                                <td class="px-6 py-4 text-right text-rose-500 whitespace-nowrap">-₹<%= o.discount.toLocaleString() %></td>
-                                <td class="px-6 py-4 text-right text-emerald-600 font-extrabold whitespace-nowrap">₹<%= o.grandTotal.toLocaleString() %></td>
+                                <td class="px-6 py-4 text-blue-600 font-mono font-bold whitespace-nowrap"><%= o.orderId || 'N/A' %></td>
+                                <td class="px-6 py-4 text-gray-400 whitespace-nowrap"><%= o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'N/A' %></td>
+                                <td class="px-6 py-4 text-gray-800 whitespace-nowrap"><%= (o.shippingAddress && o.shippingAddress.fullName) ? o.shippingAddress.fullName : (o.userId ? o.userId.name : 'N/A') %></td>
+                                <td class="px-6 py-4 text-right text-gray-900 whitespace-nowrap">₹<%= (o.subtotal || 0).toLocaleString() %></td>
+                                <td class="px-6 py-4 text-right text-rose-500 whitespace-nowrap">-₹<%= (o.discount || 0).toLocaleString() %></td>
+                                <td class="px-6 py-4 text-right text-emerald-600 font-extrabold whitespace-nowrap">₹<%= (o.grandTotal || 0).toLocaleString() %></td>
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
-                                    <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-[9px] uppercase tracking-widest font-bold"><%= o.paymentMethod %></span>
+                                    <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-[9px] uppercase tracking-widest font-bold"><%= o.paymentMethod || 'COD' %></span>
                                 </td>
                             </tr>
                         <% }) %>
