@@ -379,6 +379,14 @@ export const editCategory = async (req, res) => {
     return res.redirect("/admin/categories");
   }
 };
+export const deletecategory=async (req,res)=>{
+  try{
+    const category=await Category.findById(req.params.id)
+    
+  }
+  catch{}
+
+}
 
 // LIST / UNLIST
 export const toggleCategoryStatus = async (req, res) => {

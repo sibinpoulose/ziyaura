@@ -86,6 +86,12 @@ export const cancelOrder = async (req, res) => {
       if (["Cancelled", "Returned", "Return Requested"].includes(item.orderStatus)) {
         return res.status(400).json({ success: false, message: "Item is already cancelled or returned." });
       }
+      const countt=await product.findById(item.productId).item.quantity;
+      if(countt<5){
+        return res.status(400).json({success:fasle,messae:"quantity must be less than 5"})
+      }
+      
+
 
       item.orderStatus = "Cancelled";
       item.cancelReason = reason || "Cancelled by user";
