@@ -130,17 +130,40 @@
                 </tbody>
             </table>
 
-            <!-- Pagination -->
+            <!-- Enhanced Pagination Bar -->
             <% if (typeof totalPages !== 'undefined') { %>
-                <div class="flex justify-center items-center gap-3 py-6 border-t border-gray-50">
-                    <% for(let i = 1; i <= totalPages; i++){ %>
-                        <a
-                            href="/admin/sales-report?page=<%= i %>&startDate=<%= startDate %>&endDate=<%= endDate %>&filterType=<%= filterType %>&search=<%= typeof search !== 'undefined' ? search : '' %>"
-                            class="px-4 py-2 rounded-lg text-xs font-bold <%= currentPage === i ? 'bg-black text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' %>"
-                        >
-                            <%= i %>
-                        </a>
-                    <% } %>
+                <div class="flex flex-col sm:flex-row justify-between items-center px-8 py-5 border-t border-gray-100 gap-4 bg-gray-50/30">
+                    <div class="text-xs text-gray-500 font-medium">
+                        Page <span class="font-bold text-gray-800"><%= currentPage %></span> of <span class="font-bold text-gray-800"><%= totalPages %></span> 
+                        <span class="text-gray-400 font-normal ml-1">(<%= overallSalesCount %> transactions found)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <% if (currentPage > 1) { %>
+                            <a href="/admin/sales-report?page=<%= currentPage - 1 %>&startDate=<%= startDate %>&endDate=<%= endDate %>&filterType=<%= filterType %>&search=<%= typeof search !== 'undefined' ? search : '' %>" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors">
+                                <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+                            </a>
+                        <% } else { %>
+                            <span class="px-3 py-1.5 rounded-lg border border-gray-100 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+                            </span>
+                        <% } %>
+
+                        <% for(let i = 1; i <= totalPages; i++){ %>
+                            <a href="/admin/sales-report?page=<%= i %>&startDate=<%= startDate %>&endDate=<%= endDate %>&filterType=<%= filterType %>&search=<%= typeof search !== 'undefined' ? search : '' %>" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors <%= currentPage === i ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' %>">
+                                <%= i %>
+                            </a>
+                        <% } %>
+
+                        <% if (currentPage < totalPages) { %>
+                            <a href="/admin/sales-report?page=<%= currentPage + 1 %>&startDate=<%= startDate %>&endDate=<%= endDate %>&filterType=<%= filterType %>&search=<%= typeof search !== 'undefined' ? search : '' %>" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors">
+                                Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                            </a>
+                        <% } else { %>
+                            <span class="px-3 py-1.5 rounded-lg border border-gray-100 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                            </span>
+                        <% } %>
+                    </div>
                 </div>
             <% } %>
         </section>
