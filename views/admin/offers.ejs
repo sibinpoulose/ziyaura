@@ -36,6 +36,24 @@
             </button>
         </header>
 
+        <!-- Search Bar Section -->
+        <section class="bg-white p-5 rounded-2xl custom-shadow mb-6">
+            <form action="/admin/offers" method="GET" class="flex gap-4 items-center">
+                <div class="relative flex-grow">
+                    <input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" placeholder="Search offer campaign by name, target or discount type..." class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-blue-500">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400 text-xs"></i>
+                </div>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-6 py-2.5 rounded-xl uppercase tracking-wider transition-colors">
+                    Search
+                </button>
+                <% if (typeof search !== 'undefined' && search) { %>
+                    <a href="/admin/offers" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs px-5 py-2.5 rounded-xl uppercase tracking-wider transition-colors">
+                        Clear
+                    </a>
+                <% } %>
+            </form>
+        </section>
+
         <!-- Create Offer Form Section (Collapsible) -->
         <section id="offerForm" class="bg-white p-8 rounded-2xl custom-shadow mb-8 hidden">
             <h4 class="text-sm font-bold text-gray-800 mb-6">Create New Offer Campaign</h4>
@@ -146,12 +164,12 @@
             </table>
 
             <!-- Pagination -->
-            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+            <% if (typeof totalPages !== 'undefined') { %>
                 <div class="flex justify-center items-center gap-3 py-6 border-t border-gray-50">
                     <% for(let i = 1; i <= totalPages; i++){ %>
                         <a
-                            href="/admin/offers?page=<%= i %>"
-                            class="px-4 py-2 rounded-lg <%= currentPage === i ? 'bg-black text-white' : 'bg-gray-200 text-gray-700' %>"
+                            href="/admin/offers?page=<%= i %>&search=<%= typeof search !== 'undefined' ? search : '' %>"
+                            class="px-4 py-2 rounded-lg text-xs font-bold <%= currentPage === i ? 'bg-black text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' %>"
                         >
                             <%= i %>
                         </a>

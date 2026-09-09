@@ -1,22 +1,32 @@
 import Coupon from "../../models/coupon.js";
 
-// List all coupons with pagination
+// List all coupons with pagination and search
 export const loadCouponsPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const limit = 5;
     const skip = (page - 1) * limit;
+    const search = req.query.search || "";
 
-    const totalCoupons = await Coupon.countDocuments();
+    const query = {};
+    if (search) {
+      query.$or = [
+        { code: { $regex: search, $options: "i" } },
+        { discountType: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    const totalCoupons = await Coupon.countDocuments(query);
     const totalPages = Math.ceil(totalCoupons / limit) || 1;
 
-    const coupons = await Coupon.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+    const coupons = await Coupon.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
     res.render("admin/coupons", {
       coupons,
       currentPage: page,
       totalPages,
-      totalCoupons
+      totalCoupons,
+      search
     });
   } catch (error) {
     console.error(error);

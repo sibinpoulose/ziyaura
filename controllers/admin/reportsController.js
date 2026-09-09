@@ -3,7 +3,7 @@ import PDFDocument from "pdfkit";
 import XLSX from "xlsx";
 
 // Fetch sales report data helper
-const getSalesReportData = async (startDate, endDate, page = null, limit = null) => {
+const getSalesReportData = async (startDate, endDate, page = null, limit = null, search = "") => {
   const query = {
     orderStatus: { $ne: "Cancelled" }
   };
@@ -25,6 +25,14 @@ const getSalesReportData = async (startDate, endDate, page = null, limit = null)
         $lte: endObj
       };
     }
+  }
+
+  if (search) {
+    query.$or = [
+      { orderId: { $regex: search, $options: "i" } },
+      { "shippingAddress.fullName": { $regex: search, $options: "i" } },
+      { paymentMethod: { $regex: search, $options: "i" } }
+    ];
   }
 
   const allMatchingOrders = await Order.find(query);
@@ -59,9 +67,9 @@ const getSalesReportData = async (startDate, endDate, page = null, limit = null)
 // Render sales report interface
 export const loadSalesReport = async (req, res) => {
   try {
-    const { startDate, endDate, filterType } = req.query;
+    const { startDate, endDate, filterType, search } = req.query;
     const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const limit = 5;
     
     let start = startDate;
     let end = endDate;
@@ -81,12 +89,13 @@ export const loadSalesReport = async (req, res) => {
       end = new Date(today.getFullYear(), 11, 31, 23, 59, 59).toISOString();
     }
 
-    const reportData = await getSalesReportData(start, end, page, limit);
+    const reportData = await getSalesReportData(start, end, page, limit, search || "");
     res.render("admin/sales-report", {
       ...reportData,
       startDate: start ? start.substring(0, 10) : "",
       endDate: end ? end.substring(0, 10) : "",
-      filterType: filterType || ""
+      filterType: filterType || "",
+      search: search || ""
     });
   } catch (error) {
     console.error(error);
@@ -97,8 +106,8 @@ export const loadSalesReport = async (req, res) => {
 // Download Excel sales ledger spreadsheet
 export const downloadExcelReport = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
-    const { orders } = await getSalesReportData(startDate, endDate);
+    const { startDate, endDate, search } = req.query;
+    const { orders } = await getSalesReportData(startDate, endDate, null, null, search || "");
 
     const rows = orders.map(o => ({
       "Order ID": o.orderId,
@@ -130,8 +139,8 @@ export const downloadExcelReport = async (req, res) => {
 // Download PDF sales summary report
 export const downloadPDFReport = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
-    const { orders, overallSalesCount, overallOrderAmount, overallDiscount } = await getSalesReportData(startDate, endDate);
+    const { startDate, endDate, search } = req.query;
+    const { orders, overallSalesCount, overallOrderAmount, overallDiscount } = await getSalesReportData(startDate, endDate, null, null, search || "");
 
     const doc = new PDFDocument({ margin: 40 });
     res.setHeader("Content-Type", "application/pdf");

@@ -6,13 +6,23 @@ import Category from "../../models/category.js";
 export const loadOffersPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const limit = 5;
     const skip = (page - 1) * limit;
+    const search = req.query.search || "";
 
-    const totalOffers = await Offer.countDocuments();
+    const query = {};
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { targetType: { $regex: search, $options: "i" } },
+        { discountType: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    const totalOffers = await Offer.countDocuments(query);
     const totalPages = Math.ceil(totalOffers / limit) || 1;
 
-    const offers = await Offer.find()
+    const offers = await Offer.find(query)
       .populate("productTarget", "name")
       .populate("categoryTarget", "name")
       .sort({ createdAt: -1 })
@@ -28,7 +38,8 @@ export const loadOffersPage = async (req, res) => {
       categories,
       currentPage: page,
       totalPages,
-      totalOffers
+      totalOffers,
+      search
     });
   } catch (error) {
     console.error(error);

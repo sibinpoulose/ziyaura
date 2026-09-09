@@ -33,10 +33,10 @@
 
             <!-- Action Downloads Bar -->
             <div class="flex gap-3">
-                <a href="/admin/sales-report/excel?startDate=<%= startDate %>&endDate=<%= endDate %>" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] tracking-widest uppercase px-4 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
+                <a href="/admin/sales-report/excel?startDate=<%= startDate %>&endDate=<%= endDate %>&search=<%= typeof search !== 'undefined' ? search : '' %>" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] tracking-widest uppercase px-4 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
                     <i class="fa-regular fa-file-excel text-sm"></i> Excel Report
                 </a>
-                <a href="/admin/sales-report/pdf?startDate=<%= startDate %>&endDate=<%= endDate %>" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] tracking-widest uppercase px-4 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
+                <a href="/admin/sales-report/pdf?startDate=<%= startDate %>&endDate=<%= endDate %>&search=<%= typeof search !== 'undefined' ? search : '' %>" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] tracking-widest uppercase px-4 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
                     <i class="fa-regular fa-file-pdf text-sm"></i> PDF Report
                 </a>
             </div>
@@ -44,7 +44,7 @@
 
         <!-- Filters Form -->
         <section class="bg-white p-8 rounded-2xl custom-shadow mb-8">
-            <form id="reportFilterForm" action="/admin/sales-report" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <form id="reportFilterForm" action="/admin/sales-report" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Filter Presets</label>
                     <select name="filterType" onchange="this.form.submit()" class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg bg-white">
@@ -53,6 +53,10 @@
                         <option value="weekly" <%= filterType === 'weekly' ? 'selected' : '' %>>Weekly (Last 7 Days)</option>
                         <option value="yearly" <%= filterType === 'yearly' ? 'selected' : '' %>>Yearly (Current Year)</option>
                     </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Search Order/Customer</label>
+                    <input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" placeholder="Order ID or Customer..." class="w-full border border-gray-200 text-xs px-3 py-2.5 focus:outline-none focus:border-blue-500 rounded-lg">
                 </div>
                 <div class="space-y-2">
                     <label class="block text-[10px] font-bold text-gray-400 tracking-wider uppercase">Start Date</label>
@@ -127,12 +131,12 @@
             </table>
 
             <!-- Pagination -->
-            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+            <% if (typeof totalPages !== 'undefined') { %>
                 <div class="flex justify-center items-center gap-3 py-6 border-t border-gray-50">
                     <% for(let i = 1; i <= totalPages; i++){ %>
                         <a
-                            href="/admin/sales-report?page=<%= i %>&startDate=<%= startDate %>&endDate=<%= endDate %>&filterType=<%= filterType %>"
-                            class="px-4 py-2 rounded-lg <%= currentPage === i ? 'bg-black text-white' : 'bg-gray-200 text-gray-700' %>"
+                            href="/admin/sales-report?page=<%= i %>&startDate=<%= startDate %>&endDate=<%= endDate %>&filterType=<%= filterType %>&search=<%= typeof search !== 'undefined' ? search : '' %>"
+                            class="px-4 py-2 rounded-lg text-xs font-bold <%= currentPage === i ? 'bg-black text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' %>"
                         >
                             <%= i %>
                         </a>
