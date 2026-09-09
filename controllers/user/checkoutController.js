@@ -113,6 +113,12 @@ export const loadCheckoutPage = async (req, res) => {
 
     const grandTotal = Math.max(0, subtotal + shippingCharge - couponDiscount);
 
+    // Fetch available active coupons for display
+    const availableCoupons = await Coupon.find({
+      isActive: true,
+      expiryDate: { $gt: new Date() }
+    }).sort({ createdAt: -1 });
+
     res.render("user/checkout", {
       checkoutItems,
       addresses,
@@ -122,7 +128,8 @@ export const loadCheckoutPage = async (req, res) => {
       discount: couponDiscount,
       couponCode,
       walletBalance: userDetails.walletBalance || 0,
-      grandTotal
+      grandTotal,
+      availableCoupons
     });
   } catch (error) {
     console.error(error);

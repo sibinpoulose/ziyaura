@@ -68,7 +68,7 @@
         <!-- Wallet -->
 
         <a href="/profile/wallet" class="
-        flex items-center gap-4 px-6 py-4
+        flex items-center gap-4 px-6 py-4 border-b
         <%= requestPath === '/profile/wallet'
           ? 'bg-red-400 text-white'
           : 'text-gray-600 hover:bg-gray-50'
@@ -80,6 +80,26 @@
             <span class="text-sm font-medium">
 
                 Wallet
+
+            </span>
+
+        </a>
+
+        <!-- My Coupons -->
+
+        <a href="/profile/coupons" class="
+        flex items-center gap-4 px-6 py-4
+        <%= requestPath === '/profile/coupons'
+          ? 'bg-red-400 text-white'
+          : 'text-gray-600 hover:bg-gray-50'
+        %>
+      ">
+
+            <i class="fa-solid fa-ticket"></i>
+
+            <span class="text-sm font-medium">
+
+                My Coupons
 
             </span>
 

@@ -1,5 +1,6 @@
 import User from "../../models/User.js";
 import Address from "../../models/address.js";
+import Coupon from "../../models/coupon.js";
 import { sendMail } from "../../utils/mail.js";
 import { generateOTP } from "../../utils/otp.js";
 import { comparePassword } from "../../utils/hash.js";
@@ -688,6 +689,27 @@ export const changePassword = async (req, res) => {
 
     req.session.error = "Failed to change password";
 
+    res.redirect("/profile");
+  }
+};
+
+// LOAD USER COUPONS PAGE
+export const loadUserCoupons = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    const coupons = await Coupon.find({
+      isActive: true,
+      expiryDate: { $gt: new Date() }
+    }).sort({ createdAt: -1 });
+
+    res.render("user/coupons", {
+      user,
+      coupons,
+      requestPath: "/profile/coupons"
+    });
+  } catch (err) {
+    console.error(err);
     res.redirect("/profile");
   }
 };

@@ -1,0 +1,131 @@
+<%- include("../partials/user/header") %>
+
+<div class="bg-gray-100 min-h-screen py-10">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6">
+        
+        <!-- Page Title Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800">
+                My Coupons & Offers
+            </h2>
+            <p class="text-sm text-gray-500 mt-1">
+                Explore active store coupons and apply them at checkout to save on your orders
+            </p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- User Sidebar -->
+            <%- include("../partials/user/sidebar") %>
+
+            <!-- Main Content Container -->
+            <div class="flex-1 space-y-6">
+                
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center justify-between border-b pb-4 mb-6">
+                        <div>
+                            <h3 class="text-xs font-bold tracking-widest uppercase text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-ticket text-black text-sm"></i> Available Coupons (<%= coupons.length %>)
+                            </h3>
+                            <p class="text-[11px] text-gray-400 font-medium mt-0.5">Copy any active code below and enter it on the checkout page.</p>
+                        </div>
+                        <a href="/cart" class="bg-black hover:bg-gray-800 text-white font-bold text-[10px] uppercase tracking-widest px-4 py-2.5 rounded transition-colors">
+                            Go To Shopping Bag
+                        </a>
+                    </div>
+
+                    <% if (coupons.length === 0) { %>
+                        <div class="text-center py-16">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                                <i class="fa-solid fa-tags text-2xl"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider">No Active Coupons Right Now</h4>
+                            <p class="text-xs text-gray-400 mt-1">Check back soon for seasonal promotional discount vouchers!</p>
+                        </div>
+                    <% } else { %>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <% coupons.forEach(c => { %>
+                                <div class="border-2 border-dashed border-gray-200 hover:border-black rounded-lg p-5 bg-gradient-to-br from-white to-gray-50/50 transition-all flex flex-col justify-between space-y-4 relative overflow-hidden group">
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="bg-black text-white px-3 py-1 rounded text-sm font-bold tracking-wider font-mono">
+                                                <%= c.code %>
+                                            </div>
+                                            <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                                <%= c.discountType === 'percentage' ? c.discountValue + '% OFF' : '₹' + c.discountValue + ' OFF' %>
+                                            </span>
+                                        </div>
+
+                                        <div class="space-y-1 text-xs text-gray-600">
+                                            <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                                                <span class="text-gray-400">Minimum Purchase:</span>
+                                                <span class="font-bold text-gray-900">₹<%= c.minPurchase.toLocaleString() %></span>
+                                            </div>
+                                            <% if (c.maxDiscount) { %>
+                                                <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                                                    <span class="text-gray-400">Max Discount Cap:</span>
+                                                    <span class="font-bold text-gray-900">₹<%= c.maxDiscount.toLocaleString() %></span>
+                                                </div>
+                                            <% } %>
+                                            <div class="flex justify-between items-center py-1">
+                                                <span class="text-gray-400">Valid Until:</span>
+                                                <span class="font-bold text-rose-500"><%= new Date(c.expiryDate).toLocaleDateString() %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+                                        <span class="text-[10px] text-gray-400 font-medium italic">Apply at checkout step</span>
+                                        <button 
+                                            onclick="copyCouponCode('<%= c.code %>')" 
+                                            class="bg-gray-100 hover:bg-black hover:text-white text-gray-800 font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded transition-all flex items-center gap-1.5"
+                                        >
+                                            <i class="fa-regular fa-copy"></i> Copy Code
+                                        </button>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } %>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function copyCouponCode(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            Swal.fire({
+                title: 'Coupon Copied!',
+                text: 'Coupon code "' + code + '" copied to clipboard.',
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true
+            });
+        }).catch(err => {
+            console.error(err);
+            const input = document.createElement('input');
+            input.value = code;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            Swal.fire({
+                title: 'Coupon Copied!',
+                text: 'Coupon code "' + code + '" copied to clipboard.',
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2500
+            });
+        });
+    }
+</script>
+
+<%- include("../partials/user/footer") %>

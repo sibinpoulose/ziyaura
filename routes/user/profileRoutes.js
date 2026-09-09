@@ -18,12 +18,14 @@ import {
   logout,
   changePassword,
   loadProfileOtpPage,
-  resendProfileOtp
+  resendProfileOtp,
+  loadUserCoupons
 } from "../../controllers/user/profileController.js";
 
 const router = express.Router();
 
 router.get("/", protect, loadProfile);
+router.get("/coupons", protect, loadUserCoupons);
 router.get("/profile-otp", protect, loadProfileOtpPage);
 router.get("/address", protect, loadAddressPage);
 router.get("/address/add", protect, loadAddAddressPage);

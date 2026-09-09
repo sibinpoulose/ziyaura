@@ -223,6 +223,54 @@
         </div>
         <p id="coupon-message" class="text-[9px] font-bold uppercase tracking-wider mb-2"></p>
 
+        <!-- Available Coupons List -->
+        <% if (typeof availableCoupons !== 'undefined' && availableCoupons.length > 0) { %>
+          <div class="mt-2 border-t border-gray-100 pt-3">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                <i class="fa-solid fa-ticket text-black mr-1"></i> Available Coupons (<%= availableCoupons.length %>)
+              </span>
+            </div>
+            <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
+              <% availableCoupons.forEach(c => { 
+                const meetsMin = subtotal >= c.minPurchase;
+                const isCurrent = couponCode && couponCode.toUpperCase() === c.code.toUpperCase();
+              %>
+                <div class="p-2.5 rounded border border-dashed <%= isCurrent ? 'border-emerald-500 bg-emerald-50/50' : (meetsMin ? 'border-gray-300 bg-gray-50/50' : 'border-gray-200 bg-gray-50/20 opacity-75') %> flex justify-between items-center">
+                  <div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-bold text-xs tracking-wider uppercase text-black font-mono"><%= c.code %></span>
+                      <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-black text-white uppercase">
+                        <%= c.discountType === 'percentage' ? c.discountValue + '% OFF' : '₹' + c.discountValue + ' OFF' %>
+                      </span>
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-0.5 font-medium">
+                      Min. Spend: ₹<%= c.minPurchase %>
+                      <% if (c.maxDiscount) { %> | Cap: ₹<%= c.maxDiscount %><% } %>
+                    </p>
+                    <% if (!meetsMin) { %>
+                      <p class="text-[9px] text-amber-600 font-semibold mt-0.5">Add ₹<%= (c.minPurchase - subtotal).toLocaleString() %> more to qualify</p>
+                    <% } %>
+                  </div>
+                  <div>
+                    <% if (!couponCode && meetsMin) { %>
+                      <button 
+                        type="button" 
+                        onclick="applySpecificCoupon('<%= c.code %>')" 
+                        class="bg-black hover:bg-gray-800 text-white font-bold text-[9px] px-3 py-1.5 uppercase tracking-wider rounded-sm transition-colors"
+                      >
+                        Apply
+                      </button>
+                    <% } else if (isCurrent) { %>
+                      <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">APPLIED</span>
+                    <% } %>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
         <!-- Prices breakdown -->
         <div class="space-y-4 text-xs border-t border-gray-100 pt-4">
           <div class="flex justify-between items-center">
@@ -759,6 +807,14 @@
       msg.className = 'text-[9px] font-bold text-rose-500';
       msg.innerText = 'FAILED TO APPLY COUPON';
     });
+  }
+
+  function applySpecificCoupon(code) {
+    const input = document.getElementById('coupon-input');
+    if (input) {
+      input.value = code;
+      applyCouponCode();
+    }
   }
 
   function removeCouponCode() {
