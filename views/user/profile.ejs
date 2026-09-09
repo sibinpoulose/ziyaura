@@ -339,7 +339,7 @@
               </div>
 
 
-              <form id="changePasswordForm" action="/profile/change-password" method="POST" class="p-8 space-y-6">
+              <form id="changePasswordForm" action="/profile/change-password" method="POST" novalidate class="p-8 space-y-6">
 
                 <div>
 
@@ -351,8 +351,8 @@
 
                   <div class="relative">
 
-                    <input type="password" id="currentPassword" name="currentPassword" required
-                      class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+                    <input type="password" id="currentPassword" name="currentPassword"
+                      class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors">
 
                     <button type="button" onclick="togglePassword('currentPassword', 'currentPasswordIcon')"
                       class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
@@ -362,6 +362,7 @@
                     </button>
 
                   </div>
+                  <span id="currentPasswordError" class="text-red-500 text-xs hidden mt-1.5 block"></span>
 
                 </div>
 
@@ -376,8 +377,8 @@
 
                   <div class="relative">
 
-                    <input type="password" id="newPassword" name="newPassword" required
-                      class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+                    <input type="password" id="newPassword" name="newPassword"
+                      class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors">
 
                     <button type="button" onclick="togglePassword('newPassword', 'newPasswordIcon')"
                       class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
@@ -387,6 +388,7 @@
                     </button>
 
                   </div>
+                  <span id="newPasswordError" class="text-red-500 text-xs hidden mt-1.5 block"></span>
 
                   <div id="passwordRules" class="text-xs space-y-1 mt-3">
 
@@ -435,8 +437,8 @@
 
                   <div class="relative">
 
-                    <input type="password" id="confirmPassword" name="confirmPassword" required
-                      class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm">
+                    <input type="password" id="confirmPassword" name="confirmPassword"
+                      class="w-full border border-gray-300 rounded-md p-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors">
 
                     <button type="button" onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')"
                       class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
@@ -446,11 +448,12 @@
                     </button>
 
                   </div>
+                  <span id="confirmPasswordError" class="text-red-500 text-xs hidden mt-1.5 block"></span>
 
                 </div>
 
 
-                <p id="passwordError" class="text-red-500 text-sm"></p>
+                <p id="passwordError" class="text-red-500 text-sm hidden"></p>
 
 
                 <div class="pt-4">
@@ -1057,119 +1060,108 @@
       });
 
 
+      function showFieldError(inputId, errorId, message) {
+        const input = document.getElementById(inputId);
+        const errorEl = document.getElementById(errorId);
+        if (errorEl) {
+          errorEl.innerText = message;
+          errorEl.classList.remove("hidden");
+        }
+        if (input) {
+          input.classList.add("border-red-500");
+          input.classList.remove("border-gray-300");
+        }
+      }
+
+      function clearFieldError(inputId, errorId) {
+        const input = document.getElementById(inputId);
+        const errorEl = document.getElementById(errorId);
+        if (errorEl) {
+          errorEl.innerText = "";
+          errorEl.classList.add("hidden");
+        }
+        if (input) {
+          input.classList.remove("border-red-500");
+          input.classList.add("border-gray-300");
+        }
+      }
+
+      function clearAllPasswordErrors() {
+        clearFieldError("currentPassword", "currentPasswordError");
+        clearFieldError("newPassword", "newPasswordError");
+        clearFieldError("confirmPassword", "confirmPasswordError");
+        if (passwordError) {
+          passwordError.innerText = "";
+          passwordError.classList.add("hidden");
+        }
+      }
+
+      // Real-time input listeners
+      currentPasswordInput.addEventListener("input", () => {
+        if (currentPasswordInput.value.trim()) {
+          clearFieldError("currentPassword", "currentPasswordError");
+        }
+      });
+
+      newPasswordInput.addEventListener("input", () => {
+        if (newPasswordInput.value) {
+          clearFieldError("newPassword", "newPasswordError");
+        }
+        if (confirmPasswordInput.value && confirmPasswordInput.value === newPasswordInput.value) {
+          clearFieldError("confirmPassword", "confirmPasswordError");
+        }
+      });
+
+      confirmPasswordInput.addEventListener("input", () => {
+        if (confirmPasswordInput.value && confirmPasswordInput.value === newPasswordInput.value) {
+          clearFieldError("confirmPassword", "confirmPasswordError");
+        }
+      });
+
       changePasswordForm.addEventListener("submit", (e) => {
-
-        passwordError.innerText = "";
-
+        clearAllPasswordErrors();
+        let isValid = true;
+        let firstErrorMessage = "";
 
         if (!currentPasswordInput.value.trim()) {
-
-          e.preventDefault();
-
-          const msg = "Current password is required";
-
-          passwordError.innerText = msg;
-          showToast(msg, "error", "high");
-
-          return;
-
+          isValid = false;
+          firstErrorMessage = "Current password is required";
+          showFieldError("currentPassword", "currentPasswordError", firstErrorMessage);
         }
 
-
-        if (newPasswordInput.value.length < 8) {
-
-          e.preventDefault();
-
-          const msg = "Password must be at least 8 characters";
-
-          passwordError.innerText = msg;
-          showToast(msg, "error", "high");
-
-          return;
-
+        const newPass = newPasswordInput.value;
+        if (!newPass) {
+          if (!firstErrorMessage) firstErrorMessage = "New password is required";
+          showFieldError("newPassword", "newPasswordError", "New password is required");
+          isValid = false;
+        } else if (newPass.length < 8) {
+          if (!firstErrorMessage) firstErrorMessage = "Password must be at least 8 characters";
+          showFieldError("newPassword", "newPasswordError", "Password must be at least 8 characters");
+          isValid = false;
+        } else if (!/[A-Z]/.test(newPass) || !/[a-z]/.test(newPass) || !/[0-9]/.test(newPass) || !/[^A-Za-z0-9]/.test(newPass)) {
+          if (!firstErrorMessage) firstErrorMessage = "Password does not meet all complexity requirements";
+          showFieldError("newPassword", "newPasswordError", "Must include upper, lower, number & special character");
+          isValid = false;
         }
 
-
-        if (!/[A-Z]/.test(newPasswordInput.value)) {
-
-          e.preventDefault();
-
-          const msg = "Password needs one uppercase letter";
-
-          passwordError.innerText = msg;
-          showToast(msg, "error", "high");
-
-          return;
-
+        if (!confirmPasswordInput.value) {
+          if (!firstErrorMessage) firstErrorMessage = "Please confirm your new password";
+          showFieldError("confirmPassword", "confirmPasswordError", "Please confirm new password");
+          isValid = false;
+        } else if (newPass !== confirmPasswordInput.value) {
+          if (!firstErrorMessage) firstErrorMessage = "Passwords do not match";
+          showFieldError("confirmPassword", "confirmPasswordError", "Passwords do not match");
+          isValid = false;
         }
 
-
-        if (!/[a-z]/.test(newPasswordInput.value)) {
-
+        if (!isValid) {
           e.preventDefault();
-
-          const msg = "Password needs one lowercase letter";
-
-          passwordError.innerText = msg;
-          showToast(msg, "error", "high");
-
+          showToast(firstErrorMessage, "error", "high");
           return;
-
         }
 
-
-        if (!/[0-9]/.test(newPasswordInput.value)) {
-
-          e.preventDefault();
-
-          const msg = "Password needs one number";
-
-          passwordError.innerText = msg;
-          showToast(msg, "error", "high");
-
-          return;
-
-        }
-
-
-        if (!/[^A-Za-z0-9]/.test(newPasswordInput.value)) {
-
-          e.preventDefault();
-
-          const msg = "Password needs one special character";
-
-          passwordError.innerText = msg;
-          showToast(msg, "error", "high");
-
-          return;
-
-        }
-
-
-        if (
-
-          newPasswordInput.value !==
-          confirmPasswordInput.value
-
-        ) {
-
-          e.preventDefault();
-
-          const msg = "Passwords do not match";
-
-          passwordError.innerText = msg;
-          showToast(msg, "error", "high");
-
-          return;
-
-        }
-
-
-        changePasswordButton.innerText =
-          "Updating...";
-
+        changePasswordButton.innerText = "Updating...";
         changePasswordButton.disabled = true;
-
       });
 
       const profileAccountForm = document.getElementById("profileAccountForm");
