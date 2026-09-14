@@ -19,7 +19,7 @@ import { isAdminGuest } from "../../middlewares/guestMiddleware.js";
 // Coupon Admin Imports
 import { loadCouponsPage, createCoupon, updateCoupon, deleteCoupon } from "../../controllers/admin/adminCouponController.js";
 // Offer Admin Imports
-import { loadOffersPage, createOffer, deleteOffer } from "../../controllers/admin/adminOfferController.js";
+import { loadOffersPage, createOffer, updateOffer, deleteOffer } from "../../controllers/admin/adminOfferController.js";
 // Reports Imports
 import { loadSalesReport, downloadExcelReport, downloadPDFReport } from "../../controllers/admin/reportsController.js";
 
@@ -101,6 +101,7 @@ router.delete("/coupons/delete/:id", adminProtect, deleteCoupon);
 // Offers Admin Routes
 router.get("/offers", adminProtect, loadOffersPage);
 router.post("/offers/create", adminProtect, createOffer);
+router.post("/offers/update", adminProtect, updateOffer);
 router.delete("/offers/delete/:id", adminProtect, deleteOffer);
 
 // Sales Reports Routes

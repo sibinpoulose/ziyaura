@@ -93,7 +93,15 @@ export const getOffersPageData = async ({ page = 1, limit = 5, search = "" }) =>
   };
 };
 
-export const validateOfferInput = ({ name, discountType, discountValue, targetType, expiryDate }) => {
+export const validateOfferInput = ({
+  name,
+  discountType,
+  discountValue,
+  targetType,
+  productTarget,
+  categoryTarget,
+  expiryDate
+}) => {
   if (!name || !discountType || !discountValue || !targetType || !expiryDate) {
     return "Please fill all required fields.";
   }
@@ -105,6 +113,14 @@ export const validateOfferInput = ({ name, discountType, discountValue, targetTy
 
   if (discountType === "percentage" && numericDiscount > 100) {
     return "Percentage discount cannot exceed 100%.";
+  }
+
+  if (targetType === "product" && !productTarget) {
+    return "Please select a target product.";
+  }
+
+  if (targetType === "category" && !categoryTarget) {
+    return "Please select a target category.";
   }
 
   const parsedExpDate = new Date(expiryDate);
@@ -122,21 +138,60 @@ export const validateOfferInput = ({ name, discountType, discountValue, targetTy
   return null;
 };
 
+export const checkDuplicateOfferName = async (name, excludeId = null) => {
+  const query = {
+    name: { $regex: `^${name.trim()}$`, $options: "i" }
+  };
+  if (excludeId) {
+    query._id = { $ne: excludeId };
+  }
+  return await Offer.findOne(query);
+};
+
 export const createOfferService = async (data) => {
+  const existing = await checkDuplicateOfferName(data.name);
+  if (existing) {
+    return { error: "An offer campaign with this name already exists." };
+  }
+
   const offerData = {
-    name: data.name,
+    name: data.name.trim(),
     discountType: data.discountType,
     discountValue: parseFloat(data.discountValue),
     targetType: data.targetType,
-    expiryDate: new Date(data.expiryDate)
+    expiryDate: new Date(data.expiryDate),
+    productTarget: data.targetType === "product" ? data.productTarget : null,
+    categoryTarget: data.targetType === "category" ? data.categoryTarget : null
   };
-
-  if (data.targetType === "product") offerData.productTarget = data.productTarget;
-  if (data.targetType === "category") offerData.categoryTarget = data.categoryTarget;
 
   const offer = await Offer.create(offerData);
   await recalculatePrices();
-  return offer;
+  return { success: true, offer };
+};
+
+export const updateOfferService = async (offerId, data) => {
+  const offer = await Offer.findById(offerId);
+  if (!offer) {
+    return { error: "Offer campaign not found.", notFound: true };
+  }
+
+  const duplicate = await checkDuplicateOfferName(data.name, offerId);
+  if (duplicate) {
+    return { error: "An offer campaign with this name already exists." };
+  }
+
+  offer.name = data.name.trim();
+  offer.discountType = data.discountType;
+  offer.discountValue = parseFloat(data.discountValue);
+  offer.targetType = data.targetType;
+  offer.productTarget = data.targetType === "product" ? data.productTarget : null;
+  offer.categoryTarget = data.targetType === "category" ? data.categoryTarget : null;
+  offer.expiryDate = new Date(data.expiryDate);
+
+  await offer.save();
+  await recalculatePrices();
+
+  return { success: true, offer };
 };
 
 export const deleteOfferService = async (offerId) => {

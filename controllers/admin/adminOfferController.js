@@ -2,6 +2,7 @@ import {
   getOffersPageData,
   validateOfferInput,
   createOfferService,
+  updateOfferService,
   deleteOfferService,
   recalculatePrices
 } from "../../services/admin/offerService.js";
@@ -26,12 +27,7 @@ export const createOffer = async (req, res) => {
   try {
     const { name, discountType, discountValue, targetType, productTarget, categoryTarget, expiryDate } = req.body;
 
-    const validationError = validateOfferInput({ name, discountType, discountValue, targetType, expiryDate });
-    if (validationError) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validationError });
-    }
-
-    await createOfferService({
+    const validationError = validateOfferInput({
       name,
       discountType,
       discountValue,
@@ -41,10 +37,72 @@ export const createOffer = async (req, res) => {
       expiryDate
     });
 
+    if (validationError) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validationError });
+    }
+
+    const result = await createOfferService({
+      name,
+      discountType,
+      discountValue,
+      targetType,
+      productTarget,
+      categoryTarget,
+      expiryDate
+    });
+
+    if (result.error) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: result.error });
+    }
+
     res.status(HTTP_STATUS.OK).json({ success: true, message: "Offer created successfully." });
   } catch (error) {
     console.error("Create offer error:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to create offer." });
+  }
+};
+
+export const updateOffer = async (req, res) => {
+  try {
+    const { offerId, name, discountType, discountValue, targetType, productTarget, categoryTarget, expiryDate } = req.body;
+
+    if (!offerId) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Offer ID is required." });
+    }
+
+    const validationError = validateOfferInput({
+      name,
+      discountType,
+      discountValue,
+      targetType,
+      productTarget,
+      categoryTarget,
+      expiryDate
+    });
+
+    if (validationError) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validationError });
+    }
+
+    const result = await updateOfferService(offerId, {
+      name,
+      discountType,
+      discountValue,
+      targetType,
+      productTarget,
+      categoryTarget,
+      expiryDate
+    });
+
+    if (result.error) {
+      const status = result.notFound ? HTTP_STATUS.NOT_FOUND : HTTP_STATUS.BAD_REQUEST;
+      return res.status(status).json({ success: false, message: result.error });
+    }
+
+    res.status(HTTP_STATUS.OK).json({ success: true, message: "Offer updated successfully." });
+  } catch (error) {
+    console.error("Update offer error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to update offer." });
   }
 };
 
