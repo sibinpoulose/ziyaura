@@ -7,22 +7,21 @@ import { sendMail } from "../../utils/mail.js";
 export const registerUser = async (data) => {
   const { name, email, password, phone } = data;
 
-  const existing = await User.findOne({ email });
+  const existingUser = await User.findOne({ email });
 
-  if (existing) {
-    if (existing.isVerified) {
+  if (existingUser) {
+    if (existingUser.isVerified) {
       throw new Error("User already exists with this email address. Please login.");
     }
 
-    // Account exists but is unverified: update user details and allow re-registration
     const hashedPassword = await hashPassword(password);
-    existing.name = name;
-    existing.password = hashedPassword;
-    if (phone) existing.phone = phone;
+    existingUser.name = name;
+    existingUser.password = hashedPassword;
+    if (phone) existingUser.phone = phone;
 
-    await existing.save();
+    await existingUser.save();
 
-    const userObj = existing.toObject();
+    const userObj = existingUser.toObject();
     delete userObj.password;
     return userObj;
   }
@@ -69,7 +68,6 @@ export const loginUser = async (data) => {
 
 export const sendOtp = async (email) => {
   const user = await User.findOne({ email });
-
   if (!user) throw new Error("User not found");
 
   const otp = generateOTP();
@@ -80,32 +78,22 @@ export const sendOtp = async (email) => {
 
   await user.save();
 
-  console.log("========== OTP ==========");
-  console.log(otp);
-  console.log("=========================");
-
   try {
     await sendMail(email, otp);
   } catch (err) {
-    console.log(err);
+    console.error("Failed to send OTP email:", err);
   }
 
   return { message: "OTP sent" };
 };
+
 export const verifyOtp = async (email, otp) => {
   const user = await User.findOne({ email });
+  if (!user) throw new Error("User not found");
 
-  if (!user) {
-    throw new Error("User not found");
-  }
+  if (user.otp !== otp) throw new Error("Invalid OTP");
 
-  if (user.otp !== otp) {
-    throw new Error("Invalid OTP");
-  }
-
-  if (user.otpExpiry < Date.now()) {
-    throw new Error("OTP expired");
-  }
+  if (user.otpExpiry < Date.now()) throw new Error("OTP expired");
 
   user.isVerified = true;
   user.otp = null;
@@ -115,19 +103,21 @@ export const verifyOtp = async (email, otp) => {
   return user;
 };
 
+export const getOtpTimeRemaining = async (email) => {
+  if (!email) return 0;
+  const user = await User.findOne({ email }).select("otpExpiry");
+  if (!user || !user.otpExpiry) return 0;
+  return Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000));
+};
+
 export const resetPassword = async (email, newPassword) => {
   const user = await User.findOne({ email });
-
   if (!user) throw new Error("User not found");
 
-  if (!user.isVerified) {
-    throw new Error("OTP not verified");
-  }
+  if (!user.isVerified) throw new Error("OTP not verified");
 
-  const hashed = await hashPassword(newPassword);
-
-  user.password = hashed;
-
+  const hashedPassword = await hashPassword(newPassword);
+  user.password = hashedPassword;
   await user.save();
 
   return { message: "Password updated" };

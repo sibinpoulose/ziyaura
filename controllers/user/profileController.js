@@ -1,84 +1,59 @@
-import User from "../../models/User.js";
-import Address from "../../models/address.js";
-import Coupon from "../../models/coupon.js";
+import {
+  getUserProfileData,
+  updateUserBasicInfo,
+  checkExistingEmail,
+  updateUserEmailAndInfo,
+  updateUserProfileImage,
+  changeUserPasswordService,
+  getActiveUserCouponsData
+} from "../../services/user/profileService.js";
+import {
+  getUserAddresses,
+  getAddressById,
+  createAddress,
+  updateAddressById,
+  deleteAddressById,
+  clearDefaultAddresses
+} from "../../services/user/addressService.js";
 import { sendMail } from "../../utils/mail.js";
 import { generateOTP } from "../../utils/otp.js";
-import { comparePassword } from "../../utils/hash.js";
 
-import { hashPassword } from "../../utils/hash.js";
-
-// LOAD PROFILE PAGE
 export const loadProfile = async (req, res) => {
   try {
-    // Clear pending email update session variables on fresh load
     req.session.profileOtp = null;
     req.session.profileOtpExpiry = null;
     req.session.pendingProfile = null;
 
-    const user = await User.findById(req.user._id);
-
-    if (!user.referralCode) {
-      user.referralCode = "REF-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-      await user.save();
-    }
-
-    const addresses = await Address.find({
-      userId: req.user._id
-    });
-
-    const referralUrl = `${req.protocol}://${req.get("host")}/signup?ref=${user.referralCode}`;
-
-    res.render("user/profile", {
-      user,
-      addresses,
-      referralUrl,
-      scrollToPassword: false
-    });
+    const data = await getUserProfileData(req.user._id, req.protocol, req.get("host"));
+    res.render("user/profile", data);
   } catch (err) {
-    console.log(err);
+    console.error("Load Profile Error:", err);
     res.redirect("/");
   }
 };
 
-// UPDATE ACCOUNT
 export const updateAccount = async (req, res) => {
   try {
     const { name, email, phone } = req.body;
 
-    // Validate Name (3-50 chars, only letters and spaces)
     const nameTrimmed = name ? name.trim() : "";
     if (nameTrimmed.length < 3 || nameTrimmed.length > 50 || !/^[A-Za-z\s]+$/.test(nameTrimmed)) {
       req.session.error = "Name must be 3-50 characters and contain only letters and spaces";
       return res.redirect("/profile");
     }
 
-    // Validate Phone (10 digits)
     if (!phone || !/^[0-9]{10}$/.test(phone)) {
       req.session.error = "Phone number must be exactly 10 digits";
       return res.redirect("/profile");
     }
 
-    const user = await User.findById(req.user._id);
-
-    // EMAIL NOT CHANGED
-    if (email === user.email) {
-      await User.findByIdAndUpdate(
-        req.user._id,
-        {
-          name: nameTrimmed,
-          phone
-        }
-      );
-
+    if (email === req.user.email) {
+      await updateUserBasicInfo(req.user._id, { name: nameTrimmed, phone });
       req.session.success = "Account updated successfully";
       return res.redirect("/profile");
     }
 
-    // EMAIL CHANGED - START 2-STEP OTP (Step 1: Verify Old Email)
-    const existingUser = await User.findOne({
-      email
-    });
-
+    const existingUser = await checkExistingEmail(email);
     if (existingUser) {
       req.session.error = "Email is already in use by another account";
       return res.redirect("/profile");
@@ -95,21 +70,17 @@ export const updateAccount = async (req, res) => {
       phone
     };
 
-    // Send OTP to CURRENT email first for security verification
-    await sendMail(user.email, otp);
+    await sendMail(req.user.email, otp);
 
-    console.log("PROFILE OTP (OLD EMAIL):", otp);
-
-    req.session.success = `Security Check: OTP sent to your current email address (${user.email})`;
+    req.session.success = `Security Check: OTP sent to your current email address (${req.user.email})`;
     res.redirect("/profile/profile-otp");
   } catch (err) {
-    console.log(err);
+    console.error("Update Account Error:", err);
     req.session.error = "Failed to update account: " + err.message;
     res.redirect("/profile");
   }
 };
 
-// VERIFY PROFILE OTP
 export const verifyProfileOtp = async (req, res) => {
   try {
     const { otp } = req.body;
@@ -146,7 +117,6 @@ export const verifyProfileOtp = async (req, res) => {
       });
     }
 
-    // IF STEP 1 (OLD EMAIL) WAS VERIFIED -> MOVE TO STEP 2 (NEW EMAIL)
     if (stage === "verify_old") {
       const newOtp = generateOTP();
       req.session.profileOtp = newOtp;
@@ -154,21 +124,16 @@ export const verifyProfileOtp = async (req, res) => {
       req.session.emailChangeStage = "verify_new";
 
       await sendMail(pendingProfile.email, newOtp);
-      console.log("PROFILE OTP (NEW EMAIL):", newOtp);
 
       req.session.success = `Current email verified! Now enter the OTP sent to your new email (${pendingProfile.email})`;
       return res.redirect("/profile/profile-otp");
     }
 
-    // STEP 2 (NEW EMAIL) VERIFIED -> UPDATE USER FINALLY
-    await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        name: pendingProfile.name,
-        email: pendingProfile.email,
-        phone: pendingProfile.phone
-      }
-    );
+    await updateUserEmailAndInfo(req.user._id, {
+      name: pendingProfile.name,
+      email: pendingProfile.email,
+      phone: pendingProfile.phone
+    });
 
     req.session.profileOtp = null;
     req.session.profileOtpExpiry = null;
@@ -178,13 +143,12 @@ export const verifyProfileOtp = async (req, res) => {
     req.session.success = "Email address and profile updated successfully";
     res.redirect("/profile");
   } catch (err) {
-    console.log(err);
+    console.error("Verify Profile OTP Error:", err);
     req.session.error = "Failed to verify OTP: " + err.message;
     res.redirect("/profile");
   }
 };
 
-// LOAD PROFILE OTP PAGE
 export const loadProfileOtpPage = async (req, res) => {
   try {
     if (!req.session.pendingProfile) {
@@ -201,12 +165,11 @@ export const loadProfileOtpPage = async (req, res) => {
       timeLeft
     });
   } catch (err) {
-    console.log(err);
+    console.error("Load Profile OTP Page Error:", err);
     res.redirect("/profile");
   }
 };
 
-// RESEND PROFILE OTP
 export const resendProfileOtp = async (req, res) => {
   try {
     if (!req.session.pendingProfile) {
@@ -222,55 +185,34 @@ export const resendProfileOtp = async (req, res) => {
     req.session.profileOtpExpiry = Date.now() + 5 * 60 * 1000;
 
     await sendMail(email, otp);
-    console.log("RESENT PROFILE OTP:", otp);
 
     req.session.success = `OTP resent successfully to ${email}`;
     res.redirect("/profile/profile-otp");
   } catch (err) {
-    console.log(err);
+    console.error("Resend Profile OTP Error:", err);
     req.session.error = "Failed to resend OTP";
     res.redirect("/profile/profile-otp");
   }
 };
 
-// LOAD ADDRESS PAGE
 export const loadAddressPage = async (req, res) => {
   try {
-    const addresses = await Address.find({
-      userId: req.user._id
-    });
-
-    res.render("user/address", {
-      addresses
-    });
+    const addresses = await getUserAddresses(req.user._id);
+    res.render("user/address", { addresses });
   } catch (err) {
-    console.log(err);
-
+    console.error("Load Address Page Error:", err);
     res.redirect("/profile");
   }
 };
 
-// LOAD ADD ADDRESS PAGE
 export const loadAddAddressPage = (req, res) => {
   res.render("user/add-address");
 };
 
-// ADD ADDRESS
 export const addAddress = async (req, res) => {
   try {
-    const {
-      fullName,
-      phone,
-      address,
-      landmark,
-      city,
-      state,
-      pincode,
-      addressType,
-      isDefault
-    } = req.body;
+    const { fullName, phone, address, landmark, city, state, pincode, addressType, isDefault } = req.body;
 
-    // Backend Validation
     const nameTrimmed = fullName ? fullName.trim() : "";
     if (!nameTrimmed || nameTrimmed.length < 3 || nameTrimmed.length > 50) {
       req.session.error = "Full Name must be between 3 and 50 characters";
@@ -297,47 +239,25 @@ export const addAddress = async (req, res) => {
       return res.redirect(req.headers.referer || "/profile/address");
     }
 
-    // CHECK PINCODE (gracefully check)
     try {
-      const response = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
-      );
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
       const data = await response.json();
       if (data && data[0] && data[0].Status === "Error") {
         req.session.error = "Invalid pincode or location not found";
         return res.redirect(req.headers.referer || "/profile/address");
       }
     } catch (apiError) {
-      console.log("Pincode verification service offline, skipping check:", apiError.message);
+      console.warn("Pincode verification offline, skipping:", apiError.message);
     }
-
-    // REMOVE OLD DEFAULT
 
     if (isDefault === "on") {
-      await Address.updateMany(
-        {
-          userId: req.user._id
-        },
-
-        {
-          $set: {
-            isDefault: false
-          }
-        }
-      );
+      await clearDefaultAddresses(req.user._id);
     }
 
-    // CHECK EXISTING ADDRESS
+    const existingAddresses = await getUserAddresses(req.user._id);
 
-    const existingAddress = await Address.findOne({
-      userId: req.user._id
-    });
-
-    // CREATE ADDRESS
-
-    await Address.create({
+    await createAddress({
       userId: req.user._id,
-
       fullName: fullName.trim(),
       phone,
       address: address.trim(),
@@ -345,15 +265,12 @@ export const addAddress = async (req, res) => {
       city: city.trim(),
       state: state.trim(),
       pincode,
-
       addressType,
-
-      isDefault: existingAddress ? isDefault === "on" : true
+      isDefault: existingAddresses.length > 0 ? isDefault === "on" : true
     });
 
     req.session.success = "Address added successfully";
 
-    // Redirect to referer page so it reloads the source view correctly
     let redirectTo = "/profile";
     if (req.headers.referer) {
       if (req.headers.referer.includes("checkout")) {
@@ -365,25 +282,17 @@ export const addAddress = async (req, res) => {
 
     res.redirect(redirectTo);
   } catch (err) {
-    console.log(err);
-
+    console.error("Add Address Error:", err);
     req.session.error = "Failed to add address: " + err.message;
-
     res.redirect(req.headers.referer || "/profile/address");
   }
 };
 
-// LOAD EDIT ADDRESS PAGE
 export const loadEditAddressPage = async (req, res) => {
   try {
-    const address = await Address.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
-
+    const address = await getAddressById(req.params.id, req.user._id);
     if (!address) {
       req.session.error = "Address not found";
-
       return res.redirect("/profile/address");
     }
 
@@ -392,32 +301,17 @@ export const loadEditAddressPage = async (req, res) => {
       from: req.query.from || ""
     });
   } catch (err) {
-    console.log(err);
-
+    console.error("Load Edit Address Error:", err);
     req.session.error = "Failed to load address";
-
     res.redirect("/profile/address");
   }
 };
 
-// UPDATE ADDRESS
 export const updateAddress = async (req, res) => {
   try {
-    const {
-      fullName,
-      phone,
-      address,
-      landmark,
-      city,
-      state,
-      pincode,
-      addressType,
-      isDefault
-    } = req.body;
-
+    const { fullName, phone, address, landmark, city, state, pincode, addressType, isDefault } = req.body;
     const fromParam = req.query.from ? `?from=${req.query.from}` : "";
 
-    // Backend Validation
     const nameTrimmed = fullName ? fullName.trim() : "";
     if (!nameTrimmed || nameTrimmed.length < 3 || nameTrimmed.length > 50) {
       req.session.error = "Full Name must be between 3 and 50 characters";
@@ -444,58 +338,32 @@ export const updateAddress = async (req, res) => {
       return res.redirect(`/profile/address/edit/${req.params.id}${fromParam}`);
     }
 
-    // CHECK PINCODE (gracefully check)
     try {
-      const response = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
-      );
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
       const data = await response.json();
       if (data && data[0] && data[0].Status === "Error") {
         req.session.error = "Invalid pincode or location not found";
         return res.redirect(`/profile/address/edit/${req.params.id}`);
       }
     } catch (apiError) {
-      console.log("Pincode verification service offline, skipping check:", apiError.message);
+      console.warn("Pincode verification offline, skipping:", apiError.message);
     }
-
-    // REMOVE PREVIOUS DEFAULT
 
     if (isDefault === "on") {
-      await Address.updateMany(
-        {
-          userId: req.user._id
-        },
-
-        {
-          $set: {
-            isDefault: false
-          }
-        }
-      );
+      await clearDefaultAddresses(req.user._id);
     }
 
-    // UPDATE ADDRESS
-
-    await Address.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        userId: req.user._id
-      },
-
-      {
-        fullName: fullName.trim(),
-        phone,
-        address: address.trim(),
-        landmark: landmark ? landmark.trim() : "",
-        city: city.trim(),
-        state: state.trim(),
-        pincode,
-
-        addressType,
-
-        isDefault: isDefault === "on"
-      }
-    );
+    await updateAddressById(req.params.id, req.user._id, {
+      fullName: fullName.trim(),
+      phone,
+      address: address.trim(),
+      landmark: landmark ? landmark.trim() : "",
+      city: city.trim(),
+      state: state.trim(),
+      pincode,
+      addressType,
+      isDefault: isDefault === "on"
+    });
 
     req.session.success = "Address updated successfully";
 
@@ -505,8 +373,7 @@ export const updateAddress = async (req, res) => {
     }
     res.redirect(redirectTo);
   } catch (err) {
-    console.log(err);
-
+    console.error("Update Address Error:", err);
     req.session.error = "Failed to update address: " + err.message;
 
     let redirectTo = "/profile/address";
@@ -517,33 +384,10 @@ export const updateAddress = async (req, res) => {
   }
 };
 
-// SET DEFAULT ADDRESS
 export const setDefaultAddress = async (req, res) => {
   try {
-    // REMOVE OLD DEFAULT
-
-    await Address.updateMany(
-      {
-        userId: req.user._id
-      },
-
-      {
-        isDefault: false
-      }
-    );
-
-    // SET NEW DEFAULT
-
-    await Address.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        userId: req.user._id
-      },
-
-      {
-        isDefault: true
-      }
-    );
+    await clearDefaultAddresses(req.user._id);
+    await updateAddressById(req.params.id, req.user._id, { isDefault: true });
 
     req.session.success = "Default address updated";
 
@@ -553,8 +397,7 @@ export const setDefaultAddress = async (req, res) => {
     }
     res.redirect(redirectTo);
   } catch (err) {
-    console.log(err);
-
+    console.error("Set Default Address Error:", err);
     req.session.error = "Failed to update default address";
 
     let redirectTo = "/profile/address";
@@ -564,14 +407,10 @@ export const setDefaultAddress = async (req, res) => {
     res.redirect(redirectTo);
   }
 };
-// DELETE ADDRESS
+
 export const deleteAddress = async (req, res) => {
   try {
-    await Address.findOneAndDelete({
-      _id: req.params.id,
-      userId: req.user._id
-    });
-
+    await deleteAddressById(req.params.id, req.user._id);
     req.session.success = "Address deleted successfully";
 
     let redirectTo = "/profile/address";
@@ -580,8 +419,7 @@ export const deleteAddress = async (req, res) => {
     }
     res.redirect(redirectTo);
   } catch (err) {
-    console.log(err);
-
+    console.error("Delete Address Error:", err);
     req.session.error = "Failed to delete address";
 
     let redirectTo = "/profile/address";
@@ -591,125 +429,63 @@ export const deleteAddress = async (req, res) => {
     res.redirect(redirectTo);
   }
 };
-// UPDATE PROFILE IMAGE
 
 export const updateProfileImage = async (req, res) => {
   try {
-    // CHECK FILE EXISTS
-
     if (!req.file) {
       req.session.error = "Only image files are allowed";
-
       return res.redirect("/profile");
     }
 
-    // SAVE CLOUDINARY IMAGE URL
-
-    await User.findByIdAndUpdate(
-      req.user._id,
-
-      {
-        profileImage: req.file.path
-      }
-    );
-
+    await updateUserProfileImage(req.user._id, req.file.path);
     req.session.success = "Profile image updated successfully";
-
     res.redirect("/profile");
   } catch (err) {
-    console.log(err);
-
+    console.error("Update Profile Image Error:", err);
     req.session.error = "Failed to upload image";
-
     res.redirect("/profile");
   }
 };
+
 export const logout = (req, res) => {
   res.clearCookie("userToken");
-
   req.session.success = "Logged out successfully";
-
   res.redirect("/login");
 };
-// CHANGE PASSWORD
 
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
-    // GET USER
-
-    const user = await User.findById(req.user._id);
-
-    // CHECK EMPTY
-
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      req.session.error = "All fields are required";
-
-      return res.redirect("/profile");
-    }
-
-    // CHECK PASSWORD MATCH
-
-    if (newPassword !== confirmPassword) {
-      req.session.error = "Passwords do not match";
-
-      return res.redirect("/profile");
-    }
-
-    // CHECK CURRENT PASSWORD
-
-    const isMatch = await comparePassword(
+    const result = await changeUserPasswordService(req.user._id, {
       currentPassword,
+      newPassword,
+      confirmPassword
+    });
 
-      user.password
-    );
-
-    if (!isMatch) {
-      req.session.error = "Current password is incorrect";
-
+    if (result.error) {
+      req.session.error = result.error;
       return res.redirect("/profile");
     }
-
-    // HASH NEW PASSWORD
-
-    const hashedPassword = await hashPassword(newPassword);
-
-    // UPDATE PASSWORD
-
-    user.password = hashedPassword;
-
-    await user.save();
 
     req.session.success = "Password changed successfully";
-
     return res.redirect("/profile");
   } catch (err) {
-    console.log(err);
-
+    console.error("Change Password Error:", err);
     req.session.error = "Failed to change password";
-
     res.redirect("/profile");
   }
 };
 
-// LOAD USER COUPONS PAGE
 export const loadUserCoupons = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-
-    const coupons = await Coupon.find({
-      isActive: true,
-      expiryDate: { $gt: new Date() }
-    }).sort({ createdAt: -1 });
-
+    const data = await getActiveUserCouponsData(req.user._id);
     res.render("user/coupons", {
-      user,
-      coupons,
+      ...data,
       requestPath: "/profile/coupons"
     });
   } catch (err) {
-    console.error(err);
+    console.error("Load User Coupons Error:", err);
     res.redirect("/profile");
   }
 };

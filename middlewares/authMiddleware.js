@@ -1,24 +1,25 @@
 import jwt from "jsonwebtoken";
-
 import User from "../models/User.js";
+import { HTTP_STATUS } from "../utils/constants.js";
 
 export const protect = async (req, res, next) => {
   try {
     const token = req.cookies.userToken;
 
     if (!token) {
-      if (req.xhr || req.headers.accept?.includes("application/json") || req.headers["content-type"]?.includes("application/json")) {
-        return res.status(401).json({ success: false, message: "Please login to proceed.", redirect: "/login" });
+      if (
+        req.xhr ||
+        req.headers.accept?.includes("application/json") ||
+        req.headers["content-type"]?.includes("application/json")
+      ) {
+        return res
+          .status(HTTP_STATUS.UNAUTHORIZED)
+          .json({ success: false, message: "Please login to proceed.", redirect: "/login" });
       }
       return res.redirect("/login");
     }
 
-    const decoded = jwt.verify(
-      token,
-
-      process.env.JWT_SECRET
-    );
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
@@ -27,19 +28,17 @@ export const protect = async (req, res, next) => {
 
     if (user.isBlocked) {
       res.clearCookie("userToken");
-
       req.session.error = "Your account has been blocked";
-
       return res.redirect("/login");
     }
 
     req.user = user;
-
     next();
   } catch (err) {
     return res.redirect("/login");
   }
 };
+
 export const adminProtect = async (req, res, next) => {
   try {
     const token = req.cookies.adminToken;
@@ -48,12 +47,7 @@ export const adminProtect = async (req, res, next) => {
       return res.redirect("/admin/login");
     }
 
-    const decoded = jwt.verify(
-      token,
-
-      process.env.JWT_SECRET
-    );
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
@@ -66,7 +60,6 @@ export const adminProtect = async (req, res, next) => {
 
     req.admin = user;
     req.user = user;
-
     next();
   } catch (err) {
     return res.redirect("/admin/login");

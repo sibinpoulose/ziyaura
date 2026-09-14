@@ -4,12 +4,12 @@ import {
   loginUser,
   sendOtp,
   verifyOtp,
-  resetPassword as resetPasswordService
+  resetPassword as resetPasswordService,
+  getOtpTimeRemaining
 } from "../../services/user/authService.js";
-
-import User from "../../models/User.js";
-import Category from "../../models/category.js";
-import { handleReferralSignup } from "./referralController.js";
+import { handleReferralSignup, validateReferralCode } from "../../services/user/referralService.js";
+import { getFeaturedCategoriesForHome } from "../../services/user/homeService.js";
+import { COOKIE_MAX_AGE, HTTP_STATUS } from "../../utils/constants.js";
 
 export const signup = async (req, res) => {
   try {
@@ -20,27 +20,31 @@ export const signup = async (req, res) => {
       return res.redirect("/signup");
     }
 
-    // Name Validation (3-50 chars, only letters and spaces)
     const nameTrimmed = name.trim();
     if (nameTrimmed.length < 3 || nameTrimmed.length > 50 || !/^[A-Za-z\s]+$/.test(nameTrimmed)) {
       req.session.error = "Username must be 3-50 characters and contain only letters and spaces";
       return res.redirect("/signup");
     }
 
-    // Email Validation
     const emailRegex = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/i;
     if (!email.match(emailRegex)) {
       req.session.error = "Please enter a valid email address";
       return res.redirect("/signup");
     }
 
-    // Password strength check (8+ chars, upper, lower, number, special char)
     if (password.length < 8) {
       req.session.error = "Password must be at least 8 characters long";
       return res.redirect("/signup");
     }
-    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
-      req.session.error = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character";
+
+    if (
+      !/[A-Z]/.test(password) ||
+      !/[a-z]/.test(password) ||
+      !/[0-9]/.test(password) ||
+      !/[^A-Za-z0-9]/.test(password)
+    ) {
+      req.session.error =
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character";
       return res.redirect("/signup");
     }
 
@@ -49,15 +53,13 @@ export const signup = async (req, res) => {
       return res.redirect("/signup");
     }
 
-    // Phone Validation (10 digits if provided)
     if (phone && !/^[0-9]{10}$/.test(phone)) {
       req.session.error = "Phone number must be exactly 10 digits";
       return res.redirect("/signup");
     }
 
-    // Check referral code if provided
     if (referralCode && referralCode.trim()) {
-      const referrer = await User.findOne({ referralCode: referralCode.trim() });
+      const referrer = await validateReferralCode(referralCode.trim());
       if (!referrer) {
         req.session.error = "Invalid referral code provided";
         return res.redirect("/signup");
@@ -92,11 +94,11 @@ export const login = async (req, res) => {
       return res.redirect("/login");
     }
 
-    const data = await loginUser(req.body);
+    const { token } = await loginUser(req.body);
 
-    res.cookie("userToken", data.token, {
+    res.cookie("userToken", token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: COOKIE_MAX_AGE
     });
 
     req.session.success = "Login successful";
@@ -125,12 +127,11 @@ export const sendOTP = async (req, res) => {
     await sendOtp(email);
 
     req.session.success = "OTP sent successfully";
-    const user = await User.findOne({ email });
-    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 300;
+    const timeLeft = await getOtpTimeRemaining(email);
 
     res.render("user/otp", {
       email,
-      timeLeft
+      timeLeft: timeLeft || 300
     });
   } catch (err) {
     req.session.error = err.message;
@@ -143,7 +144,6 @@ export const verifyOTP = async (req, res) => {
     const { email, otp } = req.body;
     const user = await verifyOtp(email, otp);
 
-    // Process referral reward if referralCode was used at signup
     if (req.session.referralCode) {
       await handleReferralSignup(user._id, req.session.referralCode);
       delete req.session.referralCode;
@@ -152,8 +152,7 @@ export const verifyOTP = async (req, res) => {
     req.session.success = "Account verified successfully";
     res.redirect("/login");
   } catch (err) {
-    const user = await User.findOne({ email: req.body.email });
-    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 0;
+    const timeLeft = await getOtpTimeRemaining(req.body.email);
 
     res.render("user/otp", {
       email: req.body.email,
@@ -174,16 +173,14 @@ export const logout = (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-
     await sendOtp(email);
 
     req.session.success = "OTP sent to your email";
-    const user = await User.findOne({ email });
-    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 300;
+    const timeLeft = await getOtpTimeRemaining(email);
 
     res.render("user/verify-otp", {
       email,
-      timeLeft
+      timeLeft: timeLeft || 300
     });
   } catch (err) {
     req.session.error = err.message;
@@ -200,10 +197,9 @@ export const verifyOtpReset = async (req, res) => {
       email
     });
   } catch (err) {
-    const user = await User.findOne({ email });
-    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 0;
+    const timeLeft = await getOtpTimeRemaining(email);
 
-    return res.status(400).render("user/verify-otp", {
+    return res.status(HTTP_STATUS.BAD_REQUEST).render("user/verify-otp", {
       email,
       error: err.message,
       timeLeft
@@ -255,8 +251,7 @@ export const loadOtpPage = async (req, res) => {
     if (!email) {
       return res.redirect("/signup");
     }
-    const user = await User.findOne({ email });
-    const timeLeft = user && user.otpExpiry ? Math.max(0, Math.floor((user.otpExpiry.getTime() - Date.now()) / 1000)) : 0;
+    const timeLeft = await getOtpTimeRemaining(email);
     res.render("user/otp", {
       email,
       timeLeft
@@ -269,18 +264,7 @@ export const loadOtpPage = async (req, res) => {
 
 export const loadHomePage = async (req, res) => {
   try {
-    let featuredCategories = await Category.find({ isListed: true, isFeatured: true }).limit(4);
-    
-    if (featuredCategories.length < 4) {
-      const remaining = 4 - featuredCategories.length;
-      const featuredIds = featuredCategories.map(c => c._id);
-      const extraCategories = await Category.find({
-        isListed: true,
-        _id: { $not: { $in: featuredIds } }
-      }).limit(remaining);
-      featuredCategories = [...featuredCategories, ...extraCategories];
-    }
-    
+    const featuredCategories = await getFeaturedCategoriesForHome();
     res.render("user/home", { featuredCategories });
   } catch (error) {
     console.error("Load Home Page Categories Error:", error);
@@ -293,7 +277,7 @@ export const loadForgotPasswordPage = (req, res) => {
 };
 
 export const handleGoogleCallback = (req, res, next) => {
-  passport.authenticate("google", { session: false }, (err, data, info) => {
+  passport.authenticate("google", { session: false }, (err, data) => {
     if (err) {
       console.error("Google Auth Error:", err);
       req.session.error = "Google authentication failed: " + (err.message || "Unknown error");
@@ -307,7 +291,7 @@ export const handleGoogleCallback = (req, res, next) => {
 
     res.cookie("userToken", data.token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: COOKIE_MAX_AGE
     });
 
     req.session.success = "Login successful";
