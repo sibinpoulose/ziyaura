@@ -3,150 +3,132 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | ZIYAURA</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen text-gray-900 antialiased">
 
   <div class="min-h-screen flex flex-col md:flex-row">
 
-    <div class="hidden md:flex md:w-1/2 bg-gray-900 flex-col justify-center px-12 lg:px-20 relative text-white">
-
-      <h1 class="absolute top-8 left-12 lg:left-20 text-xl font-semibold tracking-widest text-white">
-
-        ZIYAURA
-
-      </h1>
-
-      <div class="mt-16">
-
-        <p class="text-2xl text-gray-200 mb-6 font-light">
-
-          Welcome back. Continue your journey.
-
-        </p>
-
-        <img src="/images/signupimage.webp" class="rounded-lg shadow-md w-full max-w-md object-cover">
-
+    <!-- Desktop Left Luxury Hero Panel -->
+    <div class="hidden md:flex md:w-1/2 bg-[#0d0d0d] flex-col justify-between p-12 lg:p-16 relative text-white">
+      <div>
+        <a href="/" class="inline-block focus:outline-none">
+          <span class="text-xl font-bold tracking-[0.25em] text-white">ZIYAURA</span>
+        </a>
       </div>
 
+      <div class="my-auto max-w-md">
+        <p class="text-[11px] uppercase tracking-[0.25em] text-gray-400 mb-3 font-light">Timeless Luxury</p>
+        <h2 class="text-3xl lg:text-4xl font-light tracking-tight text-white mb-6 leading-tight">
+          Welcome back.<br>
+          <span class="font-normal text-gray-300">Continue your journey.</span>
+        </h2>
+        <div class="overflow-hidden rounded-2xl shadow-2xl border border-white/10 bg-gray-900">
+          <img src="/images/signupimage.webp" alt="Ziyaura Collection" class="w-full h-64 lg:h-72 object-cover transition-transform duration-700 hover:scale-105">
+        </div>
+      </div>
+
+      <div class="text-xs text-gray-500 font-light">
+        &copy; <%= new Date().getFullYear() %> ZIYAURA. All rights reserved.
+      </div>
     </div>
 
-    <div class="w-full md:w-1/2 flex justify-center items-center py-10 px-4 sm:px-6">
+    <!-- Right Column / Mobile Centered Card -->
+    <div class="w-full md:w-1/2 flex flex-col justify-center items-center py-10 px-4 sm:px-8 lg:px-12 bg-gray-50/70 md:bg-white min-h-screen">
 
-      <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md w-full max-w-md my-auto">
+      <div class="w-full max-w-md bg-white p-6 sm:p-10 rounded-2xl shadow-sm sm:shadow-md md:shadow-none border border-gray-100 md:border-0 my-auto">
 
-        <h2 class="text-xl font-semibold mb-4 text-center">
+        <!-- Mobile Brand Logo (visible on mobile only) -->
+        <div class="text-center mb-8 md:hidden">
+          <a href="/" class="inline-block focus:outline-none">
+            <h1 class="text-2xl font-bold tracking-[0.25em] text-gray-900">ZIYAURA</h1>
+          </a>
+          <p class="text-[11px] uppercase tracking-widest text-gray-400 mt-1 font-light">Luxury Fragrances</p>
+        </div>
 
-          Login to your account
-
-        </h2>
+        <div class="text-center md:text-left mb-6">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+            Login to your account
+          </h2>
+          <p class="text-xs text-gray-500 mt-1">
+            Enter your credentials to access your bag and orders
+          </p>
+        </div>
 
         <form id="loginForm" action="/login" method="POST" class="space-y-4">
 
-          <input id="email" type="email" name="email" placeholder="Email"
-            class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
-
-          <div class="relative">
-
-            <input type="password" id="password" name="password" placeholder="Password" required
-              class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 pr-12">
-
-            <button type="button" onclick="togglePassword()"
-              class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-
-              <i id="passwordIcon" class="fa-solid fa-eye"></i>
-
-            </button>
-
+          <div>
+            <label for="email" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Email Address</label>
+            <input id="email" type="email" name="email" placeholder="name@example.com"
+              class="w-full px-4 py-3 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors" required>
           </div>
 
-          <div class="text-right text-sm">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="password" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider">Password</label>
+              <a href="/forgot-password" class="text-xs text-gray-500 hover:text-black hover:underline transition-colors">
+                Forgot password?
+              </a>
+            </div>
+            <div class="relative">
+              <input type="password" id="password" name="password" placeholder="••••••••" required
+                class="w-full px-4 py-3 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black pr-11 transition-colors">
 
-            <a href="/forgot-password" class="text-gray-500 hover:text-blue-600">
-
-              Forgot password?
-
-            </a>
-
+              <button type="button" onclick="togglePassword()" aria-label="Toggle password visibility"
+                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1">
+                <i id="passwordIcon" class="fa-solid fa-eye text-sm"></i>
+              </button>
+            </div>
           </div>
 
-          <p id="loginError" class="text-red-500 text-sm text-center"></p>
+          <p id="loginError" class="text-rose-500 text-xs text-center min-h-[1.25rem] font-medium"></p>
 
-
-
-                  <button id="loginButton" class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded">
-
-                    Login
-
-                  </button>
+          <button id="loginButton" type="submit"
+            class="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-all duration-200 shadow-sm active:scale-[0.99] cursor-pointer">
+            Login
+          </button>
 
         </form>
 
-        <div class="flex items-center my-5">
-
-          <div class="flex-grow h-px bg-gray-300"></div>
-
-          <span class="px-3 text-sm text-gray-500">
-
+        <div class="flex items-center my-6">
+          <div class="flex-grow h-px bg-gray-200"></div>
+          <span class="px-3 text-xs uppercase tracking-wider text-gray-400 font-medium">
             or continue with
-
           </span>
-
-          <div class="flex-grow h-px bg-gray-300"></div>
-
+          <div class="flex-grow h-px bg-gray-200"></div>
         </div>
 
         <div class="space-y-3">
-
           <a href="/auth/google"
-            class="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded hover:bg-gray-100">
-
-            <img src="/images/googlelogo.jpg" class="w-7 h-7">
-
-            <span class="text-sm font-medium text-gray-700">
-
+            class="w-full flex items-center justify-center gap-3 border border-gray-200 py-3 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 group">
+            <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.02 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+            </svg>
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-700 group-hover:text-black transition-colors">
               Continue with Google
-
             </span>
-
           </a>
-
-          <!-- <a
-            href="/auth/facebook"
-            class="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded hover:bg-gray-100"
-          >
-
-            <img
-              src="/images/facebooklogo.png"
-              class="w-5 h-5"
-            >
-
-            <span class="text-sm font-medium text-gray-700">
-
-              Continue with Facebook
-
-            </span>
-
-          </a> -->
-
         </div>
 
-        <p class="text-center mt-4 text-sm">
-
+        <p class="text-center mt-6 text-xs text-gray-600">
           Don't have an account?
-
-          <a href="/signup" class="text-blue-600">
-
+          <a href="/signup" class="text-black font-semibold hover:underline ml-1">
             Sign up
-
           </a>
-
         </p>
 
       </div>
@@ -156,106 +138,53 @@
   </div>
 
   <script>
-
     function togglePassword() {
-
-      const input =
-        document.getElementById("password");
-
-      const icon =
-        document.getElementById("passwordIcon");
-
+      const input = document.getElementById("password");
+      const icon = document.getElementById("passwordIcon");
 
       if (input.type === "password") {
-
         input.type = "text";
-
         icon.classList.remove("fa-eye");
-
         icon.classList.add("fa-eye-slash");
-
-      }
-
-      else {
-
+      } else {
         input.type = "password";
-
         icon.classList.remove("fa-eye-slash");
-
         icon.classList.add("fa-eye");
-
       }
-
     }
 
-
-    const loginForm =
-      document.getElementById("loginForm");
-
-    const emailInput =
-      document.getElementById("email");
-
-    const passwordInput =
-      document.getElementById("password");
-
-    const loginError =
-      document.getElementById("loginError");
-
-    const loginButton =
-      document.getElementById("loginButton");
-
+    const loginForm = document.getElementById("loginForm");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const loginError = document.getElementById("loginError");
+    const loginButton = document.getElementById("loginButton");
 
     loginForm.addEventListener("submit", (e) => {
-
       loginError.innerText = "";
 
-
       if (!emailInput.value.trim()) {
-
         e.preventDefault();
-
-        loginError.innerText =
-          "Email is required";
-
+        loginError.innerText = "Email is required";
         return;
-
       }
 
-
-      const emailPattern =
-        /^[^ ]+@[^ ]+\.[a-z]{2,3}$/i;
-
+      const emailPattern = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/i;
       if (!emailInput.value.match(emailPattern)) {
-
         e.preventDefault();
-
-        loginError.innerText =
-          "Enter valid email";
-
+        loginError.innerText = "Enter valid email";
         return;
-
       }
-
 
       if (!passwordInput.value.trim()) {
-
         e.preventDefault();
-
-        loginError.innerText =
-          "Password is required";
-
+        loginError.innerText = "Password is required";
         return;
-
       }
 
-
-      loginButton.innerText =
-        "Logging in...";
-
+      loginButton.innerText = "LOGGING IN...";
       loginButton.disabled = true;
-
+      loginButton.classList.add("opacity-75", "cursor-not-allowed");
     });
-
   </script>
 
   <%- include("../partials/toast") %>

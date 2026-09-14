@@ -3,128 +3,172 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Signup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account | ZIYAURA</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen text-gray-900 antialiased py-8 sm:py-12 px-4 sm:px-6">
 
-  <div class="min-h-screen flex flex-col md:flex-row">
+  <div class="max-w-md w-full mx-auto">
 
-    <div class="hidden md:flex md:w-1/2 bg-gray-900 flex-col justify-center px-12 lg:px-20 relative text-white">
-      <h1 class="absolute top-8 left-12 lg:left-20 text-xl font-semibold tracking-widest text-white">
-        ZIYAURA
-      </h1>
+    <!-- Luxury Card -->
+    <div class="bg-white p-6 sm:p-10 rounded-2xl shadow-sm sm:shadow-md border border-gray-100">
 
-      <div class="mt-16">
-        <p class="text-2xl text-gray-200 mb-6 font-light">
-          Explore the things you love.
-        </p>
-        <img src="/images/signupimage.webp" class="rounded-lg shadow-md w-full max-w-md object-cover">
-      </div>
-    </div>
-
-    <div class="w-full md:w-1/2 flex justify-center items-center py-10 px-4 sm:px-6 overflow-y-auto">
-      <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md w-full max-w-md my-auto">
-
-        <h2 class="text-xl font-semibold mb-4 text-center">
+      <!-- Header & Brand Logo -->
+      <div class="text-center mb-8">
+        <a href="/" class="inline-block focus:outline-none">
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-[0.25em] text-gray-900">ZIYAURA</h1>
+        </a>
+        <p class="text-[11px] uppercase tracking-widest text-gray-400 mt-1.5 font-light">Luxury Fragrances</p>
+        
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight mt-6">
           Create Account
         </h2>
-
-        <form id="signupForm" action="/signup" method="POST" class="space-y-4">
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Username</label>
-            <input id="name" name="name" placeholder="Enter username"
-              class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors">
-            <span id="nameError" class="text-red-500 text-xs hidden mt-1 block"></span>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Email Address</label>
-            <input id="email" type="email" name="email" placeholder="Enter email address"
-              class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors">
-            <span id="emailError" class="text-red-500 text-xs hidden mt-1 block"></span>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Password</label>
-            <div class="relative">
-              <input type="password" id="password" name="password" placeholder="Enter password" 
-                class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 pr-12 transition-colors">
-
-              <button type="button" onclick="togglePassword('password', 'passwordIcon')"
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                <i id="passwordIcon" class="fa-solid fa-eye"></i>
-              </button>
-            </div>
-            <span id="passwordError" class="text-red-500 text-xs hidden mt-1 block"></span>
-
-            <div id="passwordRules" class="text-xs space-y-1 mt-2">
-              <p id="lengthRule" class="text-gray-500">✗ Minimum 8 characters</p>
-              <p id="uppercaseRule" class="text-gray-500">✗ One uppercase letter</p>
-              <p id="lowercaseRule" class="text-gray-500">✗ One lowercase letter</p>
-              <p id="numberRule" class="text-gray-500">✗ One number</p>
-              <p id="specialRule" class="text-gray-500">✗ One special character</p>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Confirm Password</label>
-            <div class="relative">
-              <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" 
-                class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 pr-12 transition-colors">
-
-              <button type="button" onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')"
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                <i id="confirmPasswordIcon" class="fa-solid fa-eye"></i>
-              </button>
-            </div>
-            <span id="confirmPasswordError" class="text-red-500 text-xs hidden mt-1 block"></span>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number (Optional)</label>
-            <input id="phone" name="phone" placeholder="10-digit phone number"
-              class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors">
-            <span id="phoneError" class="text-red-500 text-xs hidden mt-1 block"></span>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Referral Code (Optional)</label>
-            <input id="referralCode" name="referralCode" value="<%= typeof referralCode !== 'undefined' ? referralCode : '' %>" placeholder="e.g. REF-ABC123"
-              class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors">
-            <span id="referralCodeError" class="text-red-500 text-xs hidden mt-1 block"></span>
-          </div>
-
-          <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded font-medium transition-colors">
-            Sign Up
-          </button>
-        </form>
-
-        <div class="flex items-center my-5">
-          <div class="flex-grow h-px bg-gray-300"></div>
-          <span class="px-3 text-sm text-gray-500">or continue with</span>
-          <div class="flex-grow h-px bg-gray-300"></div>
-        </div>
-
-        <div class="space-y-3">
-          <a href="/auth/google"
-            class="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded hover:bg-gray-100">
-            <img src="/images/googlelogo.jpg" class="w-7 h-7">
-            <span class="text-sm font-medium text-gray-700">Continue with Google</span>
-          </a>
-        </div>
-
-        <p class="text-center mt-4 text-sm">
-          Already have an account?
-          <a href="/login" class="text-blue-600 font-semibold">Login</a>
+        <p class="text-xs text-gray-500 mt-1">
+          Join Ziyaura to explore bespoke perfumes & offers
         </p>
-
       </div>
+
+      <form id="signupForm" action="/signup" method="POST" class="space-y-4">
+
+        <!-- Username -->
+        <div>
+          <label for="name" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Username</label>
+          <input id="name" name="name" type="text" placeholder="Enter username"
+            class="w-full px-4 py-3 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors">
+          <span id="nameError" class="text-rose-500 text-xs hidden mt-1 block font-medium"></span>
+        </div>
+
+        <!-- Email Address -->
+        <div>
+          <label for="email" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Email Address</label>
+          <input id="email" type="email" name="email" placeholder="name@example.com"
+            class="w-full px-4 py-3 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors">
+          <span id="emailError" class="text-rose-500 text-xs hidden mt-1 block font-medium"></span>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Password</label>
+          <div class="relative">
+            <input type="password" id="password" name="password" placeholder="Create password" 
+              class="w-full px-4 py-3 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black pr-11 transition-colors">
+
+            <button type="button" onclick="togglePassword('password', 'passwordIcon')" aria-label="Toggle password visibility"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1">
+              <i id="passwordIcon" class="fa-solid fa-eye text-sm"></i>
+            </button>
+          </div>
+          <span id="passwordError" class="text-rose-500 text-xs hidden mt-1 block font-medium"></span>
+
+          <!-- Password Requirements Checklist -->
+          <div id="passwordRules" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-2.5 p-3 bg-gray-50 rounded-lg border border-gray-100 text-[11px]">
+            <p id="lengthRule" class="text-gray-400 flex items-center gap-1.5 transition-colors">
+              <i class="fa-solid fa-circle-xmark text-[10px]"></i> <span>Min. 8 characters</span>
+            </p>
+            <p id="uppercaseRule" class="text-gray-400 flex items-center gap-1.5 transition-colors">
+              <i class="fa-solid fa-circle-xmark text-[10px]"></i> <span>One uppercase</span>
+            </p>
+            <p id="lowercaseRule" class="text-gray-400 flex items-center gap-1.5 transition-colors">
+              <i class="fa-solid fa-circle-xmark text-[10px]"></i> <span>One lowercase</span>
+            </p>
+            <p id="numberRule" class="text-gray-400 flex items-center gap-1.5 transition-colors">
+              <i class="fa-solid fa-circle-xmark text-[10px]"></i> <span>One number</span>
+            </p>
+            <p id="specialRule" class="text-gray-400 flex items-center gap-1.5 sm:col-span-2 transition-colors">
+              <i class="fa-solid fa-circle-xmark text-[10px]"></i> <span>One special character</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div>
+          <label for="confirmPassword" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Confirm Password</label>
+          <div class="relative">
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter password" 
+              class="w-full px-4 py-3 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black pr-11 transition-colors">
+
+            <button type="button" onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')" aria-label="Toggle password visibility"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1">
+              <i id="confirmPasswordIcon" class="fa-solid fa-eye text-sm"></i>
+            </button>
+          </div>
+          <span id="confirmPasswordError" class="text-rose-500 text-xs hidden mt-1 block font-medium"></span>
+        </div>
+
+        <!-- Phone Number -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="phone" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone Number</label>
+            <span class="text-[11px] text-gray-400 font-normal">Optional</span>
+          </div>
+          <input id="phone" name="phone" type="tel" placeholder="10-digit mobile number"
+            class="w-full px-4 py-3 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors">
+          <span id="phoneError" class="text-rose-500 text-xs hidden mt-1 block font-medium"></span>
+        </div>
+
+        <!-- Referral Code -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="referralCode" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider">Referral Code</label>
+            <span class="text-[11px] text-gray-400 font-normal">Optional</span>
+          </div>
+          <input id="referralCode" name="referralCode" value="<%= typeof referralCode !== 'undefined' ? referralCode : '' %>" placeholder="e.g. REF-ABC123"
+            class="w-full px-4 py-3 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors">
+          <span id="referralCodeError" class="text-rose-500 text-xs hidden mt-1 block font-medium"></span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="signupSubmitButton"
+          class="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-all duration-200 shadow-sm active:scale-[0.99] cursor-pointer mt-2">
+          Create Account
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="flex items-center my-6">
+        <div class="flex-grow h-px bg-gray-200"></div>
+        <span class="px-3 text-xs uppercase tracking-wider text-gray-400 font-medium">
+          or continue with
+        </span>
+        <div class="flex-grow h-px bg-gray-200"></div>
+      </div>
+
+      <!-- Google OAuth -->
+      <div class="space-y-3">
+        <a href="/auth/google"
+          class="w-full flex items-center justify-center gap-3 border border-gray-200 py-3 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 group">
+          <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.02 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
+          <span class="text-xs font-semibold uppercase tracking-wider text-gray-700 group-hover:text-black transition-colors">
+            Continue with Google
+          </span>
+        </a>
+      </div>
+
+      <!-- Login Link -->
+      <p class="text-center mt-6 text-xs text-gray-600">
+        Already have an account?
+        <a href="/login" class="text-black font-semibold hover:underline ml-1">
+          Login
+        </a>
+      </p>
+
     </div>
+
   </div>
 
   <script>
@@ -149,48 +193,23 @@
     const numberRule = document.getElementById("numberRule");
     const specialRule = document.getElementById("specialRule");
 
+    function setRuleStatus(el, isValid, text) {
+      if (isValid) {
+        el.className = "text-emerald-600 flex items-center gap-1.5 transition-colors font-medium";
+        el.innerHTML = `<i class="fa-solid fa-circle-check text-[10px] text-emerald-500"></i> <span>${text}</span>`;
+      } else {
+        el.className = "text-gray-400 flex items-center gap-1.5 transition-colors";
+        el.innerHTML = `<i class="fa-solid fa-circle-xmark text-[10px]"></i> <span>${text}</span>`;
+      }
+    }
+
     passwordInput.addEventListener("keyup", () => {
       const password = passwordInput.value;
-      
-      if (password.length >= 8) {
-        lengthRule.innerHTML = "✓ Minimum 8 characters";
-        lengthRule.className = "text-green-600";
-      } else {
-        lengthRule.innerHTML = "✗ Minimum 8 characters";
-        lengthRule.className = "text-gray-500";
-      }
-
-      if (/[A-Z]/.test(password)) {
-        uppercaseRule.innerHTML = "✓ One uppercase letter";
-        uppercaseRule.className = "text-green-600";
-      } else {
-        uppercaseRule.innerHTML = "✗ One uppercase letter";
-        uppercaseRule.className = "text-gray-500";
-      }
-
-      if (/[a-z]/.test(password)) {
-        lowercaseRule.innerHTML = "✓ One lowercase letter";
-        lowercaseRule.className = "text-green-600";
-      } else {
-        lowercaseRule.innerHTML = "✗ One lowercase letter";
-        lowercaseRule.className = "text-gray-500";
-      }
-
-      if (/[0-9]/.test(password)) {
-        numberRule.innerHTML = "✓ One number";
-        numberRule.className = "text-green-600";
-      } else {
-        numberRule.innerHTML = "✗ One number";
-        numberRule.className = "text-gray-500";
-      }
-
-      if (/[^A-Za-z0-9]/.test(password)) {
-        specialRule.innerHTML = "✓ One special character";
-        specialRule.className = "text-green-600";
-      } else {
-        specialRule.innerHTML = "✗ One special character";
-        specialRule.className = "text-gray-500";
-      }
+      setRuleStatus(lengthRule, password.length >= 8, "Min. 8 characters");
+      setRuleStatus(uppercaseRule, /[A-Z]/.test(password), "One uppercase");
+      setRuleStatus(lowercaseRule, /[a-z]/.test(password), "One lowercase");
+      setRuleStatus(numberRule, /[0-9]/.test(password), "One number");
+      setRuleStatus(specialRule, /[^A-Za-z0-9]/.test(password), "One special character");
     });
 
     const signupForm = document.getElementById("signupForm");
@@ -208,7 +227,8 @@
         errorEl.classList.remove("hidden");
       }
       if (input) {
-        input.classList.add("border-red-500");
+        input.classList.remove("border-gray-200");
+        input.classList.add("border-rose-500", "focus:border-rose-500", "focus:ring-rose-500");
       }
     }
 
@@ -220,7 +240,8 @@
         errorEl.classList.add("hidden");
       }
       if (input) {
-        input.classList.remove("border-red-500");
+        input.classList.remove("border-rose-500", "focus:border-rose-500", "focus:ring-rose-500");
+        input.classList.add("border-gray-200");
       }
     }
 
