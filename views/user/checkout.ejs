@@ -109,13 +109,13 @@
                       </a>
                     <% } %>
 
-                    <a 
-                      href="/profile/address/delete/<%= address._id %>" 
-                      class="text-rose-400 hover:text-rose-600 transition-colors ml-auto"
-                      onclick="return confirm('Are you sure you want to delete this address?');"
+                    <button 
+                      type="button" 
+                      class="text-rose-400 hover:text-rose-600 transition-colors ml-auto focus:outline-none"
+                      onclick="confirmDeleteAddress(event, '<%= address._id %>')"
                     >
                       DELETE
-                    </a>
+                    </button>
                   </div>
                 </div>
               <% }) %>
@@ -562,6 +562,29 @@
     if (selectedDot) {
       selectedDot.classList.remove('hidden');
     }
+  }
+
+  function confirmDeleteAddress(event, addressId) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    Swal.fire({
+      title: 'DELETE ADDRESS?',
+      text: 'Are you sure you want to remove this delivery address? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#000000',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: 'YES, DELETE',
+      cancelButtonText: 'CANCEL',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = `/profile/address/delete/${addressId}`;
+      }
+    });
   }
 
   // Address modal controls

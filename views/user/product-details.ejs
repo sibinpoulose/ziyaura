@@ -726,7 +726,7 @@
 
             const data = await response.json();
             if (data.success) {
-              showToast(data.message, 'success');
+              showToast(data.message, 'success', 'low', { text: 'VIEW BAG', url: '/cart' });
               const badge = document.getElementById('cart-badge');
               if (badge && typeof data.cartCount !== 'undefined') {
                 badge.innerText = data.cartCount;
@@ -735,6 +735,12 @@
                 } else {
                   badge.classList.add('hidden');
                 }
+              }
+              // Micro-interaction: Bounce cart icon in header
+              const cartLink = document.querySelector('a[href="/cart"]');
+              if (cartLink) {
+                cartLink.classList.add('scale-125', 'transition-transform', 'duration-200');
+                setTimeout(() => cartLink.classList.remove('scale-125'), 350);
               }
             } else {
               showToast(data.message, 'error');
@@ -775,6 +781,27 @@
               } else {
                 icon.className = 'fa-solid fa-heart text-rose-500';
                 textSpan.innerText = 'REMOVE FROM WISHLIST';
+              }
+
+              // Instantly update header wishlist count badge
+              const wishBadge = document.getElementById('wishlist-badge');
+              if (wishBadge) {
+                let newCount = typeof data.wishlistCount !== 'undefined'
+                  ? data.wishlistCount
+                  : Math.max(0, (parseInt(wishBadge.innerText.trim()) || 0) + (isAdded ? -1 : 1));
+                wishBadge.innerText = newCount;
+                if (newCount > 0) {
+                  wishBadge.classList.remove('hidden');
+                } else {
+                  wishBadge.classList.add('hidden');
+                }
+              }
+
+              // Pulse header wishlist icon
+              const wishLink = document.querySelector('a[href="/wishlist"]');
+              if (wishLink) {
+                wishLink.classList.add('scale-125');
+                setTimeout(() => wishLink.classList.remove('scale-125'), 350);
               }
             } else {
               showToast(data.message, 'error');

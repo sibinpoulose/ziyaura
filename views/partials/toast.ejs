@@ -1,8 +1,8 @@
 <!-- Font Awesome stylesheet fallback to ensure icons are loaded -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-<!-- Top-Right Container -->
-<div id="toast-container-topright" class="fixed top-6 right-6 z-[9999] flex flex-col items-end gap-3 pointer-events-none max-w-xs md:max-w-sm w-full px-4"></div>
+<!-- Top-Right Container (Offset below the sticky header so shopping bag and profile options are never obscured) -->
+<div id="toast-container-topright" class="fixed top-20 md:top-24 right-4 md:right-8 z-[9999] flex flex-col items-end gap-3 pointer-events-none max-w-xs md:max-w-sm w-full px-4"></div>
 
 <!-- Center Modal Container -->
 <div id="toast-container-center" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-4 pointer-events-none px-4 bg-black/45 backdrop-blur-[1.5px] hidden"></div>
@@ -70,7 +70,7 @@
 </style>
 
 <script>
-  function showToast(message, type = 'success', priority = 'low') {
+  function showToast(message, type = 'success', priority = 'low', action = null) {
     // We ignore 'none' priority messages (e.g. cart quantity increments)
     if (priority === 'none') return;
 
@@ -91,7 +91,7 @@
     if (priority === 'high') {
       toast.className = 'toast-item toast-center relative flex flex-col items-center text-center p-8 bg-white rounded-lg shadow-2xl border border-gray-100 max-w-md w-full overflow-hidden';
     } else {
-      toast.className = 'toast-item toast-topright relative flex items-center gap-4 p-4 bg-white/95 backdrop-blur-md rounded-sm shadow-md border border-gray-100/60 min-w-[280px] max-w-sm overflow-hidden';
+      toast.className = 'toast-item toast-topright relative flex flex-col gap-2 p-4 bg-white/95 backdrop-blur-md rounded-md shadow-xl border border-gray-100 min-w-[280px] max-w-sm overflow-hidden';
     }
 
     // Icon & Color definitions
@@ -124,26 +124,36 @@
           <h3 class="text-sm font-bold text-gray-900 tracking-widest uppercase">${title}</h3>
           <p class="text-xs text-gray-600 mt-2 leading-relaxed px-4 font-medium">${message}</p>
         </div>
-        <button type="button" class="w-full bg-black hover:bg-gray-800 text-white text-xs font-bold tracking-widest uppercase py-3 rounded-md transition-colors shadow-sm" onclick="dismissToast(this.parentElement, 'high')">
+        <button type="button" class="w-full bg-black hover:bg-gray-800 text-white text-xs font-bold tracking-widest uppercase py-3 rounded-md transition-colors shadow-sm" onclick="dismissToast(this.closest('.toast-item'), 'high')">
           TRY AGAIN
         </button>
-        <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1 focus:outline-none" onclick="dismissToast(this.parentElement, 'high')">
+        <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1 focus:outline-none" onclick="dismissToast(this.closest('.toast-item'), 'high')">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
         <div class="absolute bottom-0 left-0 h-1 w-full ${barColor} toast-progress"></div>
       `;
     } else {
       toast.innerHTML = `
-        <div class="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 ${iconBg} ${iconColor}">
-          <i class="${iconClass} text-sm"></i>
+        <div class="flex items-start gap-3.5 w-full">
+          <div class="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 ${iconBg} ${iconColor} mt-0.5 shadow-sm">
+            <i class="${iconClass} text-sm"></i>
+          </div>
+          <div class="flex-grow pr-2 text-left">
+            <p class="text-xs font-bold text-gray-800 tracking-tight uppercase">${title}</p>
+            <p class="text-[11px] font-medium text-gray-500 leading-snug mt-0.5">${message}</p>
+            ${action && action.text && action.url ? `
+              <div class="mt-2.5 flex items-center gap-2">
+                <a href="${action.url}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black hover:bg-gray-800 text-white text-[10px] font-bold tracking-widest uppercase rounded shadow-sm transition-all duration-150">
+                  <span>${action.text}</span>
+                  <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                </a>
+              </div>
+            ` : ''}
+          </div>
+          <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1 flex-shrink-0 focus:outline-none" onclick="dismissToast(this.closest('.toast-item'), 'low')">
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
         </div>
-        <div class="flex-grow pr-6 text-left">
-          <p class="text-xs font-bold text-gray-800 tracking-tight uppercase">${title}</p>
-          <p class="text-[10px] font-semibold text-gray-500 leading-tight mt-0.5">${message}</p>
-        </div>
-        <button class="absolute top-2.5 right-2 text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1" onclick="dismissToast(this.parentElement, 'low')">
-          <i class="fa-solid fa-xmark text-[10px]"></i>
-        </button>
         <div class="absolute bottom-0 left-0 h-0.5 w-full ${barColor} toast-progress"></div>
       `;
     }

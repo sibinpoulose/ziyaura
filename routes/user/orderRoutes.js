@@ -12,6 +12,7 @@ const router = express.Router();
 
 // Fetch orders listing page
 router.get("/profile/orders", protect, loadOrdersPage);
+router.get("/orders", protect, (req, res) => res.redirect("/profile/orders"));
 
 // Fetch specific order details
 router.get("/profile/orders/:id", protect, loadOrderDetailPage);

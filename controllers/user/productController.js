@@ -7,7 +7,18 @@ export const loadProductsPage = async (req, res) => {
     const search = req.query.search || "";
     const categorySlug = req.query.category || "";
     const sort = req.query.sort || "newest";
-    const selectedBrand = req.query.brand || "";
+
+    let selectedBrands = [];
+    if (req.query.brand) {
+      if (Array.isArray(req.query.brand)) {
+        selectedBrands = req.query.brand.filter(Boolean);
+      } else if (typeof req.query.brand === "string" && req.query.brand.trim()) {
+        selectedBrands = req.query.brand.includes(",")
+          ? req.query.brand.split(",").map((b) => b.trim()).filter(Boolean)
+          : [req.query.brand.trim()];
+      }
+    }
+
     const inStock = req.query.inStock === "true";
     const minPrice = parseFloat(req.query.minPrice) || 0;
     const maxPrice = parseFloat(req.query.maxPrice) || Infinity;
@@ -19,7 +30,7 @@ export const loadProductsPage = async (req, res) => {
       search,
       categorySlug,
       sort,
-      selectedBrand,
+      selectedBrands,
       inStock,
       minPrice,
       maxPrice,
@@ -31,7 +42,8 @@ export const loadProductsPage = async (req, res) => {
       search,
       categorySlug,
       sort,
-      selectedBrand,
+      selectedBrands,
+      selectedBrand: selectedBrands.length === 1 ? selectedBrands[0] : selectedBrands,
       inStock,
       minPrice: req.query.minPrice || "",
       maxPrice: req.query.maxPrice || ""

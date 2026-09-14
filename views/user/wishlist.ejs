@@ -46,15 +46,14 @@
           >
             
             <!-- Remove Button -->
-            <form action="/wishlist/remove/<%= item._id %>" method="POST" class="absolute top-4 right-4 z-10">
-              <button 
-                type="submit" 
-                class="w-7 h-7 bg-white/90 backdrop-blur-sm border border-gray-100 hover:border-black text-gray-400 hover:text-black rounded-full flex items-center justify-center transition-all shadow-sm"
-                title="Remove from wishlist"
-              >
-                <i class="fa-solid fa-xmark text-[11px]"></i>
-              </button>
-            </form>
+            <button 
+              type="button" 
+              onclick="removeFromWishlistPage(event, '<%= item._id %>', '<%= item.productId %>')"
+              class="absolute top-4 right-4 z-10 w-7 h-7 bg-white/90 backdrop-blur-sm border border-gray-100 hover:border-black text-gray-400 hover:text-black rounded-full flex items-center justify-center transition-all shadow-sm"
+              title="Remove from wishlist"
+            >
+              <i class="fa-solid fa-xmark text-[11px]"></i>
+            </button>
 
             <!-- Discount Badge -->
             <% if (item.hasDiscount) { %>
@@ -210,7 +209,7 @@
         const data = await response.json();
 
         if (data.success) {
-          showToast(data.message, 'success');
+          showToast(data.message, 'success', 'low', { text: 'VIEW BAG', url: '/cart' });
           
           // Update header cart badge dynamically
           const badge = document.getElementById('cart-badge');
@@ -220,6 +219,30 @@
               badge.classList.remove('hidden');
             } else {
               badge.classList.add('hidden');
+            }
+          }
+
+          // Micro-interaction: Bounce cart icon in header
+          const cartLink = document.querySelector('a[href="/cart"]');
+          if (cartLink) {
+            cartLink.classList.add('scale-125', 'transition-transform', 'duration-200');
+            setTimeout(() => cartLink.classList.remove('scale-125'), 350);
+          }
+
+          // Also remove from wishlist in database
+          fetch(`/wishlist/remove/${productId}`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' }
+          }).catch(err => console.error('Wishlist removal error:', err));
+
+          // Decrement header wishlist badge dynamically
+          const wishBadge = document.getElementById('wishlist-badge');
+          if (wishBadge) {
+            let count = parseInt(wishBadge.innerText.trim()) || 0;
+            count = Math.max(0, count - 1);
+            wishBadge.innerText = count;
+            if (count === 0) {
+              wishBadge.classList.add('hidden');
             }
           }
 
@@ -237,10 +260,27 @@
               const grid = document.getElementById('wishlist-grid');
               if (grid) {
                 const remainingCards = grid.querySelectorAll('.group');
-                countLabel.innerText = `(${remainingCards.length} items)`;
+                if (countLabel) {
+                  countLabel.innerText = `(${remainingCards.length} items)`;
+                }
                 
                 if (remainingCards.length === 0) {
-                  window.location.reload(); // Reload to show empty state
+                  // Render clean empty state dynamically instead of reloading the page
+                  grid.className = 'w-full';
+                  grid.innerHTML = `
+                    <div class="text-center py-20 bg-gray-50 rounded-sm border border-dashed border-gray-200 w-full">
+                      <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fa-regular fa-heart text-2xl text-gray-400"></i>
+                      </div>
+                      <h3 class="text-sm font-bold tracking-widest text-gray-800 uppercase mb-2">Your Wishlist is Empty</h3>
+                      <p class="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed mb-6">
+                        You haven't saved any items to your wishlist yet. Browse our collections and click the heart icon to save products.
+                      </p>
+                      <a href="/products" class="inline-block bg-black hover:bg-gray-800 text-white text-[10px] font-bold tracking-widest uppercase px-8 py-3 rounded-sm transition-colors">
+                        EXPLORE CATALOG
+                      </a>
+                    </div>
+                  `;
                 }
               }
             }, 300);
@@ -250,6 +290,88 @@
         }
       } catch (error) {
         console.error('AJAX Error:', error);
+        showToast('Something went wrong. Please try again.', 'error');
+      }
+    }
+
+    async function removeFromWishlistPage(event, id, productId) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      try {
+        const response = await fetch(`/wishlist/remove/${id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast(data.message || 'Product removed from wishlist.', 'success');
+
+          // Update header badge dynamically
+          const wishBadge = document.getElementById('wishlist-badge');
+          if (wishBadge) {
+            let newCount = typeof data.wishlistCount !== 'undefined'
+              ? data.wishlistCount
+              : Math.max(0, (parseInt(wishBadge.innerText.trim()) || 0) - 1);
+            wishBadge.innerText = newCount;
+            if (newCount === 0) {
+              wishBadge.classList.add('hidden');
+            }
+          }
+
+          // Pulse header wishlist icon
+          const wishLink = document.querySelector('a[href="/wishlist"]');
+          if (wishLink) {
+            wishLink.classList.add('scale-125');
+            setTimeout(() => wishLink.classList.remove('scale-125'), 350);
+          }
+
+          // Animate card removal from DOM
+          const card = document.getElementById(`wishlist-card-${productId}`);
+          if (card) {
+            card.style.transform = 'scale(0.9)';
+            card.style.opacity = '0';
+            card.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+              card.remove();
+              const countLabel = document.getElementById('wishlist-count');
+              const grid = document.getElementById('wishlist-grid');
+              if (grid) {
+                const remainingCards = grid.querySelectorAll('.group');
+                if (countLabel) {
+                  countLabel.innerText = `(${remainingCards.length} items)`;
+                }
+                if (remainingCards.length === 0) {
+                  grid.className = 'w-full';
+                  grid.innerHTML = `
+                    <div class="text-center py-20 bg-gray-50 rounded-sm border border-dashed border-gray-200 w-full">
+                      <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fa-regular fa-heart text-2xl text-gray-400"></i>
+                      </div>
+                      <h3 class="text-sm font-bold tracking-widest text-gray-800 uppercase mb-2">Your Wishlist is Empty</h3>
+                      <p class="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed mb-6">
+                        You haven't saved any items to your wishlist yet. Browse our collections and click the heart icon to save products.
+                      </p>
+                      <a href="/products" class="inline-block bg-black hover:bg-gray-800 text-white text-[10px] font-bold tracking-widest uppercase px-8 py-3 rounded-sm transition-colors">
+                        EXPLORE CATALOG
+                      </a>
+                    </div>
+                  `;
+                }
+              }
+            }, 300);
+          }
+        } else {
+          showToast(data.message || 'Failed to remove product.', 'error');
+        }
+      } catch (err) {
+        console.error('Error removing from wishlist:', err);
         showToast('Something went wrong. Please try again.', 'error');
       }
     }

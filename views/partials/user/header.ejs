@@ -82,7 +82,7 @@
       <div class="flex items-center space-x-4 lg:space-x-8 text-gray-800">
 
         <!-- Wishlist -->
-        <a href="/wishlist" class="hover:opacity-70 flex items-center relative">
+        <a href="/wishlist" class="hover:opacity-70 flex items-center relative transition-transform duration-200 origin-center">
           <i class="fa-regular fa-heart text-lg md:text-xl"></i>
           <span id="wishlist-badge" class="<%= (locals.wishlistCount && wishlistCount > 0) ? '' : 'hidden' %> absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white">
             <%= locals.wishlistCount || 0 %>
@@ -90,7 +90,7 @@
         </a>
 
         <!-- Cart -->
-        <a href="/cart" class="hover:opacity-70 flex items-center relative">
+        <a href="/cart" class="hover:opacity-70 flex items-center relative transition-transform duration-200 origin-center">
           <i class="fa-solid fa-bag-shopping text-lg md:text-xl"></i>
           <span id="cart-badge" class="<%= (locals.cartCount && cartCount > 0) ? '' : 'hidden' %> absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white">
             <%= locals.cartCount || 0 %>

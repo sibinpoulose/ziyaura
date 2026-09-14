@@ -142,13 +142,11 @@
 
                                                         <!-- Delete -->
 
-                                                        <a href="/profile/address/delete/<%= address._id %>"
-                                                            onclick="return confirm('Delete this address?')"
+                                                        <button type="button"
+                                                            onclick="confirmDeleteAddress(event, '<%= address._id %>')"
                                                             class="flex-1 bg-red-500 text-white rounded-xl py-3 text-center font-medium hover:bg-red-600 transition">
-
                                                             Delete
-
-                                                        </a>
+                                                        </button>
 
                                                     </div>
 
@@ -203,3 +201,28 @@
 
     <%- include("../partials/user/footer") %>
     <%- include("../partials/toast") %>
+
+    <script>
+      function confirmDeleteAddress(event, addressId) {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+
+        Swal.fire({
+          title: 'Delete Address?',
+          text: 'Are you sure you want to remove this address? This action cannot be undone.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#000000',
+          cancelButtonColor: '#ef4444',
+          confirmButtonText: 'Yes, Delete',
+          cancelButtonText: 'Cancel',
+          reverseButtons: true
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = `/profile/address/delete/${addressId}`;
+          }
+        });
+      }
+    </script>

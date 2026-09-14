@@ -9,6 +9,7 @@ export const getUserProductsCatalog = async ({
   categorySlug = "",
   sort = "newest",
   selectedBrand = "",
+  selectedBrands = [],
   inStock = false,
   minPrice = 0,
   maxPrice = Infinity,
@@ -30,8 +31,22 @@ export const getUserProductsCatalog = async ({
     matchQuery.category = selectedCategory ? selectedCategory._id : null;
   }
 
-  if (selectedBrand) {
-    matchQuery.brand = selectedBrand;
+  // Handle single or multiple brand selection
+  let brandsList = [];
+  if (Array.isArray(selectedBrands) && selectedBrands.length > 0) {
+    brandsList = selectedBrands.filter(Boolean);
+  } else if (Array.isArray(selectedBrand) && selectedBrand.length > 0) {
+    brandsList = selectedBrand.filter(Boolean);
+  } else if (typeof selectedBrand === "string" && selectedBrand.trim()) {
+    brandsList = selectedBrand.includes(",")
+      ? selectedBrand.split(",").map((b) => b.trim()).filter(Boolean)
+      : [selectedBrand.trim()];
+  }
+
+  if (brandsList.length === 1) {
+    matchQuery.brand = brandsList[0];
+  } else if (brandsList.length > 1) {
+    matchQuery.brand = { $in: brandsList };
   }
 
   if (search) {

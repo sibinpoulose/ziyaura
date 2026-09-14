@@ -91,7 +91,7 @@ export const addProductToWishlist = async (userId, productId) => {
   wishlist.items.push({ productId });
   await wishlist.save();
 
-  return { success: true };
+  return { success: true, wishlistCount: wishlist.items.length };
 };
 
 export const removeProductFromWishlist = async (userId, targetId) => {
@@ -105,5 +105,5 @@ export const removeProductFromWishlist = async (userId, targetId) => {
   );
   await wishlist.save();
 
-  return { success: true };
+  return { success: true, wishlistCount: wishlist.items.length };
 };

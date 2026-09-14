@@ -25,9 +25,11 @@ export const addToWishlist = async (req, res) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: result.error });
     }
 
-    return res
-      .status(HTTP_STATUS.OK)
-      .json({ success: true, message: "Product added to wishlist successfully." });
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: "Product added to wishlist successfully.",
+      wishlistCount: result.wishlistCount
+    });
   } catch (error) {
     console.error("Add to Wishlist Error:", error);
     return res
@@ -53,7 +55,11 @@ export const removeFromWishlist = async (req, res) => {
     }
 
     if (isJson) {
-      return res.status(HTTP_STATUS.OK).json({ success: true, message: "Product removed from wishlist." });
+      return res.status(HTTP_STATUS.OK).json({
+        success: true,
+        message: "Product removed from wishlist.",
+        wishlistCount: result.wishlistCount
+      });
     }
     req.session.success = "Product removed from wishlist.";
     res.redirect("/wishlist");

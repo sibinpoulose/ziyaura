@@ -98,13 +98,23 @@
         CONTINUE SHOPPING
       </a>
       
-      <!-- Order History / Details Button (Pointing to Profile page for now) -->
+      <!-- Order History Button -->
       <a 
-        href="/profile" 
+        href="/profile/orders" 
         class="w-full sm:w-auto border border-gray-200 text-gray-700 hover:text-black hover:border-black text-center py-4 px-8 rounded-sm transition-colors block"
       >
-        VIEW ORDER DETAILS
+        VIEW ORDER HISTORY
       </a>
+
+      <% if (locals.order && order._id) { %>
+        <!-- View Current Order Details -->
+        <a 
+          href="/profile/orders/<%= order._id %>" 
+          class="w-full sm:w-auto border border-black text-black hover:bg-black hover:text-white text-center py-4 px-8 rounded-sm transition-colors block"
+        >
+          VIEW ORDER DETAILS
+        </a>
+      <% } %>
     </div>
 
   </div>

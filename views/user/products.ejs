@@ -177,13 +177,18 @@
               <span class="text-xs font-bold tracking-widest block text-gray-800">BRAND</span>
               <div class="space-y-2.5 max-h-48 overflow-y-auto custom-scrollbar pr-2">
                 <% brands.forEach(brandName => { %>
+                  <% 
+                    const isBrandChecked = (typeof selectedBrands !== 'undefined' && Array.isArray(selectedBrands))
+                      ? selectedBrands.includes(brandName)
+                      : (Array.isArray(selectedBrand) ? selectedBrand.includes(brandName) : selectedBrand === brandName);
+                  %>
                   <label class="flex items-center gap-3 text-xs text-gray-600 hover:text-black cursor-pointer font-medium">
                     <input
                       type="checkbox"
                       name="brand"
                       value="<%= brandName %>"
                       class="w-3.5 h-3.5 border-gray-300 rounded text-black focus:ring-black accent-black"
-                      <%= selectedBrand === brandName ? 'checked' : '' %>
+                      <%= isBrandChecked ? 'checked' : '' %>
                       onchange="applyFilters()"
                     >
                     <span><%= brandName %></span>
@@ -489,6 +494,27 @@
             icon.className = 'fa-regular fa-heart text-gray-300 hover:text-rose-500 text-base';
           } else {
             icon.className = 'fa-solid fa-heart text-rose-500 text-base';
+          }
+
+          // Instantly update header wishlist count badge
+          const wishBadge = document.getElementById('wishlist-badge');
+          if (wishBadge) {
+            let newCount = typeof data.wishlistCount !== 'undefined'
+              ? data.wishlistCount
+              : Math.max(0, (parseInt(wishBadge.innerText.trim()) || 0) + (isAdded ? -1 : 1));
+            wishBadge.innerText = newCount;
+            if (newCount > 0) {
+              wishBadge.classList.remove('hidden');
+            } else {
+              wishBadge.classList.add('hidden');
+            }
+          }
+
+          // Pulse header wishlist icon
+          const wishLink = document.querySelector('a[href="/wishlist"]');
+          if (wishLink) {
+            wishLink.classList.add('scale-125');
+            setTimeout(() => wishLink.classList.remove('scale-125'), 350);
           }
         } else {
           showToast(data.message, 'error');
